@@ -71,7 +71,7 @@ $built_in_functions = array(
 	'exclusive_choice'	=>'',
 	'require_exclusive_choice'=>'',
 	'remove_choice'		=>'',
-	// images	
+	// images
 	'linear_blend'		=>'',
 	'masked_blend'		=>'',
 	'combine_blend'		=>'',
@@ -81,6 +81,7 @@ $built_in_functions = array(
 	'saturate'		=>'',
 	'invert_image'		=>'',
 	'recolor_image'		=>'',
+	'resize_image'		=>'',
 	'enlarge'		=>'',
 	'crop'			=>'',
 	'flip_horizontal'	=>'',

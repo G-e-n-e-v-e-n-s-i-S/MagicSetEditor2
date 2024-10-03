@@ -304,6 +304,19 @@ bool EnlargeImage::operator == (const GeneratedImage& that) const {
                && border_size == that2->border_size;
 }
 
+// ----------------------------------------------------------------------------- : ResizeImage
+
+Image ResizeImage::generate(const Options& opt) const {
+  Image img = image->generate(opt);
+  return resample(img, width, height);
+}
+bool ResizeImage::operator == (const GeneratedImage& that) const {
+  const ResizeImage* that2 = dynamic_cast<const ResizeImage*>(&that);
+  return that2 && *image == *that2->image
+    && width == that2->width
+    && height == that2->height;
+}
+
 // ----------------------------------------------------------------------------- : CropImage
 
 Image CropImage::generate(const Options& opt) const {
