@@ -109,6 +109,7 @@ These functions are built into the program, other [[type:function]]s can be defi
 | [[fun:write_set_file]]	Write a MSE set file to the output directory.
 	
 ! Other functions		<<<
+| [[fun:get_mse_version]]			Get the MSE app version.
 | [[fun:trace]]			Output a message for debugging purposes.
 | [[fun:assert]]		Check a condition for debugging purposes.
 | [[fun:warning]]		Output a warning message.
