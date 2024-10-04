@@ -8,6 +8,7 @@
 // ----------------------------------------------------------------------------- : Includes
 
 #include <util/prec.hpp>
+#include <util/version.hpp>
 #include <script/functions/functions.hpp>
 #include <script/functions/util.hpp>
 #include <util/tagged_string.hpp>
@@ -20,6 +21,10 @@
 #include <random>
 
 // ----------------------------------------------------------------------------- : Debugging
+
+SCRIPT_FUNCTION(get_mse_version) {
+  SCRIPT_RETURN(app_version.toString());
+}
 
 SCRIPT_FUNCTION(trace) {
   SCRIPT_PARAM_C(String, input);
@@ -764,6 +769,7 @@ SCRIPT_FUNCTION(rule) {
 
 void init_script_basic_functions(Context& ctx) {
   // debugging
+  ctx.setVariable(_("get_mse_version"),      script_get_mse_version);
   ctx.setVariable(_("trace"),                script_trace);
   ctx.setVariable(_("warning"),              script_warning);
   ctx.setVariable(_("error"),                script_error);

@@ -1,0 +1,7 @@
+Function: get_mse_version
+
+--Usage--
+> get_mse_version()
+
+Returns the current MSE app version in a string of the form:
+"major.minor.patch"
