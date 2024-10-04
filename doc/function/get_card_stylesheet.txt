@@ -1,0 +1,17 @@
+Function: get_card_stylesheet
+
+--Usage--
+> get_card_stylesheet(card, set: set)
+
+Get the stylesheet of a [[type:card]].
+
+This is for use in exporter scripts. In card scripts, use the "stylesheet" predefined variable instead.
+
+--Parameters--
+! Parameter	Type					Description
+| @input@	[[type:card]]		The card you want to retrieve the stylesheet from.
+| @set@		[[type:set]]		The set the card belongs to. In an exporter script, this can be ommited since "set" is a predefined variable.
+
+--Examples--
+> # Retrieve the card regions from the card's stylesheet
+> card_regions := get_card_stylesheet(card).card_regions
