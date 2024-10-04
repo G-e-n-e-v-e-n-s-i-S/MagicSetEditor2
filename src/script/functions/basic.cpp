@@ -28,11 +28,11 @@ SCRIPT_FUNCTION(get_mse_version) {
 
 SCRIPT_FUNCTION(trace) {
   SCRIPT_PARAM_C(String, input);
-#if defined(_DEBUG) && 0
-  wxLogDebug(_("Trace:\t") + input);
-#else
-  queue_message(MESSAGE_INFO, _("Trace: ") + input);
-#endif
+  #if defined(_DEBUG) && 0
+    wxLogDebug(_("Trace:\t") + input);
+  #else
+    queue_message(MESSAGE_INFO, _("Trace: ") + input);
+  #endif
   SCRIPT_RETURN(input);
 }
 
