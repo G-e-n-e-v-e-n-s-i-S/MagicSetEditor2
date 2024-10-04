@@ -287,6 +287,21 @@ private:
   double border_size;
 };
 
+// ----------------------------------------------------------------------------- : ResizeImage
+
+/// Resize an image by resampling it
+class ResizeImage : public SimpleFilterImage {
+public:
+    inline ResizeImage(const GeneratedImageP& image, int width, int height)
+        : SimpleFilterImage(image), width(max(1, width)), height(max(1, height))
+    {}
+    Image generate(const Options& opt) const override;
+    bool operator == (const GeneratedImage& that) const override;
+private:
+    int width;
+    int height;
+};
+
 // ----------------------------------------------------------------------------- : CropImage
 
 /// Crop an image at a certain point, to a certain size

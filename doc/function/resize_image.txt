@@ -1,0 +1,14 @@
+Function: resize_image
+
+--Usage--
+> resize_image(input: image, height: height_of_new_image, width: width_of_new_image)
+
+Shrink or grow an image to a new size specified in the parameters, so it can be further worked on.
+If you want to display an image in a field, MSE will automatically resize it to fit the field, you do not need to use this function.
+
+--Parameters--
+! Parameter		Type				Description
+| @input@		[[type:image]]		Image to resize
+| @height@		[[type:int]]		Height of the resulting image
+| @width@		[[type:int]]		Width of the resulting image
+

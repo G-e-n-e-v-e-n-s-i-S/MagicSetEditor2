@@ -86,6 +86,7 @@ These functions are built into the program, other [[type:function]]s can be defi
 | [[fun:saturate]]		Saturate/desaturate an image.
 | [[fun:invert_image]]		Invert the colors of an image.
 | [[fun:recolor_image]]		Change the colors of an image to match the font color.
+| [[fun:resize_image]]		Stretch or squeeze an image to a given height and width.
 | [[fun:enlarge]]		Enlarge an image by putting a border around it.
 | [[fun:crop]]			Crop an image, giving only a small subset of it.
 | [[fun:flip_horizontal]]	Flip an image horizontally.
