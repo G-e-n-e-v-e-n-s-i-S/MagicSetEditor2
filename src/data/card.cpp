@@ -14,13 +14,15 @@
 #include <util/error.hpp>
 #include <util/reflect.hpp>
 #include <util/delayed_index_maps.hpp>
+#include <util/uuid.hpp>
 
 // ----------------------------------------------------------------------------- : Card
 
 Card::Card()
-    // for files made before we saved these times, set the time to 'yesterday'
+    // for files made before we saved these, set the time to 'yesterday', generate a uuid
   : time_created (wxDateTime::Now().Subtract(wxDateSpan::Day()).ResetTime())
   , time_modified(wxDateTime::Now().Subtract(wxDateSpan::Day()).ResetTime())
+  , uuid(uuid::generate_uuid())
   , has_styling(false)
 {
   if (!game_for_reading()) {
