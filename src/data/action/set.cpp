@@ -13,6 +13,7 @@
 #include <data/pack.hpp>
 #include <data/stylesheet.hpp>
 #include <util/error.hpp>
+#include <util/uid.hpp>
 
 // ----------------------------------------------------------------------------- : Add card
 
@@ -37,6 +38,23 @@ String AddCardAction::getName(bool to_undo) const {
 
 void AddCardAction::perform(bool to_undo) {
   action.perform(set.cards, to_undo);
+  // Assign new unique ids if necessary
+  if (action.adding) {
+    for (size_t pos = 0; pos < action.steps.size(); ++pos) {
+      CardP added_card = action.steps[pos].item;
+      FOR_EACH(card, set.cards) {
+        if (added_card != card && added_card->uid == card->uid) {
+          added_card->uid = generate_uid();
+        }
+      }
+      for (size_t prev_pos = 0; prev_pos < pos; ++prev_pos) {
+        CardP prev_added_card = action.steps[prev_pos].item;
+        if (added_card->uid == prev_added_card->uid) {
+          added_card->uid = generate_uid();
+        }
+      }
+    }
+  }
 }
 
 
@@ -55,7 +73,7 @@ void ReorderCardsAction::perform(bool to_undo) {
     assert(card_id1 < set.cards.size());
     assert(card_id2 < set.cards.size());
   #endif
-  if (card_id1 >= set.cards.size() || card_id2 < set.cards.size()) {
+  if (card_id1 >= set.cards.size() || card_id2 >= set.cards.size()) {
     // TODO : Too lazy to fix this right now.
     return;
   }

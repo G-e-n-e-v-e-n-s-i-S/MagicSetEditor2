@@ -22,7 +22,7 @@ Card::Card()
     // for files made before we saved these, set the time to 'yesterday', generate a uuid
   : time_created (wxDateTime::Now().Subtract(wxDateSpan::Day()).ResetTime())
   , time_modified(wxDateTime::Now().Subtract(wxDateSpan::Day()).ResetTime())
-  , uid(uid::generate_uid())
+  , uid(generate_uid())
   , has_styling(false)
 {
   if (!game_for_reading()) {
@@ -34,7 +34,7 @@ Card::Card()
 Card::Card(const Game& game)
   : time_created (wxDateTime::Now())
   , time_modified(wxDateTime::Now())
-  , uid(uid::generate_uid())
+  , uid(generate_uid())
   , has_styling(false)
 {
   data.init(game.card_fields);
