@@ -37,8 +37,8 @@ public:
   IndexMap<FieldP, ValueP> data;
   /// Notes for this card
   String notes;
-  /// A uuid for this card, so other cards can refer to it, and be linked to it
-  String uuid;
+  /// A unique identifier for this card, so other cards can refer to it, and be linked to it
+  String uid;
   /// Time the card was created/last modified
   wxDateTime time_created, time_modified;
   /// Alternative style to use for this card

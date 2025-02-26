@@ -14,7 +14,7 @@
 #include <util/error.hpp>
 #include <util/reflect.hpp>
 #include <util/delayed_index_maps.hpp>
-#include <util/uuid.hpp>
+#include <util/uid.hpp>
 
 // ----------------------------------------------------------------------------- : Card
 
@@ -22,7 +22,7 @@ Card::Card()
     // for files made before we saved these, set the time to 'yesterday', generate a uuid
   : time_created (wxDateTime::Now().Subtract(wxDateSpan::Day()).ResetTime())
   , time_modified(wxDateTime::Now().Subtract(wxDateSpan::Day()).ResetTime())
-  , uuid(uuid::generate_uuid())
+  , uid(uid::generate_uid())
   , has_styling(false)
 {
   if (!game_for_reading()) {
@@ -34,6 +34,7 @@ Card::Card()
 Card::Card(const Game& game)
   : time_created (wxDateTime::Now())
   , time_modified(wxDateTime::Now())
+  , uid(uid::generate_uid())
   , has_styling(false)
 {
   data.init(game.card_fields);
@@ -91,6 +92,7 @@ IMPLEMENT_REFLECTION(Card) {
     }
   }
   REFLECT(notes);
+  REFLECT(uid);
   REFLECT(time_created);
   REFLECT(time_modified);
   REFLECT(extra_data); // don't allow scripts to depend on style specific data
