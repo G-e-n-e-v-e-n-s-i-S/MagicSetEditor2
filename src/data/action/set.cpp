@@ -45,12 +45,7 @@ void AddCardAction::perform(bool to_undo) {
       FOR_EACH(card, set.cards) {
         if (added_card != card && added_card->uid == card->uid) {
           added_card->uid = generate_uid();
-        }
-      }
-      for (size_t prev_pos = 0; prev_pos < pos; ++prev_pos) {
-        CardP prev_added_card = action.steps[prev_pos].item;
-        if (added_card->uid == prev_added_card->uid) {
-          added_card->uid = generate_uid();
+          break;
         }
       }
     }
