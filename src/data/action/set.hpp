@@ -64,6 +64,23 @@ public:
   const size_t card_id1, card_id2;  ///< Positions of the two cards to swap
 };
 
+// ----------------------------------------------------------------------------- : Link cards
+
+/// Add a link between two or more cards
+class LinkCardsAction : public CardListAction {
+public:
+  LinkCardsAction(Set& set, const CardP& selectedCard, vector<CardP>& linkedCards, const String& selectedRelation, const String& linkedRelation);
+  
+  String getName(bool to_undo) const override;
+  void perform(bool to_undo) override;
+  
+  //private:
+  CardP         selectedCard;     ///< The card currently selected in the cards tab
+  vector<CardP> linkedCards;      ///< The cards that will be linked to the selected card
+  String        selectedRelation; ///< The nature of the relation of the selected card
+  String        linkedRelation;   ///< The nature of the relation of the linked cards
+};
+
 // ----------------------------------------------------------------------------- : Change stylesheet
 
 /// An action that affects the rendering/display/look of a set or cards in the set

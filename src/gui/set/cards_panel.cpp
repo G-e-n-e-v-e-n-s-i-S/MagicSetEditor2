@@ -74,7 +74,8 @@ CardsPanel::CardsPanel(Window* parent, int id)
     // NOTE: space after "Del" prevents wx from making del an accellerator
     // otherwise we delete a card when delete is pressed inside the editor
     // Adding a space never hurts, please keep it just to be safe.
-    add_menu_item(menuCard, ID_CARD_REMOVE, "card_del", _MENU_("remove card")+_(" "), _HELP_("remove card"));
+    add_menu_item(menuCard, ID_CARD_REMOVE, "card_del", _MENU_("remove card") + _(" "), _HELP_("remove card"));
+    add_menu_item(menuCard, ID_CARD_LINK, "card_link", _MENU_("link card") + _(" "), _HELP_("link card"));
     menuCard->AppendSeparator();
     auto menuRotate = new wxMenu();
       add_menu_item_tr(menuRotate, ID_CARD_ROTATE_0, "card_rotate_0", "rotate_0", wxITEM_CHECK);
@@ -193,6 +194,7 @@ void CardsPanel::initUI(wxToolBar* tb, wxMenuBar* mb) {
   toolAddCard = add_tool_tr(tb, ID_CARD_ADD, "card_add", "add_card", false, wxITEM_DROPDOWN);
   tb->SetDropdownMenu(ID_CARD_ADD, makeAddCardsSubmenu(true));
   add_tool_tr(tb, ID_CARD_REMOVE, "card_del", "remove_card");
+  add_tool_tr(tb, ID_CARD_LINK, "card_link", "link_card");
   tb->AddSeparator();
   add_tool_tr(tb, ID_CARD_ROTATE, "card_rotate", "rotate_card", false, wxITEM_DROPDOWN);
   auto menuRotate = new wxMenu();
@@ -222,6 +224,7 @@ void CardsPanel::destroyUI(wxToolBar* tb, wxMenuBar* mb) {
   tb->DeleteTool(ID_FORMAT_REMINDER);
   tb->DeleteTool(ID_CARD_ADD);
   tb->DeleteTool(ID_CARD_REMOVE);
+  tb->DeleteTool(ID_CARD_LINK);
   tb->DeleteTool(ID_CARD_ROTATE);
   // remember the value in the filter control, because the card list remains filtered
   // the control is destroyed by DeleteTool
@@ -256,6 +259,7 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
       break;
     }
     case ID_CARD_REMOVE:     ev.Enable(card_list->canDelete());      break;
+    case ID_CARD_LINK:       ev.Enable(card_list->canLink());    break;
     case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE: case ID_FORMAT_SYMBOL: case ID_FORMAT_REMINDER: {
       if (focused_control(this) == ID_EDITOR) {
         ev.Enable(editor->canFormat(ev.GetId()));
@@ -313,6 +317,9 @@ void CardsPanel::onCommand(int id) {
       break;
     case ID_CARD_REMOVE:
       card_list->doDelete();
+      break;
+    case ID_CARD_LINK:
+      card_list->doLink();
       break;
     case ID_CARD_ROTATE:
     case ID_CARD_ROTATE_0: case ID_CARD_ROTATE_90: case ID_CARD_ROTATE_180: case ID_CARD_ROTATE_270: {

@@ -43,8 +43,19 @@ void AddCardAction::perform(bool to_undo) {
     for (size_t pos = 0; pos < action.steps.size(); ++pos) {
       CardP added_card = action.steps[pos].item;
       FOR_EACH(card, set.cards) {
-        if (added_card != card && added_card->uid == card->uid) {
-          added_card->uid = generate_uid();
+        if (added_card == card) continue;
+        String old_uid = added_card->uid;
+        if (old_uid == card->uid) {
+          String new_uid = generate_uid();
+          added_card->uid = new_uid;
+          for (size_t other_pos = 0; other_pos < action.steps.size(); ++other_pos) {
+            if (pos == other_pos) continue;
+            CardP other_added_card = action.steps[other_pos].item;
+            if (other_added_card->linked_card_1 == old_uid) other_added_card->linked_card_1 = new_uid;
+            if (other_added_card->linked_card_2 == old_uid) other_added_card->linked_card_2 = new_uid;
+            if (other_added_card->linked_card_3 == old_uid) other_added_card->linked_card_3 = new_uid;
+            if (other_added_card->linked_card_4 == old_uid) other_added_card->linked_card_4 = new_uid;
+          }
           break;
         }
       }
@@ -73,6 +84,24 @@ void ReorderCardsAction::perform(bool to_undo) {
     return;
   }
   swap(set.cards[card_id1], set.cards[card_id2]);
+}
+
+// ----------------------------------------------------------------------------- : Link cards
+
+LinkCardsAction::LinkCardsAction(Set& set, const CardP& selectedCard, vector<CardP>& linkedCards, const String& selectedRelation, const String& linkedRelation)
+  : CardListAction(set), selectedCard(selectedCard), linkedCards(linkedCards), selectedRelation(selectedRelation), linkedRelation(linkedRelation)
+{}
+
+String LinkCardsAction::getName(bool to_undo) const {
+  return _("Link cards");
+}
+
+void LinkCardsAction::perform(bool to_undo) {
+  if (!to_undo) {
+    selectedCard->link(linkedCards, selectedRelation, linkedRelation);
+  } else {
+    selectedCard->unlink(linkedCards);
+  }
 }
 
 // ----------------------------------------------------------------------------- : Change stylesheet

@@ -1,0 +1,46 @@
+//+----------------------------------------------------------------------------+
+//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
+//| License:      GNU General Public License 2 or later (see file COPYING)     |
+//+----------------------------------------------------------------------------+
+
+#pragma once
+
+// ----------------------------------------------------------------------------- : Includes
+
+#include <util/prec.hpp>
+
+DECLARE_POINTER_TYPE(Set);
+DECLARE_POINTER_TYPE(Card);
+DECLARE_POINTER_TYPE(ExportCardSelectionChoice);
+class SelectCardList;
+
+// ----------------------------------------------------------------------------- : CardLinkWindow
+
+/// A window for selecting a subset of the cards from a set.
+/** this is used when linking cards
+ */
+class CardLinkWindow : public wxDialog {
+public:
+  CardLinkWindow(Window* parent, const SetP& set, const CardP& selectedCard, bool sizer=true);
+  
+  /// Is the given card selected?
+  bool isSelected(const CardP& card) const;
+  /// Get a list of all selected cards
+  void getSelection(vector<CardP>& out) const;
+  /// Change which cards are selected
+  void setSelection(const vector<CardP>& cards);
+  
+protected:
+  DECLARE_EVENT_TABLE();
+  
+  wxTextCtrl*     selectedRelation, *linkedRelation;
+  SelectCardList* list;
+  SetP            set;
+  CardP           selectedCard;
+  wxButton*       sel_none;
+
+  void onOk(wxCommandEvent&);
+
+  void onSelectNone(wxCommandEvent&);
+};

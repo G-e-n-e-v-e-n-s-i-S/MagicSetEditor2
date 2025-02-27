@@ -25,5 +25,7 @@ static String generate_uid() {
   for (i = 0; i < 32; i++) {
     ss << dis(gen);
   };
-  return ss.str();
+  //return ss.str();
+  String wxString(ss.str().c_str(), wxConvUTF8);
+  return wxString;
 }

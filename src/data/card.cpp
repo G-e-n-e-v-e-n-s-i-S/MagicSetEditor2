@@ -19,7 +19,7 @@
 // ----------------------------------------------------------------------------- : Card
 
 Card::Card()
-    // for files made before we saved these, set the time to 'yesterday', generate a uuid
+    // for files made before we saved these, set the time to 'yesterday', generate a uid
   : time_created (wxDateTime::Now().Subtract(wxDateSpan::Day()).ResetTime())
   , time_modified(wxDateTime::Now().Subtract(wxDateSpan::Day()).ResetTime())
   , uid(generate_uid())
@@ -63,6 +63,130 @@ bool Card::contains(QuickFilterPart const& query) const {
   return false;
 }
 
+void Card::link(const vector<CardP>& linkedCards, const String& selectedRelation, const String& linkedRelation)
+{
+  int free_link_count = 0;
+  if (linked_card_1 == wxEmptyString) free_link_count++;
+  if (linked_card_2 == wxEmptyString) free_link_count++;
+  if (linked_card_3 == wxEmptyString) free_link_count++;
+  if (linked_card_4 == wxEmptyString) free_link_count++;
+  if (free_link_count < linkedCards.size())
+  {
+    throw Error(_ERROR_("Card does not have enough free links available. Can only link up to 4 cards."));
+  }
+
+  vector<CardP> missedCards;
+  for (size_t pos = 0; pos < linkedCards.size(); ++pos) {
+    CardP linkedCard = linkedCards[pos];
+
+    if (linked_card_1 == wxEmptyString)
+    {
+      linked_card_1 = linkedCard->uid;
+      linked_relation_1 = linkedRelation;
+    }
+    else if (linked_card_2 == wxEmptyString)
+    {
+      linked_card_2 = linkedCard->uid;
+      linked_relation_2 = linkedRelation;
+    }
+    else if (linked_card_3 == wxEmptyString)
+    {
+      linked_card_3 = linkedCard->uid;
+      linked_relation_3 = linkedRelation;
+    }
+    else
+    {
+      linked_card_4 = linkedCard->uid;
+      linked_relation_4 = linkedRelation;
+    }
+
+    if (linkedCard->linked_card_1 == wxEmptyString)
+    {
+      linkedCard->linked_card_1 = uid;
+      linkedCard->linked_relation_1 = selectedRelation;
+    }
+    else if (linkedCard->linked_card_2 == wxEmptyString)
+    {
+      linkedCard->linked_card_2 = uid;
+      linkedCard->linked_relation_2 = selectedRelation;
+    }
+    else if (linkedCard->linked_card_3 == wxEmptyString)
+    {
+      linkedCard->linked_card_3 = uid;
+      linkedCard->linked_relation_3 = selectedRelation;
+    }
+    else if (linkedCard->linked_card_4 == wxEmptyString)
+    {
+      linkedCard->linked_card_4 = uid;
+      linkedCard->linked_relation_4 = selectedRelation;
+    }
+    else
+    {
+      missedCards.push_back(linkedCard);
+    }
+  }
+  if (missedCards.size() > 0)
+  {
+    std::stringstream ss;
+    ss << "The following cards could not be linked, as they already have 4 links: ";
+    for (size_t pos = 0; pos < missedCards.size(); ++pos) {
+      ss << missedCards[pos]->identification();
+      if (pos < missedCards.size() - 1) ss << ", ";
+    };
+    String wxString(ss.str().c_str(), wxConvUTF8);
+    throw Error(tr(LOCALE_CAT_ERROR, wxString));
+  }
+}
+
+void Card::unlink(const vector<CardP>& linkedCards)
+{
+  for (size_t pos = 0; pos < linkedCards.size(); ++pos) {
+    CardP linkedCard = linkedCards[pos];
+
+    if (linked_card_1 == linkedCard->uid)
+    {
+      linked_card_1 = wxEmptyString;
+      linked_relation_1 = wxEmptyString;
+    }
+    if (linked_card_2 == linkedCard->uid)
+    {
+      linked_card_2 = wxEmptyString;
+      linked_relation_2 = wxEmptyString;
+    }
+    if (linked_card_3 == linkedCard->uid)
+    {
+      linked_card_3 = wxEmptyString;
+      linked_relation_3 = wxEmptyString;
+    }
+    if (linked_card_4 == linkedCard->uid)
+    {
+      linked_card_4 = wxEmptyString;
+      linked_relation_4 = wxEmptyString;
+    }
+
+    if (linkedCard->linked_card_1 == uid)
+    {
+      linkedCard->linked_card_1 = wxEmptyString;
+      linkedCard->linked_relation_1 = wxEmptyString;
+    }
+    if (linkedCard->linked_card_2 == uid)
+    {
+      linkedCard->linked_card_2 = wxEmptyString;
+      linkedCard->linked_relation_2 = wxEmptyString;
+    }
+    if (linkedCard->linked_card_3 == uid)
+    {
+      linkedCard->linked_card_3 = wxEmptyString;
+      linkedCard->linked_relation_3 = wxEmptyString;
+    }
+    if (linkedCard->linked_card_4 == uid)
+    {
+      linkedCard->linked_card_4 = wxEmptyString;
+      linkedCard->linked_relation_4 = wxEmptyString;
+    }
+  }
+}
+
 IndexMap<FieldP, ValueP>& Card::extraDataFor(const StyleSheet& stylesheet) {
   return extra_data.get(stylesheet.name(), stylesheet.extra_card_fields);
 }
@@ -93,6 +217,14 @@ IMPLEMENT_REFLECTION(Card) {
   }
   REFLECT(notes);
   REFLECT(uid);
+  REFLECT(linked_card_1);
+  REFLECT(linked_card_2);
+  REFLECT(linked_card_3);
+  REFLECT(linked_card_4);
+  REFLECT(linked_relation_1);
+  REFLECT(linked_relation_2);
+  REFLECT(linked_relation_3);
+  REFLECT(linked_relation_4);
   REFLECT(time_created);
   REFLECT(time_modified);
   REFLECT(extra_data); // don't allow scripts to depend on style specific data

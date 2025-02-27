@@ -10,6 +10,7 @@
 #include <gui/control/card_list.hpp>
 #include <gui/control/card_list_column_select.hpp>
 #include <gui/set/window.hpp> // for sorting all cardlists in a window
+#include <gui/card_link_window.hpp>
 #include <gui/util.hpp>
 #include <data/game.hpp>
 #include <data/field.hpp>
@@ -179,6 +180,26 @@ bool CardListBase::doDelete() {
   // delete cards
   set->actions.addAction(make_unique<AddCardAction>(REMOVE, *set, cards_to_delete));
   return true;
+}
+
+// --------------------------------------------------- : CardListBase : Card linking
+
+bool CardListBase::canLink() const {
+  vector<CardP> selectedCards;
+  getSelection(selectedCards);
+  return selectedCards.size() == 1;
+}
+bool CardListBase::doLink() {
+  vector<CardP> selectedCards;
+  getSelection(selectedCards);
+  if (selectedCards.size() != 1) return false;
+  // open link cards window
+  CardLinkWindow wnd(this, set, selectedCards[0]);
+  if (wnd.ShowModal() == wxID_OK) {
+    // The actual linking is done in this window's onOk function
+    return true;
+  }
+  return false;
 }
 
 // ----------------------------------------------------------------------------- : CardListBase : Building the list
@@ -396,6 +417,7 @@ void CardListBase::onContextMenu(wxContextMenuEvent&) {
     m.AppendSeparator();
     add_menu_item_tr(&m, ID_CARD_ADD, "card_add", "add card");
     add_menu_item_tr(&m, ID_CARD_REMOVE, "card_del", "remove card");
+    add_menu_item_tr(&m, ID_CARD_LINK, "card_link", "link card");
     PopupMenu(&m);
   }
 }

@@ -66,7 +66,7 @@ public:
   
   inline CardP getCard() const            { return static_pointer_cast<Card>(selected_item); }
   inline void  setCard(const CardP& card) { selectItem(card, true, false); }
-    
+  
   // --------------------------------------------------- : Clipboard
   
   bool canCut()    const override;
@@ -77,6 +77,11 @@ public:
   bool doCopy() override;
   bool doPaste() override;
   bool doDelete() override;
+
+  // --------------------------------------------------- : Card linking
+
+  bool canLink()    const;
+  bool doLink();
   
   // --------------------------------------------------- : Set actions
   

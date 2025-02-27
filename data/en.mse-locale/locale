@@ -52,6 +52,7 @@ menu:
 	add card:							&Add Card	Ctrl+Enter
 	add cards:							Add &Multiple Cards...
 	remove card:						&Delete Selected Card
+	link card:							&Link Cards To Selected Card...
 	orientation:						&Orientation
 	rotate 0:							&Normal
 	rotate 270:							Rotated 90° &Clockwise
@@ -172,6 +173,7 @@ help:
 	add card:							Add a new, blank, card to this set
 	add cards:							Add multiple cards to the set
 	remove card:						Delete the selected card from this set
+	link card:							Link one or more cards to the selected card
 	orientation:						Orientation of the displayed card
 	rotate card:						Rotate the card display 90° clockwise
 	rotate 0:							Display the card with the right side up
@@ -389,6 +391,7 @@ tooltip:
 
 	add card:							Add card
 	remove card:						Remove selected card
+	link card:							Link cards to selected card
 	rotate card:						Rotate card
 
 	add keyword:						Add keyword
@@ -472,6 +475,12 @@ label:
 	seed:								Seed
 	total cards:						Total
 
+	# Link cards dialog
+	linked cards relation:				Define the type of relation between the selected card and the linked cards
+	selected card:						Selected Card:
+	linked cards:						Linked Cards:
+	select linked cards:				Define up to 4 linked cards:
+	
 	# Open dialogs
 	all files:			All Files
 	
@@ -697,6 +706,7 @@ title:
 	updates available:					Updates Available
 	save changes:						Save Changes?
 	select stylesheet:					Select Stylesheet
+	link cards:							Link Cards To Selected Card
 	#preferences
 	preferences:						Preferences
 	global:								Global

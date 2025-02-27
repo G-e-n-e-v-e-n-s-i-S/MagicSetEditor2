@@ -37,8 +37,18 @@ public:
   IndexMap<FieldP, ValueP> data;
   /// Notes for this card
   String notes;
-  /// A unique identifier for this card, so other cards can refer to it, and be linked to it
+  /// Unique identifier for this card, so other cards can refer to it, and be linked to it
   String uid;
+  /// Up to four uid of other cards, to encode relations such as front face/back face, or generator/token, etc...
+  String linked_card_1;
+  String linked_card_2;
+  String linked_card_3;
+  String linked_card_4;
+  /// Nature of the relatation with the respective linked card, such as back face, or token, etc...
+  String linked_relation_1;
+  String linked_relation_2;
+  String linked_relation_3;
+  String linked_relation_4;
   /// Time the card was created/last modified
   wxDateTime time_created, time_modified;
   /// Alternative style to use for this card
@@ -66,6 +76,10 @@ public:
   /// Does any field contains the given query string?
   bool contains(QuickFilterPart const& query) const;
   
+  /// Link or unlink other cards to this card
+  void link(const vector<CardP>& linkedCards, const String& selectedRelation, const String& linkedRelation);
+  void unlink(const vector<CardP>& linkedCards);
+
   /// Find a value in the data by name and type
   template <typename T> T& value(const String& name) {
     for(IndexMap<FieldP, ValueP>::iterator it = data.begin() ; it != data.end() ; ++it) {
