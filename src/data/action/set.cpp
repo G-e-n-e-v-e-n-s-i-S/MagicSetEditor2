@@ -14,6 +14,7 @@
 #include <data/stylesheet.hpp>
 #include <util/error.hpp>
 #include <util/uid.hpp>
+#include<unordered_set>
 
 // ----------------------------------------------------------------------------- : Add card
 
@@ -37,30 +38,36 @@ String AddCardAction::getName(bool to_undo) const {
 }
 
 void AddCardAction::perform(bool to_undo) {
-  action.perform(set.cards, to_undo);
-  // Assign new unique ids if necessary
-  if (action.adding) {
+  // If we are adding cards, resolve any id conflicts
+  if (action.adding && !to_undo) {
+    // Tally existing unique ids
+    unordered_set<String> existing_uids;
+    FOR_EACH(card, set.cards) {
+      existing_uids.insert(card->uid);
+    }
+    // Assign new unique ids
+    unordered_map<String, String> modified_uids;
     for (size_t pos = 0; pos < action.steps.size(); ++pos) {
       CardP added_card = action.steps[pos].item;
-      FOR_EACH(card, set.cards) {
-        if (added_card == card) continue;
-        String old_uid = added_card->uid;
-        if (old_uid == card->uid) {
-          String new_uid = generate_uid();
-          added_card->uid = new_uid;
-          for (size_t other_pos = 0; other_pos < action.steps.size(); ++other_pos) {
-            if (pos == other_pos) continue;
-            CardP other_added_card = action.steps[other_pos].item;
-            if (other_added_card->linked_card_1 == old_uid) other_added_card->linked_card_1 = new_uid;
-            if (other_added_card->linked_card_2 == old_uid) other_added_card->linked_card_2 = new_uid;
-            if (other_added_card->linked_card_3 == old_uid) other_added_card->linked_card_3 = new_uid;
-            if (other_added_card->linked_card_4 == old_uid) other_added_card->linked_card_4 = new_uid;
-          }
-          break;
-        }
+      String old_uid = added_card->uid;
+      if (existing_uids.find(old_uid) != existing_uids.end()) {
+        String new_uid = generate_uid();
+        added_card->uid = new_uid;
+        modified_uids.insert(old_uid, new_uid);
       }
     }
+    // Update card links
+    for (size_t pos = 0; pos < action.steps.size(); ++pos) {
+      CardP added_card = action.steps[pos].item;
+      if (modified_uids.find(added_card->linked_card_1) != modified_uids.end()) added_card->linked_card_1 = modified_uids.at(added_card->linked_card_1);
+      if (modified_uids.find(added_card->linked_card_2) != modified_uids.end()) added_card->linked_card_2 = modified_uids.at(added_card->linked_card_2);
+      if (modified_uids.find(added_card->linked_card_3) != modified_uids.end()) added_card->linked_card_3 = modified_uids.at(added_card->linked_card_3);
+      if (modified_uids.find(added_card->linked_card_4) != modified_uids.end()) added_card->linked_card_4 = modified_uids.at(added_card->linked_card_4);
+    }
   }
+
+  // Add or remove cards
+  action.perform(set.cards, to_undo);
 }
 
 
