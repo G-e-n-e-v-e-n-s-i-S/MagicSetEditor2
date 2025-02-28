@@ -190,11 +190,7 @@ bool CardListBase::canLink() const {
   return selectedCards.size() == 1;
 }
 bool CardListBase::doLink() {
-  vector<CardP> selectedCards;
-  getSelection(selectedCards);
-  if (selectedCards.size() != 1) return false;
-  // open link cards window
-  CardLinkWindow wnd(this, set, selectedCards[0]);
+  CardLinkWindow wnd(this, set, getCard());
   if (wnd.ShowModal() == wxID_OK) {
     // The actual linking is done in this window's onOk function
     return true;

@@ -53,7 +53,7 @@ void AddCardAction::perform(bool to_undo) {
       if (existing_uids.find(old_uid) != existing_uids.end()) {
         String new_uid = generate_uid();
         added_card->uid = new_uid;
-        modified_uids.insert(old_uid, new_uid);
+        modified_uids.insert({ old_uid, new_uid });
       }
     }
     // Update card links
@@ -69,7 +69,6 @@ void AddCardAction::perform(bool to_undo) {
   // Add or remove cards
   action.perform(set.cards, to_undo);
 }
-
 
 // ----------------------------------------------------------------------------- : Reorder cards
 

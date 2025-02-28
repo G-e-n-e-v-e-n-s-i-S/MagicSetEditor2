@@ -609,6 +609,9 @@ button:
 	edit symbol:						Edit
 	symbol gallery:						Gallery
 
+	# Card panel
+	unlink:								Unlink
+	
 	# Style panel
 	use for all cards:					Use for &all cards
 	use custom styling options:			Options &specific to this card

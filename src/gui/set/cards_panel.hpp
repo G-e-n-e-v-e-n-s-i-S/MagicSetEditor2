@@ -15,6 +15,9 @@ class wxSplitterWindow;
 class FilteredImageCardList;
 class DataEditor;
 class TextCtrl;
+class CardViewer;
+class wxSizer;
+class wxButton;
 class HoverButton;
 class FindInfo;
 class FilterCtrl;
@@ -75,6 +78,8 @@ public:
   void selectCard(const CardP& card) override;
   void selectFirstCard() override;
 
+  void setCard(const CardP& card);
+
   void getCardLists(vector<CardListBase*>& out) override;
 
 private:
@@ -85,6 +90,10 @@ private:
   FilteredImageCardList* card_list;
   wxPanel*          nodes_panel;
   TextCtrl*         notes;
+  wxSizer*          link_sizer_1, *link_sizer_2, *link_sizer_3, *link_sizer_4;
+  wxStaticText*     link_relation_1, *link_relation_2, *link_relation_3, *link_relation_4;
+  CardViewer*       link_viewer_1, *link_viewer_2, *link_viewer_3, *link_viewer_4;
+  wxButton*         link_unlink_1, *link_unlink_2, *link_unlink_3, *link_unlink_4;
   HoverButton*      collapse_notes;
   FilterCtrl*       filter;
   String            filter_value; // value of filter, need separate variable because the control is destroyed

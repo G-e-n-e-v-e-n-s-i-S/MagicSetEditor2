@@ -12,6 +12,7 @@
 #include <data/settings.hpp>
 #include <render/value/viewer.hpp>
 #include <wx/dcbuffer.h>
+#include <util/window_id.hpp>
 
 // ----------------------------------------------------------------------------- : Events
 
@@ -31,7 +32,11 @@ wxSize CardViewer::DoGetBestSize() const {
   if (set) {
     if (!stylesheet) stylesheet = set->stylesheet;
     StyleSheetSettings& ss = settings.stylesheetSettingsFor(*stylesheet);
-    wxSize size(int(stylesheet->card_width * (150.0 / stylesheet->card_dpi) * ss.card_zoom()), int(stylesheet->card_height * (150.0 / stylesheet->card_dpi) * ss.card_zoom()));
+    double dpi_factor = stylesheet->card_dpi <= 150 ? 1.0 : 150.0 / stylesheet->card_dpi;
+    double width = stylesheet->card_width * dpi_factor * ss.card_zoom();
+    double height = stylesheet->card_height * dpi_factor * ss.card_zoom();
+    double link_factor = GetId() == ID_LINK_VIEWER ? (height * 0.5 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
+    wxSize size(int(link_factor * width), int(link_factor * height));
     if (is_sideways(deg_to_rad(ss.card_angle()))) swap(size.x, size.y);
     return size + ws - cs;
   }
@@ -150,7 +155,10 @@ Rotation CardViewer::getRotation() const {
   StyleSheetSettings& ss = settings.stylesheetSettingsFor(*stylesheet);
   int dx = CanScroll(wxHORIZONTAL) ? GetScrollPos(wxHORIZONTAL) : 0;
   int dy = CanScroll(wxVERTICAL) ? GetScrollPos(wxVERTICAL) : 0;
-  return Rotation(deg_to_rad(ss.card_angle()), stylesheet->getCardRect().move(-dx,-dy,0,0), (150.0 / stylesheet->card_dpi) * ss.card_zoom(), 1.0, ROTATION_ATTACH_TOP_LEFT);
+  double dpi_factor = stylesheet->card_dpi <= 150 ? 1.0 : 150.0 / stylesheet->card_dpi;
+  double height = stylesheet->card_height * dpi_factor * ss.card_zoom();
+  double link_factor = GetId() == ID_LINK_VIEWER ? (height * 0.5 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
+  return Rotation(deg_to_rad(ss.card_angle()), stylesheet->getCardRect().move(-dx,-dy,0,0), link_factor * dpi_factor * ss.card_zoom(), 1.0, ROTATION_ATTACH_TOP_LEFT);
 }
 
 // ----------------------------------------------------------------------------- : Event table
