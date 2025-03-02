@@ -15,6 +15,7 @@
 #include <util/reflect.hpp>
 #include <util/delayed_index_maps.hpp>
 #include <util/uid.hpp>
+#include <unordered_set>
 
 // ----------------------------------------------------------------------------- : Card
 
@@ -63,128 +64,156 @@ bool Card::contains(QuickFilterPart const& query) const {
   return false;
 }
 
-void Card::link(const vector<CardP>& linkedCards, const String& selectedRelation, const String& linkedRelation)
+void Card::link(const vector<CardP>& linked_cards, const String& selected_relation, const String& linked_relation)
 {
+  vector<String> already_linked_uids { linked_card_1, linked_card_2, linked_card_3, linked_card_4 };
+  vector<String> already_linked_relations { linked_relation_1, linked_relation_2, linked_relation_3, linked_relation_4 };
+  unordered_set<String> linked_uids;
+  FOR_EACH(linked_card, linked_cards) {
+    linked_uids.insert(linked_card->uid);
+  }
   int free_link_count = 0;
-  if (linked_card_1 == wxEmptyString) free_link_count++;
-  if (linked_card_2 == wxEmptyString) free_link_count++;
-  if (linked_card_3 == wxEmptyString) free_link_count++;
-  if (linked_card_4 == wxEmptyString) free_link_count++;
-  if (free_link_count < linkedCards.size())
+  FOR_EACH(already_linked_uid, already_linked_uids) {
+    if (already_linked_uid == wxEmptyString || linked_uids.find(already_linked_uid) != linked_uids.end()) free_link_count++;
+  }
+  if (free_link_count < linked_cards.size())
   {
     throw Error(_ERROR_("Card does not have enough free links available. Can only link up to 4 cards."));
   }
 
-  vector<CardP> missedCards;
-  for (size_t pos = 0; pos < linkedCards.size(); ++pos) {
-    CardP linkedCard = linkedCards[pos];
+  unlink(linked_cards);
+
+  vector<CardP> missed_cards;
+  for (size_t pos = 0; pos < linked_cards.size(); ++pos) {
+    CardP linked_card = linked_cards[pos];
 
     if (linked_card_1 == wxEmptyString)
     {
-      linked_card_1 = linkedCard->uid;
-      linked_relation_1 = linkedRelation;
+      linked_card_1 = linked_card->uid;
+      linked_relation_1 = linked_relation;
     }
     else if (linked_card_2 == wxEmptyString)
     {
-      linked_card_2 = linkedCard->uid;
-      linked_relation_2 = linkedRelation;
+      linked_card_2 = linked_card->uid;
+      linked_relation_2 = linked_relation;
     }
     else if (linked_card_3 == wxEmptyString)
     {
-      linked_card_3 = linkedCard->uid;
-      linked_relation_3 = linkedRelation;
+      linked_card_3 = linked_card->uid;
+      linked_relation_3 = linked_relation;
     }
     else
     {
-      linked_card_4 = linkedCard->uid;
-      linked_relation_4 = linkedRelation;
+      linked_card_4 = linked_card->uid;
+      linked_relation_4 = linked_relation;
     }
 
-    if (linkedCard->linked_card_1 == wxEmptyString)
+    if (linked_card->linked_card_1 == wxEmptyString)
     {
-      linkedCard->linked_card_1 = uid;
-      linkedCard->linked_relation_1 = selectedRelation;
+      linked_card->linked_card_1 = uid;
+      linked_card->linked_relation_1 = selected_relation;
     }
-    else if (linkedCard->linked_card_2 == wxEmptyString)
+    else if (linked_card->linked_card_2 == wxEmptyString)
     {
-      linkedCard->linked_card_2 = uid;
-      linkedCard->linked_relation_2 = selectedRelation;
+      linked_card->linked_card_2 = uid;
+      linked_card->linked_relation_2 = selected_relation;
     }
-    else if (linkedCard->linked_card_3 == wxEmptyString)
+    else if (linked_card->linked_card_3 == wxEmptyString)
     {
-      linkedCard->linked_card_3 = uid;
-      linkedCard->linked_relation_3 = selectedRelation;
+      linked_card->linked_card_3 = uid;
+      linked_card->linked_relation_3 = selected_relation;
     }
-    else if (linkedCard->linked_card_4 == wxEmptyString)
+    else if (linked_card->linked_card_4 == wxEmptyString)
     {
-      linkedCard->linked_card_4 = uid;
-      linkedCard->linked_relation_4 = selectedRelation;
+      linked_card->linked_card_4 = uid;
+      linked_card->linked_relation_4 = selected_relation;
     }
     else
     {
-      missedCards.push_back(linkedCard);
+      missed_cards.push_back(linked_card);
     }
   }
-  if (missedCards.size() > 0)
+  if (missed_cards.size() > 0)
   {
     std::stringstream ss;
     ss << "The following cards could not be linked, as they already have 4 links: ";
-    for (size_t pos = 0; pos < missedCards.size(); ++pos) {
-      ss << missedCards[pos]->identification();
-      if (pos < missedCards.size() - 1) ss << ", ";
+    for (size_t pos = 0; pos < missed_cards.size(); ++pos) {
+      ss << missed_cards[pos]->identification();
+      if (pos < missed_cards.size() - 1) ss << ", ";
     };
     String wxString(ss.str().c_str(), wxConvUTF8);
     throw Error(tr(LOCALE_CAT_ERROR, wxString));
   }
 }
 
-void Card::unlink(const vector<CardP>& linkedCards)
+void Card::link(CardP& linked_card, const String& selected_relation, const String& linked_relation)
 {
-  for (size_t pos = 0; pos < linkedCards.size(); ++pos) {
-    CardP linkedCard = linkedCards[pos];
+  vector<CardP> linked_cards { linked_card };
+  link(linked_cards, selected_relation, linked_relation);
+}
 
-    if (linked_card_1 == linkedCard->uid)
-    {
-      linked_card_1 = wxEmptyString;
-      linked_relation_1 = wxEmptyString;
-    }
-    if (linked_card_2 == linkedCard->uid)
-    {
-      linked_card_2 = wxEmptyString;
-      linked_relation_2 = wxEmptyString;
-    }
-    if (linked_card_3 == linkedCard->uid)
-    {
-      linked_card_3 = wxEmptyString;
-      linked_relation_3 = wxEmptyString;
-    }
-    if (linked_card_4 == linkedCard->uid)
-    {
-      linked_card_4 = wxEmptyString;
-      linked_relation_4 = wxEmptyString;
-    }
-
-    if (linkedCard->linked_card_1 == uid)
-    {
-      linkedCard->linked_card_1 = wxEmptyString;
-      linkedCard->linked_relation_1 = wxEmptyString;
-    }
-    if (linkedCard->linked_card_2 == uid)
-    {
-      linkedCard->linked_card_2 = wxEmptyString;
-      linkedCard->linked_relation_2 = wxEmptyString;
-    }
-    if (linkedCard->linked_card_3 == uid)
-    {
-      linkedCard->linked_card_3 = wxEmptyString;
-      linkedCard->linked_relation_3 = wxEmptyString;
-    }
-    if (linkedCard->linked_card_4 == uid)
-    {
-      linkedCard->linked_card_4 = wxEmptyString;
-      linkedCard->linked_relation_4 = wxEmptyString;
-    }
+void Card::unlink(const vector<CardP>& unlinked_cards)
+{
+  for (size_t pos = 0; pos < unlinked_cards.size(); ++pos) {
+    CardP unlinked_card = unlinked_cards[pos];
+    unlink(unlinked_card);
   }
+}
+
+pair<String, String> Card::unlink(CardP& unlinked_card)
+{
+  String selected_relation = wxEmptyString;
+  String unlinked_relation = wxEmptyString;
+  if (linked_card_1 == unlinked_card->uid)
+  {
+    selected_relation = linked_relation_1;
+    unlinked_relation = unlinked_card->linked_relation_1;
+    linked_card_1 = wxEmptyString;
+    linked_relation_1 = wxEmptyString;
+  }
+  if (linked_card_2 == unlinked_card->uid)
+  {
+    selected_relation = linked_relation_1;
+    unlinked_relation = unlinked_card->linked_relation_1;
+    linked_card_2 = wxEmptyString;
+    linked_relation_2 = wxEmptyString;
+  }
+  if (linked_card_3 == unlinked_card->uid)
+  {
+    selected_relation = linked_relation_1;
+    unlinked_relation = unlinked_card->linked_relation_1;
+    linked_card_3 = wxEmptyString;
+    linked_relation_3 = wxEmptyString;
+  }
+  if (linked_card_4 == unlinked_card->uid)
+  {
+    selected_relation = linked_relation_1;
+    unlinked_relation = unlinked_card->linked_relation_1;
+    linked_card_4 = wxEmptyString;
+    linked_relation_4 = wxEmptyString;
+  }
+
+  if (unlinked_card->linked_card_1 == uid)
+  {
+    unlinked_card->linked_card_1 = wxEmptyString;
+    unlinked_card->linked_relation_1 = wxEmptyString;
+  }
+  if (unlinked_card->linked_card_2 == uid)
+  {
+    unlinked_card->linked_card_2 = wxEmptyString;
+    unlinked_card->linked_relation_2 = wxEmptyString;
+  }
+  if (unlinked_card->linked_card_3 == uid)
+  {
+    unlinked_card->linked_card_3 = wxEmptyString;
+    unlinked_card->linked_relation_3 = wxEmptyString;
+  }
+  if (unlinked_card->linked_card_4 == uid)
+  {
+    unlinked_card->linked_card_4 = wxEmptyString;
+    unlinked_card->linked_relation_4 = wxEmptyString;
+  }
+  return make_pair(selected_relation, unlinked_relation);
 }
 
 IndexMap<FieldP, ValueP>& Card::extraDataFor(const StyleSheet& stylesheet) {

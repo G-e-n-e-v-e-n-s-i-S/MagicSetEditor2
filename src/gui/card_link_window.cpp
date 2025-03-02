@@ -7,6 +7,7 @@
 // ----------------------------------------------------------------------------- : Includes
 
 #include <util/prec.hpp>
+#include <data/game.hpp>
 #include <gui/card_link_window.hpp>
 #include <gui/control/select_card_list.hpp>
 #include <util/window_id.hpp>
@@ -20,8 +21,16 @@ CardLinkWindow::CardLinkWindow(Window* parent, const SetP& set, const CardP& sel
   , set(set), selectedCard(selectedCard)
 {
   // init controls
-  selectedRelation = new wxTextCtrl(this, wxID_ANY, _("Generator, Front Face, Partner with, etc..."));
-  linkedRelation = new wxTextCtrl(this, wxID_ANY, _("Token, Back Face, Partner with, etc..."));
+  selectedRelation = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  linkedRelation = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  relation_type = new wxChoice(this, ID_CARD_LINK_TYPE, wxDefaultPosition, wxDefaultSize, 0, nullptr);
+  relation_type->Clear();
+  FOR_EACH(link, set->game->card_links) {
+    relation_type->Append(link);
+  }
+  relation_type->Append(_("Custom..."));
+  relation_type->SetSelection(0);
+  setRelationType();
   list = new SelectCardList(this, wxID_ANY);
   list->setSet(set);
   list->selectNone();
@@ -30,6 +39,7 @@ CardLinkWindow::CardLinkWindow(Window* parent, const SetP& set, const CardP& sel
   if (sizer) {
     wxSizer* s = new wxBoxSizer(wxVERTICAL);
       s->Add(new wxStaticText(this, -1, _LABEL_("linked cards relation")), 0, wxALL, 8);
+      s->Add(relation_type, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
       s->Add(new wxStaticText(this, -1, _("  ") + _LABEL_("selected card")), 0, wxALL, 4);
       s->Add(selectedRelation, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
       s->Add(new wxStaticText(this, -1, _("  ") + _LABEL_("linked cards")), 0, wxALL, 4);
@@ -57,9 +67,30 @@ void CardLinkWindow::getSelection(vector<CardP>& out) const {
 void CardLinkWindow::setSelection(const vector<CardP>& cards) {
   list->setSelection(cards);
 }
+void CardLinkWindow::setRelationType() {
+  int sel = relation_type->GetSelection();
+  if (sel == relation_type->GetCount() - 1) { // Custom type
+    selectedRelation->ChangeValue(_("Generator, Front Face, Meld Component, etc..."));
+    selectedRelation->Enable();
+    linkedRelation->ChangeValue(_("Token, Back Face, Meld Result, etc..."));
+    linkedRelation->Enable();
+  }
+  else {
+    String relation = relation_type->GetString(sel);
+    int delimiter_pos = relation.find(" // ");
+    selectedRelation->ChangeValue(relation.substr(0, delimiter_pos));
+    selectedRelation->Enable(false);
+    linkedRelation->ChangeValue(delimiter_pos + 4 < relation.Length() ? relation.substr(delimiter_pos + 4) : _("Undefined"));
+    linkedRelation->Enable(false);
+  }
+}
 
 void CardLinkWindow::onSelectNone(wxCommandEvent&) {
   list->selectNone();
+}
+
+void CardLinkWindow::onRelationTypeChange(wxCommandEvent&) {
+  setRelationType();
 }
 
 void CardLinkWindow::onOk(wxCommandEvent&) {
@@ -76,4 +107,5 @@ void CardLinkWindow::onOk(wxCommandEvent&) {
 BEGIN_EVENT_TABLE(CardLinkWindow, wxDialog)
   EVT_BUTTON       (ID_SELECT_NONE, CardLinkWindow::onSelectNone)
   EVT_BUTTON       (wxID_OK, CardLinkWindow::onOk)
+  EVT_CHOICE       (ID_CARD_LINK_TYPE, CardLinkWindow::onRelationTypeChange)
 END_EVENT_TABLE  ()

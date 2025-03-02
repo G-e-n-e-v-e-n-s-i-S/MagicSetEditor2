@@ -8,6 +8,8 @@
 
 #include <util/prec.hpp>
 #include <gui/control/card_viewer.hpp>
+#include <gui/control/image_card_list.hpp>
+#include <gui/set/cards_panel.hpp>
 #include <data/stylesheet.hpp>
 #include <data/settings.hpp>
 #include <render/value/viewer.hpp>
@@ -35,7 +37,7 @@ wxSize CardViewer::DoGetBestSize() const {
     double dpi_factor = stylesheet->card_dpi <= 150 ? 1.0 : 150.0 / stylesheet->card_dpi;
     double width = stylesheet->card_width * dpi_factor * ss.card_zoom();
     double height = stylesheet->card_height * dpi_factor * ss.card_zoom();
-    double link_factor = GetId() == ID_LINK_VIEWER ? (height * 0.5 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
+    double link_factor = GetId() == ID_LINK_VIEWER ? (height * 0.5 - 41.0) / height : GetId() == ID_LINK_UNIQUE_VIEWER ? (height * 0.95 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
     wxSize size(int(link_factor * width), int(link_factor * height));
     if (is_sideways(deg_to_rad(ss.card_angle()))) swap(size.x, size.y);
     return size + ws - cs;
@@ -109,6 +111,15 @@ void CardViewer::onPaint(wxPaintEvent&) {
   }
 }
 
+void CardViewer::onClick(wxMouseEvent&) {
+  if (GetId() == ID_LINK_VIEWER || GetId() == ID_LINK_UNIQUE_VIEWER) {
+    CardsPanel* panel = dynamic_cast<CardsPanel*> (GetParent());
+    if (panel) {
+      panel->setCard(getCard(), true);
+    }
+  }
+}
+
 void CardViewer::drawViewer(RotatedDC& dc, ValueViewer& v) {
   if (shouldDraw(v)) v.draw(dc);
 }
@@ -157,7 +168,7 @@ Rotation CardViewer::getRotation() const {
   int dy = CanScroll(wxVERTICAL) ? GetScrollPos(wxVERTICAL) : 0;
   double dpi_factor = stylesheet->card_dpi <= 150 ? 1.0 : 150.0 / stylesheet->card_dpi;
   double height = stylesheet->card_height * dpi_factor * ss.card_zoom();
-  double link_factor = GetId() == ID_LINK_VIEWER ? (height * 0.5 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
+  double link_factor = GetId() == ID_LINK_VIEWER ? (height * 0.5 - 41.0) / height : GetId() == ID_LINK_UNIQUE_VIEWER ? (height * 0.95 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
   return Rotation(deg_to_rad(ss.card_angle()), stylesheet->getCardRect().move(-dx,-dy,0,0), link_factor * dpi_factor * ss.card_zoom(), 1.0, ROTATION_ATTACH_TOP_LEFT);
 }
 
@@ -165,4 +176,5 @@ Rotation CardViewer::getRotation() const {
 
 BEGIN_EVENT_TABLE(CardViewer, wxControl)
   EVT_PAINT(CardViewer::onPaint)
+  EVT_LEFT_UP(CardViewer::onClick)
 END_EVENT_TABLE  ()

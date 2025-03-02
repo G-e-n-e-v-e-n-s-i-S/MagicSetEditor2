@@ -69,7 +69,7 @@ public:
 /// Add a link between two or more cards
 class LinkCardsAction : public CardListAction {
 public:
-  LinkCardsAction(Set& set, const CardP& selectedCard, vector<CardP>& linkedCards, const String& selectedRelation, const String& linkedRelation);
+  LinkCardsAction(Set& set, const CardP& selected_card, vector<CardP>& linked_cards, const String& selected_relation, const String& linked_relation);
   
   String getName(bool to_undo) const override;
   void perform(bool to_undo) override;
@@ -79,6 +79,20 @@ public:
   vector<CardP> linkedCards;      ///< The cards that will be linked to the selected card
   String        selectedRelation; ///< The nature of the relation of the selected card
   String        linkedRelation;   ///< The nature of the relation of the linked cards
+};
+/// Remove a link between two or more cards
+class UnlinkCardsAction : public CardListAction {
+public:
+    UnlinkCardsAction(Set& set, const CardP& selected_card, CardP& unlinked_card);
+  
+  String getName(bool to_undo) const override;
+  void perform(bool to_undo) override;
+  
+  //private:
+  CardP         selected_card;     ///< The card currently selected in the cards tab
+  CardP         unlinked_card;     ///< The card that will be unlinked from the selected card
+  String        selected_relation; ///< The nature of the relation of the selected card
+  String        unlinked_relation; ///< The nature of the relation of the unlinked card
 };
 
 // ----------------------------------------------------------------------------- : Change stylesheet

@@ -197,6 +197,10 @@ bool CardListBase::doLink() {
   }
   return false;
 }
+bool CardListBase::doUnlink(CardP unlinked_card) {
+  set->actions.addAction(make_unique<UnlinkCardsAction>(*set, getCard(), unlinked_card));
+  return true;
+}
 
 // ----------------------------------------------------------------------------- : CardListBase : Building the list
 

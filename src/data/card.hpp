@@ -77,8 +77,10 @@ public:
   bool contains(QuickFilterPart const& query) const;
   
   /// Link or unlink other cards to this card
-  void link(const vector<CardP>& linkedCards, const String& selectedRelation, const String& linkedRelation);
-  void unlink(const vector<CardP>& linkedCards);
+  void link(const vector<CardP>& linked_cards, const String& selected_relation, const String& linked_relation);
+  void link(CardP& linked_card, const String& selected_relation, const String& linked_relation);
+  void unlink(const vector<CardP>& linked_cards);
+  pair<String, String> unlink(CardP& unlinked_card); // Returns the relations that were deleted, so we can undo
 
   /// Find a value in the data by name and type
   template <typename T> T& value(const String& name) {

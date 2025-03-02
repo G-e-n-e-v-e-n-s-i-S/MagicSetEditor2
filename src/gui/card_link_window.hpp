@@ -30,15 +30,20 @@ public:
   void getSelection(vector<CardP>& out) const;
   /// Change which cards are selected
   void setSelection(const vector<CardP>& cards);
-  
+  /// Change the type of link relation
+  void setRelationType();
+
 protected:
   DECLARE_EVENT_TABLE();
-  
+
+  wxChoice*       relation_type;
   wxTextCtrl*     selectedRelation, *linkedRelation;
   SelectCardList* list;
   SetP            set;
   CardP           selectedCard;
   wxButton*       sel_none;
+
+  void onRelationTypeChange(wxCommandEvent&);
 
   void onOk(wxCommandEvent&);
 

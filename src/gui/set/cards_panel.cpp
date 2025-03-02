@@ -374,6 +374,16 @@ void CardsPanel::onCommand(int id) {
       card_list->doLink();
       setCard(card_list->getCard());
       break;
+    case ID_LINK_UNLINK_1: case ID_LINK_UNLINK_2: case ID_LINK_UNLINK_3: case ID_LINK_UNLINK_4: {
+      card_list->doUnlink((
+          id == ID_LINK_UNLINK_1 ? link_viewer_1
+        : id == ID_LINK_UNLINK_2 ? link_viewer_2
+        : id == ID_LINK_UNLINK_3 ? link_viewer_3
+        :                          link_viewer_4
+      )->getCard());
+      setCard(card_list->getCard());
+      break;
+    }
     case ID_CARD_ROTATE:
     case ID_CARD_ROTATE_0: case ID_CARD_ROTATE_90: case ID_CARD_ROTATE_180: case ID_CARD_ROTATE_270: {
       StyleSheetSettings& ss = settings.stylesheetSettingsFor(set->stylesheetFor(card_list->getCard()));
@@ -543,8 +553,7 @@ CardP CardsPanel::selectedCard() const {
 }
 void CardsPanel::selectCard(const CardP& card) {
   if (!set) return; // we want onChangeSet first
-  card_list->setCard(card);
-  setCard(card);
+  setCard(card, true);
   notes->setValue(card ? &card->notes : nullptr);
   Layout();
   updateNotesPosition();
@@ -555,7 +564,10 @@ void CardsPanel::selectFirstCard() {
   card_list->selectFirst();
 }
 
-void CardsPanel::setCard(const CardP& card) {
+void CardsPanel::setCard(const CardP& card, bool set_in_card_list) {
+  if (set_in_card_list) {
+    card_list->setCard(card);
+  }
   editor->setCard(card);
   unordered_map<String, String> links {
     { card->linked_card_1, card->linked_relation_1 },
@@ -571,6 +583,7 @@ void CardsPanel::setCard(const CardP& card) {
   }
   int count = linked_cards.size();
   if (count >= 1) {
+    link_viewer_1->SetId(count == 1 ? ID_LINK_UNIQUE_VIEWER : ID_LINK_VIEWER);
     link_viewer_1->setCard(linked_cards[0]);
     link_relation_1->SetLabel(links.at(linked_cards[0]->uid));
     link_sizer_1->Show(true);
@@ -609,6 +622,7 @@ void CardsPanel::setCard(const CardP& card) {
     link_relation_4->SetLabel(wxEmptyString);
     link_sizer_4->Show(false);
   }
+  updateNotesPosition();
   Layout();
   if (count >= 5) {
     queue_message(MESSAGE_WARNING, "DEBUG More than 4 linked cards found for card: " + card->identification());

@@ -110,6 +110,25 @@ void LinkCardsAction::perform(bool to_undo) {
   }
 }
 
+UnlinkCardsAction::UnlinkCardsAction(Set& set, const CardP& selected_card, CardP& unlinked_card)
+  : CardListAction(set), selected_card(selected_card), unlinked_card(unlinked_card)
+{}
+
+String UnlinkCardsAction::getName(bool to_undo) const {
+  return _("Unlink card");
+}
+
+void UnlinkCardsAction::perform(bool to_undo) {
+  if (!to_undo) {
+    pair<String, String> relations = selected_card->unlink(unlinked_card);
+    selected_relation = relations.first;
+    unlinked_relation = relations.second;
+  }
+  else {
+    selected_card->link(unlinked_card, selected_relation, unlinked_relation);
+  }
+}
+
 // ----------------------------------------------------------------------------- : Change stylesheet
 
 String DisplayChangeAction::getName(bool to_undo) const {

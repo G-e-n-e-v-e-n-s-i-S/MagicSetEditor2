@@ -476,10 +476,10 @@ label:
 	total cards:						Total
 
 	# Link cards dialog
-	linked cards relation:				Define the type of relation between the selected card and the linked cards
+	linked cards relation:				Choose the type of relation between the selected card and the linked cards:
 	selected card:						Selected Card:
 	linked cards:						Linked Cards:
-	select linked cards:				Define up to 4 linked cards:
+	select linked cards:				Choose up to 4 cards to link:
 	
 	# Open dialogs
 	all files:			All Files

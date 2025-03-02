@@ -48,6 +48,7 @@ IMPLEMENT_REFLECTION(Game) {
   }
   REFLECT_NO_SCRIPT(default_set_style);
   REFLECT_NO_SCRIPT(card_fields);
+  REFLECT_NO_SCRIPT(card_links);
   REFLECT_NO_SCRIPT(card_list_color_script);
   REFLECT_NO_SCRIPT(statistics_dimensions);
   REFLECT_NO_SCRIPT(statistics_categories);

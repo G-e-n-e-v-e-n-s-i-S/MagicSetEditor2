@@ -53,9 +53,11 @@ protected:
   
 private:
   DECLARE_EVENT_TABLE();
-  
+
   void onPaint(wxPaintEvent&);
-  
+
+  void onClick(wxMouseEvent&);
+
   Bitmap buffer;     ///< Off-screen buffer we draw to
   bool   up_to_date; ///< Is the buffer up to date?
   
