@@ -67,7 +67,6 @@ bool Card::contains(QuickFilterPart const& query) const {
 void Card::link(const vector<CardP>& linked_cards, const String& selected_relation, const String& linked_relation)
 {
   vector<String> already_linked_uids { linked_card_1, linked_card_2, linked_card_3, linked_card_4 };
-  vector<String> already_linked_relations { linked_relation_1, linked_relation_2, linked_relation_3, linked_relation_4 };
   unordered_set<String> linked_uids;
   FOR_EACH(linked_card, linked_cards) {
     linked_uids.insert(linked_card->uid);

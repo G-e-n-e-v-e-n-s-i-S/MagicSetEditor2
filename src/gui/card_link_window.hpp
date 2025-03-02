@@ -17,7 +17,8 @@ class SelectCardList;
 
 // ----------------------------------------------------------------------------- : CardLinkWindow
 
-/// A window for selecting a subset of the cards from a set.
+/// A window for selecting a subset of the cards from a set,
+/** and selecting a link relation type.
 /** this is used when linking cards
  */
 class CardLinkWindow : public wxDialog {
@@ -37,10 +38,10 @@ protected:
   DECLARE_EVENT_TABLE();
 
   wxChoice*       relation_type;
-  wxTextCtrl*     selectedRelation, *linkedRelation;
+  wxTextCtrl*     selected_relation, *linked_relation;
   SelectCardList* list;
   SetP            set;
-  CardP           selectedCard;
+  CardP           selected_card;
   wxButton*       sel_none;
 
   void onRelationTypeChange(wxCommandEvent&);

@@ -185,9 +185,9 @@ bool CardListBase::doDelete() {
 // --------------------------------------------------- : CardListBase : Card linking
 
 bool CardListBase::canLink() const {
-  vector<CardP> selectedCards;
-  getSelection(selectedCards);
-  return selectedCards.size() == 1;
+  vector<CardP> selected_cards;
+  getSelection(selected_cards);
+  return selected_cards.size() == 1;
 }
 bool CardListBase::doLink() {
   CardLinkWindow wnd(this, set, getCard());

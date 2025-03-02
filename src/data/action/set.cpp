@@ -94,8 +94,8 @@ void ReorderCardsAction::perform(bool to_undo) {
 
 // ----------------------------------------------------------------------------- : Link cards
 
-LinkCardsAction::LinkCardsAction(Set& set, const CardP& selectedCard, vector<CardP>& linkedCards, const String& selectedRelation, const String& linkedRelation)
-  : CardListAction(set), selectedCard(selectedCard), linkedCards(linkedCards), selectedRelation(selectedRelation), linkedRelation(linkedRelation)
+LinkCardsAction::LinkCardsAction(Set& set, const CardP& selected_card, vector<CardP>& linked_cards, const String& selected_relation, const String& linked_relation)
+  : CardListAction(set), selected_card(selected_card), linked_cards(linked_cards), selected_relation(selected_relation), linked_relation(linked_relation)
 {}
 
 String LinkCardsAction::getName(bool to_undo) const {
@@ -104,9 +104,9 @@ String LinkCardsAction::getName(bool to_undo) const {
 
 void LinkCardsAction::perform(bool to_undo) {
   if (!to_undo) {
-    selectedCard->link(linkedCards, selectedRelation, linkedRelation);
+    selected_card->link(linked_cards, selected_relation, linked_relation);
   } else {
-    selectedCard->unlink(linkedCards);
+    selected_card->unlink(linked_cards);
   }
 }
 

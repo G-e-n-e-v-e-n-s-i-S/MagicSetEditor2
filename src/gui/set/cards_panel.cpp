@@ -33,18 +33,18 @@ CardsPanel::CardsPanel(Window* parent, int id)
 {
   // init controls
   editor          = new CardEditor(this, ID_EDITOR);
-  link_viewer_1   = new CardViewer(this, ID_LINK_VIEWER);
-  link_viewer_2   = new CardViewer(this, ID_LINK_VIEWER);
-  link_viewer_3   = new CardViewer(this, ID_LINK_VIEWER);
-  link_viewer_4   = new CardViewer(this, ID_LINK_VIEWER);
-  link_relation_1 = new wxStaticText(this, ID_LINK_RELATION_1, wxEmptyString);
-  link_relation_2 = new wxStaticText(this, ID_LINK_RELATION_2, wxEmptyString);
-  link_relation_3 = new wxStaticText(this, ID_LINK_RELATION_3, wxEmptyString);
-  link_relation_4 = new wxStaticText(this, ID_LINK_RELATION_4, wxEmptyString);
-  link_unlink_1   = new wxButton(this, ID_LINK_UNLINK_1, _BUTTON_("unlink"));
-  link_unlink_2   = new wxButton(this, ID_LINK_UNLINK_2, _BUTTON_("unlink"));
-  link_unlink_3   = new wxButton(this, ID_LINK_UNLINK_3, _BUTTON_("unlink"));
-  link_unlink_4   = new wxButton(this, ID_LINK_UNLINK_4, _BUTTON_("unlink"));
+  link_viewer_1   = new CardViewer(this, ID_CARD_LINK_VIEWER);
+  link_viewer_2   = new CardViewer(this, ID_CARD_LINK_VIEWER);
+  link_viewer_3   = new CardViewer(this, ID_CARD_LINK_VIEWER);
+  link_viewer_4   = new CardViewer(this, ID_CARD_LINK_VIEWER);
+  link_relation_1 = new wxStaticText(this, ID_CARD_LINK_RELATION_1, wxEmptyString);
+  link_relation_2 = new wxStaticText(this, ID_CARD_LINK_RELATION_2, wxEmptyString);
+  link_relation_3 = new wxStaticText(this, ID_CARD_LINK_RELATION_3, wxEmptyString);
+  link_relation_4 = new wxStaticText(this, ID_CARD_LINK_RELATION_4, wxEmptyString);
+  link_unlink_1   = new wxButton(this, ID_CARD_LINK_UNLINK_1, _BUTTON_("unlink"));
+  link_unlink_2   = new wxButton(this, ID_CARD_LINK_UNLINK_2, _BUTTON_("unlink"));
+  link_unlink_3   = new wxButton(this, ID_CARD_LINK_UNLINK_3, _BUTTON_("unlink"));
+  link_unlink_4   = new wxButton(this, ID_CARD_LINK_UNLINK_4, _BUTTON_("unlink"));
   splitter        = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL);
   card_list       = new FilteredImageCardList(splitter, ID_CARD_LIST);
   nodes_panel     = new wxPanel(splitter, wxID_ANY);
@@ -311,7 +311,7 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
       break;
     }
     case ID_CARD_REMOVE:     ev.Enable(card_list->canDelete());      break;
-    case ID_CARD_LINK:       ev.Enable(card_list->canLink());    break;
+    case ID_CARD_LINK:       ev.Enable(card_list->canLink());        break;
     case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE: case ID_FORMAT_SYMBOL: case ID_FORMAT_REMINDER: {
       if (focused_control(this) == ID_EDITOR) {
         ev.Enable(editor->canFormat(ev.GetId()));
@@ -374,12 +374,12 @@ void CardsPanel::onCommand(int id) {
       card_list->doLink();
       setCard(card_list->getCard());
       break;
-    case ID_LINK_UNLINK_1: case ID_LINK_UNLINK_2: case ID_LINK_UNLINK_3: case ID_LINK_UNLINK_4: {
+    case ID_CARD_LINK_UNLINK_1: case ID_CARD_LINK_UNLINK_2: case ID_CARD_LINK_UNLINK_3: case ID_CARD_LINK_UNLINK_4: {
       card_list->doUnlink((
-          id == ID_LINK_UNLINK_1 ? link_viewer_1
-        : id == ID_LINK_UNLINK_2 ? link_viewer_2
-        : id == ID_LINK_UNLINK_3 ? link_viewer_3
-        :                          link_viewer_4
+          id == ID_CARD_LINK_UNLINK_1 ? link_viewer_1
+        : id == ID_CARD_LINK_UNLINK_2 ? link_viewer_2
+        : id == ID_CARD_LINK_UNLINK_3 ? link_viewer_3
+        :                               link_viewer_4
       )->getCard());
       setCard(card_list->getCard());
       break;
@@ -564,11 +564,12 @@ void CardsPanel::selectFirstCard() {
   card_list->selectFirst();
 }
 
-void CardsPanel::setCard(const CardP& card, bool set_in_card_list) {
-  if (set_in_card_list) {
+void CardsPanel::setCard(const CardP& card, bool set_card_list) {
+  if (set_card_list) {
     card_list->setCard(card);
   }
   editor->setCard(card);
+
   unordered_map<String, String> links {
     { card->linked_card_1, card->linked_relation_1 },
     { card->linked_card_2, card->linked_relation_2 },
@@ -583,7 +584,7 @@ void CardsPanel::setCard(const CardP& card, bool set_in_card_list) {
   }
   int count = linked_cards.size();
   if (count >= 1) {
-    link_viewer_1->SetId(count == 1 ? ID_LINK_UNIQUE_VIEWER : ID_LINK_VIEWER);
+    link_viewer_1->SetId(count == 1 ? ID_CARD_LINK_UNIQUE_VIEWER : ID_CARD_LINK_VIEWER);
     link_viewer_1->setCard(linked_cards[0]);
     link_relation_1->SetLabel(links.at(linked_cards[0]->uid));
     link_sizer_1->Show(true);

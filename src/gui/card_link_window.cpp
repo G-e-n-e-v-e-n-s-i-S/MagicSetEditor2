@@ -16,13 +16,13 @@
 
 // ----------------------------------------------------------------------------- : ExportCardSelectionChoice
 
-CardLinkWindow::CardLinkWindow(Window* parent, const SetP& set, const CardP& selectedCard, bool sizer)
+CardLinkWindow::CardLinkWindow(Window* parent, const SetP& set, const CardP& selected_card, bool sizer)
   : wxDialog(parent, wxID_ANY, _TITLE_("link cards"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
-  , set(set), selectedCard(selectedCard)
+  , set(set), selected_card(selected_card)
 {
   // init controls
-  selectedRelation = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
-  linkedRelation = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  selected_relation = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  linked_relation = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
   relation_type = new wxChoice(this, ID_CARD_LINK_TYPE, wxDefaultPosition, wxDefaultSize, 0, nullptr);
   relation_type->Clear();
   FOR_EACH(link, set->game->card_links) {
@@ -41,9 +41,9 @@ CardLinkWindow::CardLinkWindow(Window* parent, const SetP& set, const CardP& sel
       s->Add(new wxStaticText(this, -1, _LABEL_("linked cards relation")), 0, wxALL, 8);
       s->Add(relation_type, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
       s->Add(new wxStaticText(this, -1, _("  ") + _LABEL_("selected card")), 0, wxALL, 4);
-      s->Add(selectedRelation, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
+      s->Add(selected_relation, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
       s->Add(new wxStaticText(this, -1, _("  ") + _LABEL_("linked cards")), 0, wxALL, 4);
-      s->Add(linkedRelation, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
+      s->Add(linked_relation, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
       s->Add(new wxStaticText(this, wxID_ANY, _LABEL_("select linked cards")), 0, wxALL & ~wxBOTTOM, 8);
       s->Add(list, 1, wxEXPAND | wxALL, 8);
       wxSizer* s2 = new wxBoxSizer(wxHORIZONTAL);
@@ -70,18 +70,18 @@ void CardLinkWindow::setSelection(const vector<CardP>& cards) {
 void CardLinkWindow::setRelationType() {
   int sel = relation_type->GetSelection();
   if (sel == relation_type->GetCount() - 1) { // Custom type
-    selectedRelation->ChangeValue(_("Generator, Front Face, Meld Component, etc..."));
-    selectedRelation->Enable();
-    linkedRelation->ChangeValue(_("Token, Back Face, Meld Result, etc..."));
-    linkedRelation->Enable();
+    selected_relation->ChangeValue(_("Generator, Front Face, Meld Component, etc..."));
+    selected_relation->Enable();
+    linked_relation->ChangeValue(_("Token, Back Face, Meld Result, etc..."));
+    linked_relation->Enable();
   }
   else {
     String relation = relation_type->GetString(sel);
-    int delimiter_pos = relation.find(" // ");
-    selectedRelation->ChangeValue(relation.substr(0, delimiter_pos));
-    selectedRelation->Enable(false);
-    linkedRelation->ChangeValue(delimiter_pos + 4 < relation.Length() ? relation.substr(delimiter_pos + 4) : _("Undefined"));
-    linkedRelation->Enable(false);
+    int delimiter_pos = relation.find("//");
+    selected_relation->ChangeValue(relation.substr(0, delimiter_pos).Trim());
+    selected_relation->Enable(false);
+    linked_relation->ChangeValue(delimiter_pos + 2 < relation.Length() ? relation.substr(delimiter_pos + 2).Trim() : _("Undefined"));
+    linked_relation->Enable(false);
   }
 }
 
@@ -95,11 +95,11 @@ void CardLinkWindow::onRelationTypeChange(wxCommandEvent&) {
 
 void CardLinkWindow::onOk(wxCommandEvent&) {
   // Perform the linking
-  // The selectedCard is the one selected on the main cards tab
-  // The linkedCards are the ones selected in this dialogue window
-  vector<CardP> linkedCards;
-  getSelection(linkedCards);
-  set->actions.addAction(make_unique<LinkCardsAction>(*set, selectedCard, linkedCards, selectedRelation->GetValue(), linkedRelation->GetValue()));
+  // The selected_card is the one selected on the main cards tab
+  // The linked_cards are the ones selected in this dialogue window
+  vector<CardP> linked_cards;
+  getSelection(linked_cards);
+  set->actions.addAction(make_unique<LinkCardsAction>(*set, selected_card, linked_cards, selected_relation->GetValue(), linked_relation->GetValue()));
   // Done
   EndModal(wxID_OK);
 }

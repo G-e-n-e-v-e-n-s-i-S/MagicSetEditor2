@@ -75,10 +75,10 @@ public:
   void perform(bool to_undo) override;
   
   //private:
-  CardP         selectedCard;     ///< The card currently selected in the cards tab
-  vector<CardP> linkedCards;      ///< The cards that will be linked to the selected card
-  String        selectedRelation; ///< The nature of the relation of the selected card
-  String        linkedRelation;   ///< The nature of the relation of the linked cards
+  CardP         selected_card;     ///< The card currently selected in the cards tab
+  vector<CardP> linked_cards;      ///< The cards that will be linked to the selected card
+  String        selected_relation; ///< The nature of the relation of the selected card
+  String        linked_relation;   ///< The nature of the relation of the linked cards
 };
 /// Remove a link between two or more cards
 class UnlinkCardsAction : public CardListAction {
