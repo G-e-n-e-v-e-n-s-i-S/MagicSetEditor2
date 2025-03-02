@@ -77,7 +77,7 @@ void Card::link(const vector<CardP>& linked_cards, const String& selected_relati
   }
   if (free_link_count < linked_cards.size())
   {
-    throw Error(_ERROR_("Card does not have enough free links available. Can only link up to 4 cards."));
+    throw Error(_ERROR_("not enough free links"));
   }
 
   unlink(linked_cards);
@@ -135,7 +135,7 @@ void Card::link(const vector<CardP>& linked_cards, const String& selected_relati
   if (missed_cards.size() > 0)
   {
     std::stringstream ss;
-    ss << "The following cards could not be linked, as they already have 4 links: ";
+    ss << _ERROR_("could not link");
     for (size_t pos = 0; pos < missed_cards.size(); ++pos) {
       ss << missed_cards[pos]->identification();
       if (pos < missed_cards.size() - 1) ss << ", ";

@@ -28,7 +28,7 @@ CardLinkWindow::CardLinkWindow(Window* parent, const SetP& set, const CardP& sel
   FOR_EACH(link, set->game->card_links) {
     relation_type->Append(link);
   }
-  relation_type->Append(_("Custom..."));
+  relation_type->Append(_LABEL_("custom link"));
   relation_type->SetSelection(0);
   setRelationType();
   list = new SelectCardList(this, wxID_ANY);
@@ -70,9 +70,9 @@ void CardLinkWindow::setSelection(const vector<CardP>& cards) {
 void CardLinkWindow::setRelationType() {
   int sel = relation_type->GetSelection();
   if (sel == relation_type->GetCount() - 1) { // Custom type
-    selected_relation->ChangeValue(_("Generator, Front Face, Meld Component, etc..."));
+    selected_relation->ChangeValue(_LABEL_("custom link selected"));
     selected_relation->Enable();
-    linked_relation->ChangeValue(_("Token, Back Face, Meld Result, etc..."));
+    linked_relation->ChangeValue(_LABEL_("custom link linked"));
     linked_relation->Enable();
   }
   else {
@@ -80,7 +80,7 @@ void CardLinkWindow::setRelationType() {
     int delimiter_pos = relation.find("//");
     selected_relation->ChangeValue(relation.substr(0, delimiter_pos).Trim());
     selected_relation->Enable(false);
-    linked_relation->ChangeValue(delimiter_pos + 2 < relation.Length() ? relation.substr(delimiter_pos + 2).Trim() : _("Undefined"));
+    linked_relation->ChangeValue(delimiter_pos + 2 < relation.Length() ? relation.substr(delimiter_pos + 2).Trim() : _LABEL_("custom link undefined"));
     linked_relation->Enable(false);
   }
 }

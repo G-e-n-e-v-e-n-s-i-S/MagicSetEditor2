@@ -476,6 +476,10 @@ label:
 	total cards:						Total
 
 	# Link cards dialog
+	custom link:						Custom...
+	custom link selected:				Generator, Front Face, Meld Component, etc...
+	custom link linked:					Token, Back Face, Meld Result, etc...
+	custom link undefined:				Undefined
 	linked cards relation:				Choose the type of relation between the selected card and the linked cards:
 	selected card:						Selected Card:
 	linked cards:						Linked Cards:
@@ -868,6 +872,10 @@ error:
 	# Update checking
 	checking updates failed:			Checking updates failed.
 	no updates:							There are no available updates.
+
+	# Card linking
+	not enough free links:				Card does not have enough free links available. Can only link up to 4 cards.
+	could not link:						The following cards could not be linked, as they already have 4 links:
 
 	# Stats panel
 	dimension not found:				There is no statistics dimension '%s'
