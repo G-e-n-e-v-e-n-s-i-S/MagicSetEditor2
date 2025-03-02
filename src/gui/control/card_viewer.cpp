@@ -111,7 +111,8 @@ void CardViewer::onPaint(wxPaintEvent&) {
   }
 }
 
-void CardViewer::onClick(wxMouseEvent&) {
+void CardViewer::onClick(wxMouseEvent& ev) {
+  ev.Skip(); // for focus
   if (GetId() == ID_CARD_LINK_VIEWER || GetId() == ID_CARD_LINK_UNIQUE_VIEWER) {
     CardsPanel* panel = dynamic_cast<CardsPanel*> (GetParent());
     if (panel) {
@@ -176,5 +177,5 @@ Rotation CardViewer::getRotation() const {
 
 BEGIN_EVENT_TABLE(CardViewer, wxControl)
   EVT_PAINT(CardViewer::onPaint)
-  EVT_LEFT_UP(CardViewer::onClick)
+  EVT_LEFT_DOWN(CardViewer::onClick)
 END_EVENT_TABLE  ()
