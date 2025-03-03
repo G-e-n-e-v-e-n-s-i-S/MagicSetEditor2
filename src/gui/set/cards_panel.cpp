@@ -34,6 +34,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
 {
   // init controls
   editor          = new CardEditor(this, ID_EDITOR);
+  link_editor     = new CardEditor(this, ID_CARD_LINK_EDITOR);
   link_viewer_1   = new CardViewer(this, ID_CARD_LINK_VIEWER);
   link_viewer_2   = new CardViewer(this, ID_CARD_LINK_VIEWER);
   link_viewer_3   = new CardViewer(this, ID_CARD_LINK_VIEWER);
@@ -42,6 +43,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
   link_relation_2 = new wxStaticText(this, ID_CARD_LINK_RELATION_2, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
   link_relation_3 = new wxStaticText(this, ID_CARD_LINK_RELATION_3, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
   link_relation_4 = new wxStaticText(this, ID_CARD_LINK_RELATION_4, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+  link_select     = new wxButton(this, ID_CARD_LINK_SELECT, _BUTTON_("link select"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
   link_unlink_1   = new wxButton(this, ID_CARD_LINK_UNLINK_1, _BUTTON_("unlink"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
   link_unlink_2   = new wxButton(this, ID_CARD_LINK_UNLINK_2, _BUTTON_("unlink"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
   link_unlink_3   = new wxButton(this, ID_CARD_LINK_UNLINK_3, _BUTTON_("unlink"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
@@ -52,7 +54,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
   notes           = new TextCtrl(nodes_panel, ID_NOTES, true);
   collapse_notes  = new HoverButton(nodes_panel, ID_COLLAPSE_NOTES, _("btn_collapse"), Color(), false);
   collapse_notes->SetExtraStyle(wxWS_EX_PROCESS_UI_UPDATES);
-  filter    = nullptr;
+  filter          = nullptr;
   editor->next_in_tab_order = card_list;
   // init sizer for notes panel
   wxSizer* sn = new wxBoxSizer(wxVERTICAL);
@@ -75,13 +77,13 @@ CardsPanel::CardsPanel(Window* parent, int id)
         card_and_link->Add(editor);
         wxGridBagSizer* link_boxes = new wxGridBagSizer(); // Sizer for the linked cards
         card_and_link->Add(link_boxes, 0, wxLEFT, 2);
-          link_box_1 = new wxStaticBoxSizer(wxVERTICAL, this); // Box around the first linked card, it's relation, and a button to unlink
+          link_box_1 = new wxStaticBoxSizer(wxVERTICAL, this); // Box around the first linked card, it's relation, and buttons to select and unlink
           link_boxes->Add(link_box_1, wxGBPosition(0, 0), wxGBSpan(1, 1));
-          link_box_2 = new wxStaticBoxSizer(wxVERTICAL, this);
+          link_box_2 = new wxStaticBoxSizer(wxVERTICAL, this); // Box around the second linked card, it's relation, and a button to unlink
           link_boxes->Add(link_box_2, wxGBPosition(1, 0), wxGBSpan(1, 1));
-          link_box_3 = new wxStaticBoxSizer(wxVERTICAL, this);
+          link_box_3 = new wxStaticBoxSizer(wxVERTICAL, this); // Box around the third linked card, it's relation, and a button to unlink
           link_boxes->Add(link_box_3, wxGBPosition(0, 1), wxGBSpan(1, 1));
-          link_box_4 = new wxStaticBoxSizer(wxVERTICAL, this);
+          link_box_4 = new wxStaticBoxSizer(wxVERTICAL, this); // Box around the fourth linked card, it's relation, and a button to unlink
           link_boxes->Add(link_box_4, wxGBPosition(1, 1), wxGBSpan(1, 1));
             wxGridBagSizer* link_grid_1 = new wxGridBagSizer(); // Sizer for the first linked card, with it's relation, and a button to unlink
             link_box_1->Add(link_grid_1);
@@ -91,9 +93,13 @@ CardsPanel::CardsPanel(Window* parent, int id)
             link_box_3->Add(link_grid_3);
             wxGridBagSizer* link_grid_4 = new wxGridBagSizer();
             link_box_4->Add(link_grid_4);
-              link_grid_1->Add(link_relation_1, wxGBPosition(0, 0), wxGBSpan(1, 1), wxALIGN_CENTER_VERTICAL | wxLEFT, 4);
-              link_grid_1->Add(link_unlink_1,   wxGBPosition(0, 1), wxGBSpan(1, 1), wxALIGN_RIGHT);
-              link_grid_1->Add(link_viewer_1,   wxGBPosition(1, 0), wxGBSpan(1, 2));
+              wxSizer* link_grid_1_buttons = new wxBoxSizer(wxHORIZONTAL);
+              link_grid_1->Add(link_relation_1,     wxGBPosition(0, 0), wxGBSpan(1, 1), wxALIGN_CENTER_VERTICAL | wxLEFT, 4);
+              link_grid_1->Add(link_viewer_1,       wxGBPosition(1, 0), wxGBSpan(1, 2));
+              link_grid_1->Add(link_editor,         wxGBPosition(2, 0), wxGBSpan(1, 2));
+              link_grid_1->Add(link_grid_1_buttons, wxGBPosition(0, 1), wxGBSpan(1, 1), wxALIGN_RIGHT);
+                link_grid_1_buttons->Add(link_select);
+                link_grid_1_buttons->Add(link_unlink_1);
               link_grid_2->Add(link_relation_2, wxGBPosition(0, 0), wxGBSpan(1, 1), wxALIGN_CENTER_VERTICAL | wxLEFT, 4);
               link_grid_2->Add(link_unlink_2,   wxGBPosition(0, 1), wxGBSpan(1, 1), wxALIGN_RIGHT);
               link_grid_2->Add(link_viewer_2,   wxGBPosition(1, 0), wxGBSpan(1, 2));
@@ -190,6 +196,7 @@ CardsPanel::~CardsPanel() {
 
 void CardsPanel::onChangeSet() {
   editor->setSet(set);
+  link_editor->setSet(set);
   link_viewer_1->setSet(set);
   link_viewer_2->setSet(set);
   link_viewer_3->setSet(set);
@@ -379,6 +386,10 @@ void CardsPanel::onCommand(int id) {
         :                               link_viewer_4
       )->getCard());
       setCard(card_list->getCard());
+      break;
+    }
+    case ID_CARD_LINK_SELECT: {
+      setCard(link_viewer_1->getCard(), true);
       break;
     }
     case ID_CARD_ROTATE:
@@ -581,53 +592,65 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   }
   int count = linked_cards.size();
   if (count >= 1) {
-    link_viewer_1->SetId(count == 1 ? ID_CARD_LINK_UNIQUE_VIEWER : ID_CARD_LINK_VIEWER);
-    link_viewer_1->setCard(linked_cards[0]);
-    link_viewer_1->InvalidateBestSize();
-    link_relation_1->SetLabel(links.at(linked_cards[0]->uid));
-    link_relation_1->SetMaxSize(wxSize(link_viewer_1->GetSize().x - link_unlink_1->GetSize().x, -1));
-    link_relation_1->InvalidateBestSize();
     link_box_1->Show(true);
+    link_editor->setCard(linked_cards[0]);
+    link_viewer_1->setCard(linked_cards[0]);
+    link_relation_1->SetLabel(links.at(linked_cards[0]->uid));
+    if (count == 1) {
+      link_editor->Show(true);
+      link_viewer_1->Show(false);
+      link_select->Show(true);
+      link_editor->InvalidateBestSize();
+      link_relation_1->SetMaxSize(wxSize(link_editor->GetSize().x - link_unlink_1->GetSize().x, -1));
+    } else {
+      link_editor->Show(false);
+      link_viewer_1->Show(true);
+      link_select->Show(false);
+      link_viewer_1->InvalidateBestSize();
+      link_relation_1->SetMaxSize(wxSize(link_viewer_1->GetSize().x - link_unlink_1->GetSize().x, -1));
+    }
+    link_relation_1->InvalidateBestSize();
   } else {
-    link_viewer_1->setCard(card);
-    link_relation_1->SetLabel(wxEmptyString);
     link_box_1->Show(false);
+    link_editor->setCard(card);
+    link_viewer_1->setCard(card);
+    //link_relation_1->SetLabel(wxEmptyString);
   }
   if (count >= 2) {
+    link_box_2->Show(true);
     link_viewer_2->setCard(linked_cards[1]);
     link_relation_2->SetLabel(links.at(linked_cards[1]->uid));
     link_relation_2->SetMaxSize(wxSize(link_viewer_2->GetSize().x - link_unlink_2->GetSize().x, -1));
     link_relation_2->InvalidateBestSize();
-    link_box_2->Show(true);
   }
   else {
-    link_viewer_2->setCard(card);
-    link_relation_2->SetLabel(wxEmptyString);
     link_box_2->Show(false);
+    link_viewer_2->setCard(card);
+    //link_relation_2->SetLabel(wxEmptyString);
   }
   if (count >= 3) {
+    link_box_3->Show(true);
     link_viewer_3->setCard(linked_cards[2]);
     link_relation_3->SetLabel(links.at(linked_cards[2]->uid));
     link_relation_3->SetMaxSize(wxSize(link_viewer_3->GetSize().x - link_unlink_3->GetSize().x, -1));
     link_relation_3->InvalidateBestSize();
-    link_box_3->Show(true);
   }
   else {
-    link_viewer_3->setCard(card);
-    link_relation_3->SetLabel(wxEmptyString);
     link_box_3->Show(false);
+    link_viewer_3->setCard(card);
+    //link_relation_3->SetLabel(wxEmptyString);
   }
   if (count >= 4) {
+    link_box_4->Show(true);
     link_viewer_4->setCard(linked_cards[3]);
     link_relation_4->SetLabel(links.at(linked_cards[3]->uid));
     link_relation_4->SetMaxSize(wxSize(link_viewer_4->GetSize().x - link_unlink_4->GetSize().x, -1));
     link_relation_4->InvalidateBestSize();
-    link_box_4->Show(true);
   }
   else {
-    link_viewer_4->setCard(card);
-    link_relation_4->SetLabel(wxEmptyString);
     link_box_4->Show(false);
+    link_viewer_4->setCard(card);
+    //link_relation_4->SetLabel(wxEmptyString);
   }
   updateNotesPosition();
   Layout();

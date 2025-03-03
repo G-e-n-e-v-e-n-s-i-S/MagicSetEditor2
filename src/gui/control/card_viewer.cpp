@@ -37,7 +37,7 @@ wxSize CardViewer::DoGetBestSize() const {
     double dpi_factor = stylesheet->card_dpi <= 150 ? 1.0 : 150.0 / stylesheet->card_dpi;
     double width = stylesheet->card_width * dpi_factor * ss.card_zoom();
     double height = stylesheet->card_height * dpi_factor * ss.card_zoom();
-    double link_factor = GetId() == ID_CARD_LINK_VIEWER ? (height * 0.5 - 41.0) / height : GetId() == ID_CARD_LINK_UNIQUE_VIEWER ? (height * 0.95 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
+    double link_factor = GetId() == ID_CARD_LINK_VIEWER ? (height * 0.5 - 41.0) / height : GetId() == ID_CARD_LINK_EDITOR ? (height * 0.97 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
     wxSize size(int(link_factor * width), int(link_factor * height));
     if (is_sideways(deg_to_rad(ss.card_angle()))) swap(size.x, size.y);
     return size + ws - cs;
@@ -113,7 +113,7 @@ void CardViewer::onPaint(wxPaintEvent&) {
 
 void CardViewer::onClick(wxMouseEvent& ev) {
   ev.Skip(); // allow DataEditor::onLeftDown to process this event as well
-  if (GetId() == ID_CARD_LINK_VIEWER || GetId() == ID_CARD_LINK_UNIQUE_VIEWER) {
+  if (GetId() == ID_CARD_LINK_VIEWER) {
     CardsPanel* panel = dynamic_cast<CardsPanel*> (GetParent());
     if (panel) {
       panel->setCard(getCard(), true);
@@ -169,7 +169,7 @@ Rotation CardViewer::getRotation() const {
   int dy = CanScroll(wxVERTICAL) ? GetScrollPos(wxVERTICAL) : 0;
   double dpi_factor = stylesheet->card_dpi <= 150 ? 1.0 : 150.0 / stylesheet->card_dpi;
   double height = stylesheet->card_height * dpi_factor * ss.card_zoom();
-  double link_factor = GetId() == ID_CARD_LINK_VIEWER ? (height * 0.5 - 41.0) / height : GetId() == ID_CARD_LINK_UNIQUE_VIEWER ? (height * 0.95 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
+  double link_factor = GetId() == ID_CARD_LINK_VIEWER ? (height * 0.5 - 41.0) / height : GetId() == ID_CARD_LINK_EDITOR ? (height * 0.97 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
   return Rotation(deg_to_rad(ss.card_angle()), stylesheet->getCardRect().move(-dx,-dy,0,0), link_factor * dpi_factor * ss.card_zoom(), 1.0, ROTATION_ATTACH_TOP_LEFT);
 }
 

@@ -614,6 +614,7 @@ button:
 
 	# Card panel
 	unlink:								Unlink
+	link select:						Select
 
 	# Style panel
 	use for all cards:					Use for &all cards
