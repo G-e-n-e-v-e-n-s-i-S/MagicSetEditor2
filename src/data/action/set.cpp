@@ -14,7 +14,6 @@
 #include <data/stylesheet.hpp>
 #include <util/error.hpp>
 #include <util/uid.hpp>
-#include<unordered_set>
 
 // ----------------------------------------------------------------------------- : Add card
 
@@ -39,11 +38,13 @@ String AddCardAction::getName(bool to_undo) const {
 
 void AddCardAction::perform(bool to_undo) {
   // If we are adding cards, resolve any id conflicts
+  // We always assume id conflicts occure because a card was copied,
+  // and never because two different cards randomly got the same uid
   if (action.adding && !to_undo) {
     // Tally existing unique ids
-    unordered_set<String> existing_uids;
+    unordered_map<String, CardP> existing_uids;
     FOR_EACH(card, set.cards) {
-      existing_uids.insert(card->uid);
+      existing_uids.insert({ card->uid, card });
     }
     // Assign new unique ids
     unordered_map<String, String> modified_uids;
@@ -54,9 +55,34 @@ void AddCardAction::perform(bool to_undo) {
         String new_uid = generate_uid();
         added_card->uid = new_uid;
         modified_uids.insert({ old_uid, new_uid });
+        // Copy links on existing cards
+        if (added_card->linked_card_1 != wxEmptyString) {
+          CardP linked_card = existing_uids.at(added_card->linked_card_1);
+          if (linked_card) {
+            linked_card->copyLink(existing_uids.at(old_uid), added_card);
+          }
+        }
+        if (added_card->linked_card_2 != wxEmptyString) {
+          CardP linked_card = existing_uids.at(added_card->linked_card_2);
+          if (linked_card) {
+            linked_card->copyLink(existing_uids.at(old_uid), added_card);
+          }
+        }
+        if (added_card->linked_card_3 != wxEmptyString) {
+          CardP linked_card = existing_uids.at(added_card->linked_card_3);
+          if (linked_card) {
+            linked_card->copyLink(existing_uids.at(old_uid), added_card);
+          }
+        }
+        if (added_card->linked_card_4 != wxEmptyString) {
+          CardP linked_card = existing_uids.at(added_card->linked_card_4);
+          if (linked_card) {
+            linked_card->copyLink(existing_uids.at(old_uid), added_card);
+          }
+        }
       }
     }
-    // Update card links
+    // Update links on other added cards
     for (size_t pos = 0; pos < action.steps.size(); ++pos) {
       CardP added_card = action.steps[pos].item;
       if (modified_uids.find(added_card->linked_card_1) != modified_uids.end()) added_card->linked_card_1 = modified_uids.at(added_card->linked_card_1);

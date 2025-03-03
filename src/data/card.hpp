@@ -82,6 +82,8 @@ public:
   void unlink(const vector<CardP>& linked_cards);
   pair<String, String> unlink(CardP& unlinked_card); // Returns the relations that were deleted, so we can undo
 
+  void copyLink(CardP& copy_from_card, CardP& copy_to_card);
+
   /// Find a value in the data by name and type
   template <typename T> T& value(const String& name) {
     for(IndexMap<FieldP, ValueP>::iterator it = data.begin() ; it != data.end() ; ++it) {

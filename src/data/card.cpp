@@ -77,7 +77,8 @@ void Card::link(const vector<CardP>& linked_cards, const String& selected_relati
   }
   if (free_link_count < linked_cards.size())
   {
-    throw Error(_ERROR_("not enough free links"));
+    queue_message(MESSAGE_WARNING, _ERROR_("not enough free links"));
+    return;
   }
 
   unlink(linked_cards);
@@ -141,7 +142,7 @@ void Card::link(const vector<CardP>& linked_cards, const String& selected_relati
       if (pos < missed_cards.size() - 1) ss << ", ";
     };
     String wxString(ss.str().c_str(), wxConvUTF8);
-    throw Error(tr(LOCALE_CAT_ERROR, wxString));
+    queue_message(MESSAGE_WARNING, wxString);
   }
 }
 
@@ -213,6 +214,46 @@ pair<String, String> Card::unlink(CardP& unlinked_card)
     unlinked_card->linked_relation_4 = wxEmptyString;
   }
   return make_pair(selected_relation, unlinked_relation);
+}
+
+void Card::copyLink(CardP& copy_from_card, CardP& copy_to_card) {
+  String relation_copy = wxEmptyString;
+  if (linked_card_1 == copy_from_card->uid) {
+    relation_copy = linked_relation_1;
+  }
+  else if (linked_card_2 == copy_from_card->uid) {
+    relation_copy = linked_relation_2;
+  }
+  else if (linked_card_3 == copy_from_card->uid) {
+    relation_copy = linked_relation_3;
+  }
+  else if (linked_card_4 == copy_from_card->uid) {
+    relation_copy = linked_relation_4;
+  }
+  else {
+    return;
+  }
+  String uid_copy = copy_to_card->uid;
+  if (linked_card_1 == wxEmptyString) {
+    linked_card_1 = uid_copy;
+    linked_relation_1 = relation_copy;
+  }
+  else if (linked_card_2 == wxEmptyString) {
+    linked_card_2 = uid_copy;
+    linked_relation_2 = relation_copy;
+  }
+  else if (linked_card_3 == wxEmptyString) {
+    linked_card_3 = uid_copy;
+    linked_relation_3 = relation_copy;
+  }
+  else if (linked_card_4 == wxEmptyString) {
+    linked_card_4 = uid_copy;
+    linked_relation_4 = relation_copy;
+  }
+  else
+  {
+    queue_message(MESSAGE_WARNING, _ERROR_("not enough free links for copy"));
+  }
 }
 
 IndexMap<FieldP, ValueP>& Card::extraDataFor(const StyleSheet& stylesheet) {
