@@ -112,7 +112,7 @@ void CardViewer::onPaint(wxPaintEvent&) {
 }
 
 void CardViewer::onClick(wxMouseEvent& ev) {
-  ev.Skip(); // for focus
+  ev.Skip(); // allow DataEditor::onLeftDown to process this event as well
   if (GetId() == ID_CARD_LINK_VIEWER || GetId() == ID_CARD_LINK_UNIQUE_VIEWER) {
     CardsPanel* panel = dynamic_cast<CardsPanel*> (GetParent());
     if (panel) {

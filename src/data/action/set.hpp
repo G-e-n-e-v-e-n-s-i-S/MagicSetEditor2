@@ -80,7 +80,7 @@ public:
   String        selected_relation; ///< The nature of the relation of the selected card
   String        linked_relation;   ///< The nature of the relation of the linked cards
 };
-/// Remove a link between two or more cards
+/// Remove a link between two cards
 class UnlinkCardsAction : public CardListAction {
 public:
     UnlinkCardsAction(Set& set, const CardP& selected_card, CardP& unlinked_card);

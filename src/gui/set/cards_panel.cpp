@@ -38,10 +38,10 @@ CardsPanel::CardsPanel(Window* parent, int id)
   link_viewer_2   = new CardViewer(this, ID_CARD_LINK_VIEWER);
   link_viewer_3   = new CardViewer(this, ID_CARD_LINK_VIEWER);
   link_viewer_4   = new CardViewer(this, ID_CARD_LINK_VIEWER);
-  link_relation_1 = new wxStaticText(this, ID_CARD_LINK_RELATION_1, wxEmptyString);
-  link_relation_2 = new wxStaticText(this, ID_CARD_LINK_RELATION_2, wxEmptyString);
-  link_relation_3 = new wxStaticText(this, ID_CARD_LINK_RELATION_3, wxEmptyString);
-  link_relation_4 = new wxStaticText(this, ID_CARD_LINK_RELATION_4, wxEmptyString);
+  link_relation_1 = new wxStaticText(this, ID_CARD_LINK_RELATION_1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+  link_relation_2 = new wxStaticText(this, ID_CARD_LINK_RELATION_2, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+  link_relation_3 = new wxStaticText(this, ID_CARD_LINK_RELATION_3, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+  link_relation_4 = new wxStaticText(this, ID_CARD_LINK_RELATION_4, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
   link_unlink_1   = new wxButton(this, ID_CARD_LINK_UNLINK_1, _BUTTON_("unlink"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
   link_unlink_2   = new wxButton(this, ID_CARD_LINK_UNLINK_2, _BUTTON_("unlink"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
   link_unlink_3   = new wxButton(this, ID_CARD_LINK_UNLINK_3, _BUTTON_("unlink"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
@@ -583,7 +583,10 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   if (count >= 1) {
     link_viewer_1->SetId(count == 1 ? ID_CARD_LINK_UNIQUE_VIEWER : ID_CARD_LINK_VIEWER);
     link_viewer_1->setCard(linked_cards[0]);
+    link_viewer_1->InvalidateBestSize();
     link_relation_1->SetLabel(links.at(linked_cards[0]->uid));
+    link_relation_1->SetMaxSize(wxSize(link_viewer_1->GetSize().x - link_unlink_1->GetSize().x, -1));
+    link_relation_1->InvalidateBestSize();
     link_box_1->Show(true);
   } else {
     link_viewer_1->setCard(card);
@@ -593,6 +596,8 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   if (count >= 2) {
     link_viewer_2->setCard(linked_cards[1]);
     link_relation_2->SetLabel(links.at(linked_cards[1]->uid));
+    link_relation_2->SetMaxSize(wxSize(link_viewer_2->GetSize().x - link_unlink_2->GetSize().x, -1));
+    link_relation_2->InvalidateBestSize();
     link_box_2->Show(true);
   }
   else {
@@ -603,6 +608,8 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   if (count >= 3) {
     link_viewer_3->setCard(linked_cards[2]);
     link_relation_3->SetLabel(links.at(linked_cards[2]->uid));
+    link_relation_3->SetMaxSize(wxSize(link_viewer_3->GetSize().x - link_unlink_3->GetSize().x, -1));
+    link_relation_3->InvalidateBestSize();
     link_box_3->Show(true);
   }
   else {
@@ -613,6 +620,8 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   if (count >= 4) {
     link_viewer_4->setCard(linked_cards[3]);
     link_relation_4->SetLabel(links.at(linked_cards[3]->uid));
+    link_relation_4->SetMaxSize(wxSize(link_viewer_4->GetSize().x - link_unlink_4->GetSize().x, -1));
+    link_relation_4->InvalidateBestSize();
     link_box_4->Show(true);
   }
   else {
