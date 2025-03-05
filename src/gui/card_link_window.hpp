@@ -23,7 +23,7 @@ class SelectCardList;
  */
 class CardLinkWindow : public wxDialog {
 public:
-  CardLinkWindow(Window* parent, const SetP& set, const CardP& selectedCard, bool sizer=true);
+  CardLinkWindow(Window* parent, const SetP& set, const CardP& selected_card, bool sizer=true);
   
   /// Is the given card selected?
   bool isSelected(const CardP& card) const;

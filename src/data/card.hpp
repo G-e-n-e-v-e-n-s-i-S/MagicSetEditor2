@@ -17,10 +17,16 @@
 class Game;
 class Dependency;
 class Keyword;
+DECLARE_POINTER_TYPE(Set);
 DECLARE_POINTER_TYPE(Card);
 DECLARE_POINTER_TYPE(Field);
 DECLARE_POINTER_TYPE(Value);
 DECLARE_POINTER_TYPE(StyleSheet);
+
+#define THIS_LINKED_UIDS(var)               vector<reference_wrapper<String>> var { ref(linked_card_1), ref(linked_card_2), ref(linked_card_3), ref(linked_card_4) }
+#define THIS_LINKED_RELATIONS(var)          vector<reference_wrapper<String>> var { ref(linked_relation_1), ref(linked_relation_2), ref(linked_relation_3), ref(linked_relation_4) }
+#define THIS_LINKED_PAIRS(var)              vector<pair<reference_wrapper<String>, reference_wrapper<String>>> var { make_pair(ref(linked_card_1), ref(linked_relation_1)), make_pair(ref(linked_card_2), ref(linked_relation_2)), make_pair(ref(linked_card_3), ref(linked_relation_3)), make_pair(ref(linked_card_4), ref(linked_relation_4)) }
+#define OTHER_LINKED_PAIRS(var, other_card) vector<pair<reference_wrapper<String>, reference_wrapper<String>>> var { make_pair(ref(other_card->linked_card_1), ref(other_card->linked_relation_1)), make_pair(ref(other_card->linked_card_2), ref(other_card->linked_relation_2)), make_pair(ref(other_card->linked_card_3), ref(other_card->linked_relation_3)), make_pair(ref(other_card->linked_card_4), ref(other_card->linked_relation_4)) }
 
 // ----------------------------------------------------------------------------- : Card
 
@@ -77,12 +83,13 @@ public:
   bool contains(QuickFilterPart const& query) const;
   
   /// Link or unlink other cards to this card
-  void link(const vector<CardP>& linked_cards, const String& selected_relation, const String& linked_relation);
-  void link(CardP& linked_card, const String& selected_relation, const String& linked_relation);
+  void link(const Set& set, const vector<CardP>& linked_cards, const String& selected_relation, const String& linked_relation);
+  void link(const Set& set, CardP& linked_card, const String& selected_relation, const String& linked_relation);
   void unlink(const vector<CardP>& linked_cards);
   pair<String, String> unlink(CardP& unlinked_card); // Returns the relations that were deleted, so we can undo
 
-  void copyLink(CardP& copy_from_card, CardP& copy_to_card);
+  void copyLink(const Set& set, String old_uid, String new_uid);
+  void updateLink(String old_uid, String new_uid);
 
   /// Find a value in the data by name and type
   template <typename T> T& value(const String& name) {

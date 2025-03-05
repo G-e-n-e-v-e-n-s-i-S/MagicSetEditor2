@@ -418,6 +418,7 @@ void CardListBase::onContextMenu(wxContextMenuEvent&) {
     add_menu_item_tr(&m, ID_CARD_ADD, "card_add", "add card");
     add_menu_item_tr(&m, ID_CARD_REMOVE, "card_del", "remove card");
     add_menu_item_tr(&m, ID_CARD_LINK, "card_link", "link card");
+    add_menu_item_tr(&m, ID_CARD_IMAGE_COPY, "card_image_copy", "copy card image");
     PopupMenu(&m);
   }
 }

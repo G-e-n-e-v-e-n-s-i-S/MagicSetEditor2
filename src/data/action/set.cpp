@@ -42,53 +42,40 @@ void AddCardAction::perform(bool to_undo) {
   // and never because two different cards randomly got the same uid
   if (action.adding && !to_undo) {
     // Tally existing unique ids
-    unordered_map<String, CardP> existing_uids;
+    unordered_map<String, CardP> all_existing_uids;
     FOR_EACH(card, set.cards) {
-      existing_uids.insert({ card->uid, card });
+      all_existing_uids.insert({ card->uid, card });
     }
-    // Assign new unique ids
-    unordered_map<String, String> modified_uids;
+    // Tally added unique ids
+    unordered_map<String, CardP> all_added_uids;
     for (size_t pos = 0; pos < action.steps.size(); ++pos) {
-      CardP added_card = action.steps[pos].item;
-      String old_uid = added_card->uid;
-      if (existing_uids.find(old_uid) != existing_uids.end()) {
+      CardP card = action.steps[pos].item;
+      all_added_uids.insert({ card->uid, card });
+    }
+    FOR_EACH(added_pair, all_added_uids) {
+      String old_uid = added_pair.first;
+      CardP added_card = added_pair.second;
+      // Assign new unique ids
+      if (all_existing_uids.find(old_uid) != all_existing_uids.end()) {
         String new_uid = generate_uid();
         added_card->uid = new_uid;
-        modified_uids.insert({ old_uid, new_uid });
-        // Copy links on existing cards
-        if (added_card->linked_card_1 != wxEmptyString) {
-          CardP linked_card = existing_uids.at(added_card->linked_card_1);
-          if (linked_card) {
-            linked_card->copyLink(existing_uids.at(old_uid), added_card);
+        all_added_uids.insert({ new_uid, added_card });
+        // Update links on linked cards
+        OTHER_LINKED_PAIRS(linked_pairs, added_card);
+        FOR_EACH(linked_pair, linked_pairs) {
+          String linked_uid = linked_pair.first;
+          String linked_relation = linked_pair.second;
+          if (linked_uid == wxEmptyString) continue;
+          // If it's an added card, replace the link
+          if (all_added_uids.find(linked_uid) != all_added_uids.end()) {
+            all_added_uids.at(linked_uid)->updateLink(old_uid, new_uid);
           }
-        }
-        if (added_card->linked_card_2 != wxEmptyString) {
-          CardP linked_card = existing_uids.at(added_card->linked_card_2);
-          if (linked_card) {
-            linked_card->copyLink(existing_uids.at(old_uid), added_card);
-          }
-        }
-        if (added_card->linked_card_3 != wxEmptyString) {
-          CardP linked_card = existing_uids.at(added_card->linked_card_3);
-          if (linked_card) {
-            linked_card->copyLink(existing_uids.at(old_uid), added_card);
-          }
-        }
-        if (added_card->linked_card_4 != wxEmptyString) {
-          CardP linked_card = existing_uids.at(added_card->linked_card_4);
-          if (linked_card) {
-            linked_card->copyLink(existing_uids.at(old_uid), added_card);
+          // Otherwise, if it's an existing card, copy the link
+          else if (all_existing_uids.find(linked_uid) != all_existing_uids.end()) {
+            all_existing_uids.at(linked_uid)->copyLink(set, old_uid, new_uid);
           }
         }
       }
-    }
-    // Update links on other added cards
-    for (size_t pos = 0; pos < action.steps.size(); ++pos) {
-      CardP added_card = action.steps[pos].item;
-      if (modified_uids.find(added_card->linked_card_1) != modified_uids.end()) added_card->linked_card_1 = modified_uids.at(added_card->linked_card_1);
-      if (modified_uids.find(added_card->linked_card_2) != modified_uids.end()) added_card->linked_card_2 = modified_uids.at(added_card->linked_card_2);
-      if (modified_uids.find(added_card->linked_card_3) != modified_uids.end()) added_card->linked_card_3 = modified_uids.at(added_card->linked_card_3);
-      if (modified_uids.find(added_card->linked_card_4) != modified_uids.end()) added_card->linked_card_4 = modified_uids.at(added_card->linked_card_4);
     }
   }
 
@@ -130,7 +117,7 @@ String LinkCardsAction::getName(bool to_undo) const {
 
 void LinkCardsAction::perform(bool to_undo) {
   if (!to_undo) {
-    selected_card->link(linked_cards, selected_relation, linked_relation);
+    selected_card->link(set, linked_cards, selected_relation, linked_relation);
   } else {
     selected_card->unlink(linked_cards);
   }
@@ -151,7 +138,7 @@ void UnlinkCardsAction::perform(bool to_undo) {
     unlinked_relation = relations.second;
   }
   else {
-    selected_card->link(unlinked_card, selected_relation, unlinked_relation);
+    selected_card->link(set, unlinked_card, selected_relation, unlinked_relation);
   }
 }
 

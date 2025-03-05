@@ -127,6 +127,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
     // Adding a space never hurts, please keep it just to be safe.
     add_menu_item(menuCard, ID_CARD_REMOVE, "card_del", _MENU_("remove card") + _(" "), _HELP_("remove card"));
     add_menu_item(menuCard, ID_CARD_LINK, "card_link", _MENU_("link card") + _(" "), _HELP_("link card"));
+    add_menu_item(menuCard, ID_CARD_IMAGE_COPY, "card_image_copy", _MENU_("copy card image") + _(" "), _HELP_("copy card image"));
     menuCard->AppendSeparator();
     auto menuRotate = new wxMenu();
       add_menu_item_tr(menuRotate, ID_CARD_ROTATE_0, "card_rotate_0", "rotate_0", wxITEM_CHECK);
@@ -316,6 +317,7 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
     }
     case ID_CARD_REMOVE:     ev.Enable(card_list->canDelete());      break;
     case ID_CARD_LINK:       ev.Enable(card_list->canLink());        break;
+    case ID_CARD_IMAGE_COPY: ev.Enable(card_list->canLink());        break;
     case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE: case ID_FORMAT_SYMBOL: case ID_FORMAT_REMINDER: {
       if (focused_control(this) == ID_EDITOR) {
         ev.Enable(editor->canFormat(ev.GetId()));
@@ -392,6 +394,9 @@ void CardsPanel::onCommand(int id) {
       setCard(link_viewer_1->getCard(), true);
       break;
     }
+    case ID_CARD_IMAGE_COPY:
+      queue_message(MESSAGE_WARNING, "TODO: Copy card image");
+      break;
     case ID_CARD_ROTATE:
     case ID_CARD_ROTATE_0: case ID_CARD_ROTATE_90: case ID_CARD_ROTATE_180: case ID_CARD_ROTATE_270: {
       StyleSheetSettings& ss = settings.stylesheetSettingsFor(set->stylesheetFor(card_list->getCard()));
