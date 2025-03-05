@@ -76,7 +76,7 @@ void Card::link(const Set& set, const vector<CardP>& linked_cards, const String&
   int free_link_count = 0;
   THIS_LINKED_PAIRS(this_linked_pairs);
   FOR_EACH(this_linked_pair, this_linked_pairs) {
-    String this_linked_uid = this_linked_pair.first;
+    String& this_linked_uid = this_linked_pair.first.get();
     if (
       this_linked_uid == wxEmptyString ||                                // Not a reference
       all_existing_uids.find(this_linked_uid) == all_existing_uids.end() // Reference to nonexistent card
@@ -92,8 +92,8 @@ void Card::link(const Set& set, const vector<CardP>& linked_cards, const String&
     bool written = false;
     // Try to write to a free spot
     FOR_EACH(this_linked_pair, this_linked_pairs) {
-      String this_linked_uid = this_linked_pair.first;
-      String this_linked_relation = this_linked_pair.second;
+      String& this_linked_uid = this_linked_pair.first.get();
+      String& this_linked_relation = this_linked_pair.second.get();
       if (this_linked_uid == wxEmptyString) {
         this_linked_uid = linked_card->uid;
         this_linked_relation = linked_relation;
@@ -104,8 +104,8 @@ void Card::link(const Set& set, const vector<CardP>& linked_cards, const String&
     // Try to write to an erasable spot
     if (!written) {
       FOR_EACH(this_linked_pair, this_linked_pairs) {
-        String this_linked_uid = this_linked_pair.first;
-        String this_linked_relation = this_linked_pair.second;
+        String& this_linked_uid = this_linked_pair.first.get();
+        String& this_linked_relation = this_linked_pair.second.get();
         if (all_existing_uids.find(this_linked_uid) == all_existing_uids.end()) {
           this_linked_uid = linked_card->uid;
           this_linked_relation = linked_relation;
@@ -122,8 +122,8 @@ void Card::link(const Set& set, const vector<CardP>& linked_cards, const String&
     written = false;
     // Try to write to a free spot
     FOR_EACH(linked_pair, linked_pairs) {
-      String linked_uid = linked_pair.first;
-      String linked_relation = linked_pair.second;
+      String& linked_uid = linked_pair.first.get();
+      String& linked_relation = linked_pair.second.get();
       if (linked_uid == wxEmptyString) {
         linked_uid = uid;
         linked_relation = selected_relation;
@@ -134,8 +134,8 @@ void Card::link(const Set& set, const vector<CardP>& linked_cards, const String&
     // Try to write to an erasable spot
     if (!written) {
       FOR_EACH(linked_pair, linked_pairs) {
-        String linked_uid = linked_pair.first;
-        String linked_relation = linked_pair.second;
+        String& linked_uid = linked_pair.first.get();
+        String& linked_relation = linked_pair.second.get();
         if (all_existing_uids.find(linked_uid) == all_existing_uids.end()) {
           linked_uid = uid;
           linked_relation = selected_relation;
@@ -180,8 +180,8 @@ pair<String, String> Card::unlink(CardP& unlinked_card)
   String old_selected_relation = wxEmptyString;
   THIS_LINKED_PAIRS(this_linked_pairs);
   FOR_EACH(this_linked_pair, this_linked_pairs) {
-    String this_linked_uid = this_linked_pair.first;
-    String this_linked_relation = this_linked_pair.second;
+    String& this_linked_uid = this_linked_pair.first.get();
+    String& this_linked_relation = this_linked_pair.second.get();
     if (this_linked_uid == unlinked_card->uid) {
       old_selected_relation = this_linked_relation;
       this_linked_uid = wxEmptyString;
@@ -191,8 +191,8 @@ pair<String, String> Card::unlink(CardP& unlinked_card)
   String old_unlinked_relation = wxEmptyString;
   OTHER_LINKED_PAIRS(unlinked_pairs, unlinked_card);
   FOR_EACH(unlinked_pair, unlinked_pairs) {
-    String unlinked_uid = unlinked_pair.first;
-    String unlinked_relation = unlinked_pair.second;
+    String& unlinked_uid = unlinked_pair.first.get();
+    String& unlinked_relation = unlinked_pair.second.get();
     if (unlinked_uid == uid) {
       old_unlinked_relation = unlinked_relation;
       unlinked_uid = wxEmptyString;
@@ -207,8 +207,8 @@ void Card::copyLink(const Set& set, String old_uid, String new_uid) {
   String relation_copy = wxEmptyString;
   THIS_LINKED_PAIRS(this_linked_pairs);
   FOR_EACH(this_linked_pair, this_linked_pairs) {
-    String this_linked_uid = this_linked_pair.first;
-    String this_linked_relation = this_linked_pair.second;
+    String& this_linked_uid = this_linked_pair.first.get();
+    String& this_linked_relation = this_linked_pair.second.get();
     if (this_linked_uid == old_uid) {
       relation_copy = this_linked_relation;
       break;
@@ -222,8 +222,8 @@ void Card::copyLink(const Set& set, String old_uid, String new_uid) {
   // Try to copy to a free spot
   bool written = false;
   FOR_EACH(this_linked_pair, this_linked_pairs) {
-    String this_linked_uid = this_linked_pair.first;
-    String this_linked_relation = this_linked_pair.second;
+    String& this_linked_uid = this_linked_pair.first.get();
+    String& this_linked_relation = this_linked_pair.second.get();
     if (this_linked_uid == wxEmptyString) {
       this_linked_uid = new_uid;
       this_linked_relation = relation_copy;
@@ -238,8 +238,8 @@ void Card::copyLink(const Set& set, String old_uid, String new_uid) {
       all_existing_uids.insert(card->uid);
     }
     FOR_EACH(this_linked_pair, this_linked_pairs) {
-      String this_linked_uid = this_linked_pair.first;
-      String this_linked_relation = this_linked_pair.second;
+      String& this_linked_uid = this_linked_pair.first.get();
+      String& this_linked_relation = this_linked_pair.second.get();
       if (all_existing_uids.find(this_linked_uid) == all_existing_uids.end()) {
         this_linked_uid = new_uid;
         this_linked_relation = relation_copy;
@@ -257,8 +257,7 @@ void Card::copyLink(const Set& set, String old_uid, String new_uid) {
 void Card::updateLink(String old_uid, String new_uid) {
   THIS_LINKED_PAIRS(this_linked_pairs);
   FOR_EACH(this_linked_pair, this_linked_pairs) {
-    String this_linked_uid = this_linked_pair.first;
-    String this_linked_relation = this_linked_pair.second;
+    String& this_linked_uid = this_linked_pair.first.get();
     if (this_linked_uid == old_uid) {
       this_linked_uid = new_uid;
       return;

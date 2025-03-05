@@ -37,9 +37,10 @@ String AddCardAction::getName(bool to_undo) const {
 }
 
 void AddCardAction::perform(bool to_undo) {
-  // If we are adding cards, resolve any id conflicts
-  // We always assume id conflicts occure because a card was copied,
-  // and never because two different cards randomly got the same uid
+  // If we are adding cards, resolve any uid conflicts
+  // (If we are re-adding cards, from a remove undo, there shouldn't be any uid conflicts)
+  // We always assume uid conflicts occur because a card was copy-pasted into the same set,
+  // and never because two different cards randomly got assigned the same uid
   if (action.adding && !to_undo) {
     // Tally existing unique ids
     unordered_map<String, CardP> all_existing_uids;
@@ -63,8 +64,8 @@ void AddCardAction::perform(bool to_undo) {
         // Update links on linked cards
         OTHER_LINKED_PAIRS(linked_pairs, added_card);
         FOR_EACH(linked_pair, linked_pairs) {
-          String linked_uid = linked_pair.first;
-          String linked_relation = linked_pair.second;
+          String& linked_uid = linked_pair.first.get();
+          String& linked_relation = linked_pair.second.get();
           if (linked_uid == wxEmptyString) continue;
           // If it's an added card, replace the link
           if (all_added_uids.find(linked_uid) != all_added_uids.end()) {
