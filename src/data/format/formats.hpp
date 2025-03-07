@@ -101,6 +101,7 @@ void export_image(const SetP& set, const CardP& card, const String& filename);
 /// Generate a bitmap image of a card
 Bitmap export_bitmap(const SetP& set, const CardP& card);
 Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians);
+Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians);
 
 /// Export a set to Magic Workstation format
 void export_mws(Window* parent, const SetP& set);

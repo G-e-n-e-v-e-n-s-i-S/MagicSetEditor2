@@ -13,6 +13,7 @@
 #include <data/card.hpp>
 #include <data/stylesheet.hpp>
 #include <data/settings.hpp>
+#include <gui/util.hpp>
 #include <render/card/viewer.hpp>
 #include <wx/filename.h>
 
@@ -98,6 +99,57 @@ Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, cons
   viewer.draw(dc);
   dc.SelectObject(wxNullBitmap);
   return bitmap;
+}
+
+// put multiple card images into one bitmap
+Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle = 0.0) {
+  if (!set) throw Error(_("no set"));
+  vector<Bitmap> bitmaps;
+  int width = 0;
+  int height = 0;
+  double lowest_dpi = 1200.0;
+  if (scale_to_lowest_dpi) {
+    FOR_EACH(card, cards) {
+      lowest_dpi = min(lowest_dpi, set->stylesheetFor(card).card_dpi);
+    }
+    lowest_dpi = max(lowest_dpi, 150.0);
+  }
+  // Draw card bitmaps
+  FOR_EACH(card, cards) {
+    double scaled_zoom = zoom;
+    if (scale_to_lowest_dpi) {
+      double dpi = max(set->stylesheetFor(card).card_dpi, 150.0);
+      scaled_zoom *= lowest_dpi / dpi;
+    }
+    UnzoomedDataViewer viewer = UnzoomedDataViewer(scaled_zoom, angle);
+    viewer.setSet(set);
+    viewer.setCard(card);
+    RealSize size = viewer.getRotation().getExternalSize();
+    Bitmap bitmap((int)size.width, (int)size.height);
+    if (!bitmap.Ok()) throw InternalError(_("Unable to create bitmap"));
+    wxMemoryDC bufferDC;
+    bufferDC.SelectObject(bitmap);
+    clearDC(bufferDC, *wxWHITE_BRUSH);
+    viewer.draw(bufferDC);
+    bufferDC.SelectObject(wxNullBitmap);
+    width += (int)size.width;
+    height = max(height, (int)size.height);
+    bitmaps.push_back(bitmap);
+  }
+  // Draw global bitmap
+  Bitmap global_bitmap(width + (bitmaps.size()-1) * padding, height);
+  if (!global_bitmap.Ok()) throw InternalError(_("Unable to create bitmap"));
+  wxMemoryDC globalDC;
+  globalDC.SelectObject(global_bitmap);
+  clearDC(globalDC, *wxWHITE_BRUSH);
+  int offset = 0;
+  FOR_EACH(bitmap, bitmaps) {
+    globalDC.SetDeviceOrigin(offset, 0);
+    globalDC.DrawBitmap(bitmap, 0, 0);
+    offset += bitmap.GetWidth() + padding;
+  }
+  globalDC.SelectObject(wxNullBitmap);
+  return global_bitmap;
 }
 
 // ----------------------------------------------------------------------------- : Multiple card export

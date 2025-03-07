@@ -265,6 +265,22 @@ void Card::updateLink(String old_uid, String new_uid) {
   }
 }
 
+vector<pair<CardP, String>> Card::getLinkedCards(const Set& set) {
+  unordered_map<String, String> links{
+    { linked_card_1, linked_relation_1 },
+    { linked_card_2, linked_relation_2 },
+    { linked_card_3, linked_relation_3 },
+    { linked_card_4, linked_relation_4 }
+  };
+  vector<pair<CardP, String>> linked_cards;
+  FOR_EACH(other_card, set.cards) {
+    if (links.find(other_card->uid) != links.end()) {
+      linked_cards.push_back(make_pair(other_card, links.at(other_card->uid)));
+    }
+  }
+  return linked_cards;
+}
+
 IndexMap<FieldP, ValueP>& Card::extraDataFor(const StyleSheet& stylesheet) {
   return extra_data.get(stylesheet.name(), stylesheet.extra_card_fields);
 }

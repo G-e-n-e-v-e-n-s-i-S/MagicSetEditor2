@@ -109,7 +109,7 @@ enum ChildMenuID {
   // CardList
   ID_SELECT_COLUMNS,
   ID_CARD_LINK,
-  ID_CARD_IMAGE_COPY,
+  ID_CARD_AND_LINK_COPY,
 
   // Keyword menu
   ID_KEYWORD_ADD = 6101,

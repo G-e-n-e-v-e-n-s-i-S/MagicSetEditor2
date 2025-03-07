@@ -148,6 +148,9 @@ CardsOnClipboard::CardsOnClipboard(const SetP& set, const vector<CardP>& cards) 
     if (cards.size() == 1) {
       Add(new wxBitmapDataObject(export_bitmap(set, cards[0])));
     }
+    else if (cards.size() < 6) {
+      Add(new wxBitmapDataObject(export_bitmap(set, cards, true, 0, 1.0, 0.0)));
+    }
   // Conversion to serialized card format
     Add(new CardsDataObject(set, cards), true);
 }

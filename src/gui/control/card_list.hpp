@@ -75,6 +75,7 @@ public:
   bool canDelete() const override;
   // Try to perform a clipboard operation, return success
   bool doCopy() override;
+  bool doCopyCardAndLinkedCards();
   bool doPaste() override;
   bool doDelete() override;
 

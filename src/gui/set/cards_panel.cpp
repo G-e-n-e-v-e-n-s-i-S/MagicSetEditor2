@@ -127,7 +127,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
     // Adding a space never hurts, please keep it just to be safe.
     add_menu_item(menuCard, ID_CARD_REMOVE, "card_del", _MENU_("remove card") + _(" "), _HELP_("remove card"));
     add_menu_item(menuCard, ID_CARD_LINK, "card_link", _MENU_("link card") + _(" "), _HELP_("link card"));
-    add_menu_item(menuCard, ID_CARD_IMAGE_COPY, "card_image_copy", _MENU_("copy card image") + _(" "), _HELP_("copy card image"));
+    add_menu_item(menuCard, ID_CARD_AND_LINK_COPY, "card_copy", _MENU_("copy card and links") + _(" "), _HELP_("copy card and links"));
     menuCard->AppendSeparator();
     auto menuRotate = new wxMenu();
       add_menu_item_tr(menuRotate, ID_CARD_ROTATE_0, "card_rotate_0", "rotate_0", wxITEM_CHECK);
@@ -315,9 +315,9 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
       ev.Enable(insertManyCardsMenu->GetSubMenu() != nullptr);
       break;
     }
-    case ID_CARD_REMOVE:     ev.Enable(card_list->canDelete());      break;
-    case ID_CARD_LINK:       ev.Enable(card_list->canLink());        break;
-    case ID_CARD_IMAGE_COPY: ev.Enable(card_list->canLink());        break;
+    case ID_CARD_REMOVE:        ev.Enable(card_list->canDelete());      break;
+    case ID_CARD_LINK:          ev.Enable(card_list->canLink());        break;
+    case ID_CARD_AND_LINK_COPY: ev.Enable(card_list->canCopy());        break;
     case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE: case ID_FORMAT_SYMBOL: case ID_FORMAT_REMINDER: {
       if (focused_control(this) == ID_EDITOR) {
         ev.Enable(editor->canFormat(ev.GetId()));
@@ -394,8 +394,8 @@ void CardsPanel::onCommand(int id) {
       setCard(link_viewer_1->getCard(), true);
       break;
     }
-    case ID_CARD_IMAGE_COPY:
-      queue_message(MESSAGE_WARNING, "TODO: Copy card image");
+    case ID_CARD_AND_LINK_COPY:
+      card_list->doCopyCardAndLinkedCards();
       break;
     case ID_CARD_ROTATE:
     case ID_CARD_ROTATE_0: case ID_CARD_ROTATE_90: case ID_CARD_ROTATE_180: case ID_CARD_ROTATE_270: {
@@ -583,24 +583,13 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   }
   editor->setCard(card);
 
-  unordered_map<String, String> links {
-    { card->linked_card_1, card->linked_relation_1 },
-    { card->linked_card_2, card->linked_relation_2 },
-    { card->linked_card_3, card->linked_relation_3 },
-    { card->linked_card_4, card->linked_relation_4 }
-  };
-  vector<CardP> linked_cards;
-  FOR_EACH(other_card, set->cards) {
-    if (links.find(other_card->uid) != links.end()) {
-      linked_cards.push_back(other_card);
-    }
-  }
+  vector<pair<CardP, String>> linked_cards = card->getLinkedCards(*set);
   int count = linked_cards.size();
   if (count >= 1) {
     link_box_1->Show(true);
-    link_editor->setCard(linked_cards[0]);
-    link_viewer_1->setCard(linked_cards[0]);
-    link_relation_1->SetLabel(links.at(linked_cards[0]->uid));
+    link_editor->setCard(linked_cards[0].first);
+    link_viewer_1->setCard(linked_cards[0].first);
+    link_relation_1->SetLabel(linked_cards[0].second);
     if (count == 1) {
       link_editor->Show(true);
       link_viewer_1->Show(false);
@@ -623,8 +612,8 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   }
   if (count >= 2) {
     link_box_2->Show(true);
-    link_viewer_2->setCard(linked_cards[1]);
-    link_relation_2->SetLabel(links.at(linked_cards[1]->uid));
+    link_viewer_2->setCard(linked_cards[1].first);
+    link_relation_2->SetLabel(linked_cards[1].second);
     link_relation_2->SetMaxSize(wxSize(link_viewer_2->GetSize().x - link_unlink_2->GetSize().x, -1));
     link_relation_2->InvalidateBestSize();
   }
@@ -635,8 +624,8 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   }
   if (count >= 3) {
     link_box_3->Show(true);
-    link_viewer_3->setCard(linked_cards[2]);
-    link_relation_3->SetLabel(links.at(linked_cards[2]->uid));
+    link_viewer_3->setCard(linked_cards[2].first);
+    link_relation_3->SetLabel(linked_cards[2].second);
     link_relation_3->SetMaxSize(wxSize(link_viewer_3->GetSize().x - link_unlink_3->GetSize().x, -1));
     link_relation_3->InvalidateBestSize();
   }
@@ -647,8 +636,8 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   }
   if (count >= 4) {
     link_box_4->Show(true);
-    link_viewer_4->setCard(linked_cards[3]);
-    link_relation_4->SetLabel(links.at(linked_cards[3]->uid));
+    link_viewer_4->setCard(linked_cards[3].first);
+    link_relation_4->SetLabel(linked_cards[3].second);
     link_relation_4->SetMaxSize(wxSize(link_viewer_4->GetSize().x - link_unlink_4->GetSize().x, -1));
     link_relation_4->InvalidateBestSize();
   }

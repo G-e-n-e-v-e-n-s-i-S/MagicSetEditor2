@@ -91,6 +91,8 @@ public:
   void copyLink(const Set& set, String old_uid, String new_uid);
   void updateLink(String old_uid, String new_uid);
 
+  vector<pair<CardP, String>> getLinkedCards(const Set& set);
+
   /// Find a value in the data by name and type
   template <typename T> T& value(const String& name) {
     for(IndexMap<FieldP, ValueP>::iterator it = data.begin() ; it != data.end() ; ++it) {

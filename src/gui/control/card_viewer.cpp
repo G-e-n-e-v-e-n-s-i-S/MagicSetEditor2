@@ -34,7 +34,7 @@ wxSize CardViewer::DoGetBestSize() const {
   if (set) {
     if (!stylesheet) stylesheet = set->stylesheet;
     StyleSheetSettings& ss = settings.stylesheetSettingsFor(*stylesheet);
-    double dpi_factor = stylesheet->card_dpi <= 150 ? 1.0 : 150.0 / stylesheet->card_dpi;
+    double dpi_factor = stylesheet->card_dpi <= 150.0 ? 1.0 : 150.0 / stylesheet->card_dpi;
     double width = stylesheet->card_width * dpi_factor * ss.card_zoom();
     double height = stylesheet->card_height * dpi_factor * ss.card_zoom();
     double link_factor = GetId() == ID_CARD_LINK_VIEWER ? (height * 0.5 - 41.0) / height : GetId() == ID_CARD_LINK_EDITOR ? (height * 0.97 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
@@ -167,7 +167,7 @@ Rotation CardViewer::getRotation() const {
   StyleSheetSettings& ss = settings.stylesheetSettingsFor(*stylesheet);
   int dx = CanScroll(wxHORIZONTAL) ? GetScrollPos(wxHORIZONTAL) : 0;
   int dy = CanScroll(wxVERTICAL) ? GetScrollPos(wxVERTICAL) : 0;
-  double dpi_factor = stylesheet->card_dpi <= 150 ? 1.0 : 150.0 / stylesheet->card_dpi;
+  double dpi_factor = stylesheet->card_dpi <= 150.0 ? 1.0 : 150.0 / stylesheet->card_dpi;
   double height = stylesheet->card_height * dpi_factor * ss.card_zoom();
   double link_factor = GetId() == ID_CARD_LINK_VIEWER ? (height * 0.5 - 41.0) / height : GetId() == ID_CARD_LINK_EDITOR ? (height * 0.97 - 41.0) / height : 1.0; // Subtract 41 pixels for the link title
   return Rotation(deg_to_rad(ss.card_angle()), stylesheet->getCardRect().move(-dx,-dy,0,0), link_factor * dpi_factor * ss.card_zoom(), 1.0, ROTATION_ATTACH_TOP_LEFT);
