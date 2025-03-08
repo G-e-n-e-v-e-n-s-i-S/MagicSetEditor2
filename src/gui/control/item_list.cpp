@@ -79,7 +79,7 @@ void ItemList::selectItem(const VoidP& item, bool focus, bool event) {
     focusNone();
   }
   selected_item = item;
-  if (event) sendEvent();
+  if (event) sendEvent(); // sending an event will trigger a UI update
   findSelectedItemPos();
   if (focus) focusSelectedItem();
 }

@@ -559,13 +559,16 @@ bool CardsPanel::search(FindInfo& find, bool from_start) {
     CardP card = card_list->getCard( (long) (find.forward() ? i : set->cards.size() - i - 1) );
     if (card == current) include = true;
     if (include) {
-      setCard(card, true);
+      editor->setCard(card);
       if (editor->search(find, from_start || card != current)) {
-        return true; // done
+        // found a card
+        setCard(card, true);
+        return true;
       }
     }
   }
-  setCard(current, true);
+  // didn't find anything, put editor back in its previous state
+  editor->setCard(current);
   return false;
 }
 
@@ -576,6 +579,8 @@ CardP CardsPanel::selectedCard() const {
 }
 void CardsPanel::selectCard(const CardP& card) {
   if (!set) return; // we want onChangeSet first
+
+  card_list->setCard(card);
 
   editor->setCard(card);
   vector<pair<CardP, String>> linked_cards = card->getLinkedCards(*set);

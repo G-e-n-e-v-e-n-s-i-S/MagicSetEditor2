@@ -23,8 +23,6 @@ DECLARE_POINTER_TYPE(Field);
 DECLARE_POINTER_TYPE(Value);
 DECLARE_POINTER_TYPE(StyleSheet);
 
-#define THIS_LINKED_UIDS(var)               vector<reference_wrapper<String>> var { ref(linked_card_1), ref(linked_card_2), ref(linked_card_3), ref(linked_card_4) }
-#define THIS_LINKED_RELATIONS(var)          vector<reference_wrapper<String>> var { ref(linked_relation_1), ref(linked_relation_2), ref(linked_relation_3), ref(linked_relation_4) }
 #define THIS_LINKED_PAIRS(var)              vector<pair<reference_wrapper<String>, reference_wrapper<String>>> var { make_pair(ref(linked_card_1), ref(linked_relation_1)), make_pair(ref(linked_card_2), ref(linked_relation_2)), make_pair(ref(linked_card_3), ref(linked_relation_3)), make_pair(ref(linked_card_4), ref(linked_relation_4)) }
 #define OTHER_LINKED_PAIRS(var, other_card) vector<pair<reference_wrapper<String>, reference_wrapper<String>>> var { make_pair(ref(other_card->linked_card_1), ref(other_card->linked_relation_1)), make_pair(ref(other_card->linked_card_2), ref(other_card->linked_relation_2)), make_pair(ref(other_card->linked_card_3), ref(other_card->linked_relation_3)), make_pair(ref(other_card->linked_card_4), ref(other_card->linked_relation_4)) }
 

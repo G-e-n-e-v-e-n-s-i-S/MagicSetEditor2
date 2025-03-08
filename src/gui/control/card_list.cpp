@@ -166,12 +166,16 @@ bool CardListBase::doCopyCardAndLinkedCards() {
   vector<CardP> cards_to_copy;
   unordered_set<CardP> cards_already_added;
   FOR_EACH(card, cards_selected) {
-    if (cards_already_added.find(card) == cards_already_added.end()) cards_to_copy.push_back(card);
-    cards_already_added.insert(card);
+    if (cards_already_added.find(card) == cards_already_added.end()) {
+      cards_to_copy.push_back(card);
+      cards_already_added.insert(card);
+    }
     vector<pair<CardP, String>> linked_cards = card->getLinkedCards(*set);
     FOR_EACH(linked_card, linked_cards) {
-      if (cards_already_added.find(linked_card.first) == cards_already_added.end()) cards_to_copy.push_back(linked_card.first);
-      cards_already_added.insert(linked_card.first);
+      if (cards_already_added.find(linked_card.first) == cards_already_added.end()) {
+        cards_to_copy.push_back(linked_card.first);
+        cards_already_added.insert(linked_card.first);
+      }
     }
   }
   bool ok = wxTheClipboard->SetData(new CardsOnClipboard(set, cards_to_copy)); // ignore result
