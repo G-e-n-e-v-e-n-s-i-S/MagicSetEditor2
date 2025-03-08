@@ -78,7 +78,7 @@ public:
   void selectCard(const CardP& card) override;
   void selectFirstCard() override;
 
-  void setCard(const CardP& card, bool set_card_list = false);
+  void setCard(const CardP& card, bool event = false);
 
   void getCardLists(vector<CardListBase*>& out) override;
 

@@ -64,8 +64,8 @@ public:
   
   // --------------------------------------------------- : Selection
   
-  inline CardP getCard() const            { return static_pointer_cast<Card>(selected_item); }
-  inline void  setCard(const CardP& card) { selectItem(card, true, false); }
+  inline CardP getCard() const                                { return static_pointer_cast<Card>(selected_item); }
+  inline void  setCard(const CardP& card, bool event = false) { selectItem(card, true, event); }
   
   // --------------------------------------------------- : Clipboard
   
@@ -111,8 +111,8 @@ protected:
   void sortBy(long column, bool ascending) override;
   
   /// Send an 'item selected' event for the currently selected item (selected_item)
-  void sendEvent() override { sendEvent(EVENT_CARD_SELECT); queue_message(MESSAGE_WARNING, _("Sent select event")); }
-  void sendEvent(int type = EVENT_CARD_SELECT);
+  void sendEvent() override { sendEvent(EVENT_CARD_SELECT); }
+  void sendEvent(int type);
   /// Compare cards
   bool compareItems(void* a, void* b) const override;
   

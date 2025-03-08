@@ -382,7 +382,7 @@ void CardsPanel::onCommand(int id) {
       break;
     case ID_CARD_LINK:
       card_list->doLink();
-      setCard(card_list->getCard());
+      setCard(card_list->getCard(), true);
       break;
     case ID_CARD_LINK_UNLINK_1: case ID_CARD_LINK_UNLINK_2: case ID_CARD_LINK_UNLINK_3: case ID_CARD_LINK_UNLINK_4: {
       card_list->doUnlink((
@@ -391,7 +391,7 @@ void CardsPanel::onCommand(int id) {
         : id == ID_CARD_LINK_UNLINK_3 ? link_viewer_3
         :                               link_viewer_4
       )->getCard());
-      setCard(card_list->getCard());
+      setCard(card_list->getCard(), true);
       break;
     }
     case ID_CARD_LINK_SELECT: {
@@ -559,13 +559,13 @@ bool CardsPanel::search(FindInfo& find, bool from_start) {
     CardP card = card_list->getCard( (long) (find.forward() ? i : set->cards.size() - i - 1) );
     if (card == current) include = true;
     if (include) {
-      setCard(card);
+      setCard(card, true);
       if (editor->search(find, from_start || card != current)) {
         return true; // done
       }
     }
   }
-  setCard(current);
+  setCard(current, true);
   return false;
 }
 
@@ -576,23 +576,8 @@ CardP CardsPanel::selectedCard() const {
 }
 void CardsPanel::selectCard(const CardP& card) {
   if (!set) return; // we want onChangeSet first
-  setCard(card, true);
-  notes->setValue(card ? &card->notes : nullptr);
-  Layout();
-  updateNotesPosition();
-}
 
-void CardsPanel::selectFirstCard() {
-  if (!set) return; // we want onChangeSet first
-  card_list->selectFirst();
-}
-
-void CardsPanel::setCard(const CardP& card, bool set_card_list) {
-  if (set_card_list) {
-    card_list->setCard(card);
-  }
   editor->setCard(card);
-
   vector<pair<CardP, String>> linked_cards = card->getLinkedCards(*set);
   int count = linked_cards.size();
   if (count >= 1) {
@@ -626,8 +611,7 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
     link_relation_2->SetLabel(linked_cards[1].second);
     link_relation_2->SetMaxSize(wxSize(link_viewer_2->GetSize().x - link_unlink_2->GetSize().x, -1));
     link_relation_2->InvalidateBestSize();
-  }
-  else {
+  } else {
     link_box_2->Show(false);
     link_viewer_2->setCard(card);
     //link_relation_2->SetLabel(wxEmptyString);
@@ -638,8 +622,7 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
     link_relation_3->SetLabel(linked_cards[2].second);
     link_relation_3->SetMaxSize(wxSize(link_viewer_3->GetSize().x - link_unlink_3->GetSize().x, -1));
     link_relation_3->InvalidateBestSize();
-  }
-  else {
+  } else {
     link_box_3->Show(false);
     link_viewer_3->setCard(card);
     //link_relation_3->SetLabel(wxEmptyString);
@@ -650,8 +633,7 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
     link_relation_4->SetLabel(linked_cards[3].second);
     link_relation_4->SetMaxSize(wxSize(link_viewer_4->GetSize().x - link_unlink_4->GetSize().x, -1));
     link_relation_4->InvalidateBestSize();
-  }
-  else {
+  } else {
     link_box_4->Show(false);
     link_viewer_4->setCard(card);
     //link_relation_4->SetLabel(wxEmptyString);
@@ -659,15 +641,25 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
   if (count >= 5) {
     queue_message(MESSAGE_WARNING, "DEBUG More than 4 linked cards found for card: " + card->identification());
   }
-  updateNotesPosition();
+
+  notes->setValue(card ? &card->notes : nullptr);
+
   Layout();
-  
+  updateNotesPosition();
+}
+
+void CardsPanel::selectFirstCard() {
+  if (!set) return; // we want onChangeSet first
+  card_list->selectFirst();
+}
+
+void CardsPanel::setCard(const CardP& card, bool event) {
+  if (!set) return; // we want onChangeSet first
+  card_list->setCard(card, event);
 }
 
 void CardsPanel::setEditor(DataEditor* editor) {
   focused_editor = editor;
-  //String editorName = editor->GetId() == ID_CARD_LINK_EDITOR ? _("link") : (editor->GetId() == ID_EDITOR ? _("base") : _("unknown"));
-  //queue_message(MESSAGE_WARNING, _("Focus Changed to ") + editorName);
 }
 
 void CardsPanel::getCardLists(vector<CardListBase*>& out) {
