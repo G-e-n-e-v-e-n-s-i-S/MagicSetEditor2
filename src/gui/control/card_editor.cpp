@@ -9,6 +9,7 @@
 #include <util/prec.hpp>
 #include <gui/control/card_editor.hpp>
 #include <gui/value/editor.hpp>
+#include <gui/set/cards_panel.hpp>
 #include <gui/util.hpp>
 #include <data/field.hpp>
 #include <data/stylesheet.hpp>
@@ -502,6 +503,10 @@ void DataEditor::onFocus(wxFocusEvent& ev) {
     } else {
       selectFirst();
     }
+  }
+  CardsPanel* panel = dynamic_cast<CardsPanel*> (GetParent());
+  if (panel) {
+    panel->setEditor(this);
   }
 }
 void DataEditor::onLoseFocus(wxFocusEvent& ev) {

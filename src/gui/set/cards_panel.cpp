@@ -35,6 +35,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
   // init controls
   editor          = new CardEditor(this, ID_EDITOR);
   link_editor     = new CardEditor(this, ID_CARD_LINK_EDITOR);
+  focused_editor  = editor;
   link_viewer_1   = new CardViewer(this, ID_CARD_LINK_VIEWER);
   link_viewer_2   = new CardViewer(this, ID_CARD_LINK_VIEWER);
   link_viewer_3   = new CardViewer(this, ID_CARD_LINK_VIEWER);
@@ -300,8 +301,8 @@ void CardsPanel::destroyUI(wxToolBar* tb, wxMenuBar* mb) {
 
 void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
   switch (ev.GetId()) {
-    case ID_CARD_PREV:       ev.Enable(card_list->canSelectPrevious());  break;
-    case ID_CARD_NEXT:       ev.Enable(card_list->canSelectNext());    break;
+    case ID_CARD_PREV:        ev.Enable(card_list->canSelectPrevious()); break;
+    case ID_CARD_NEXT:        ev.Enable(card_list->canSelectNext());     break;
     case ID_CARD_ROTATE_0: case ID_CARD_ROTATE_90: case ID_CARD_ROTATE_180: case ID_CARD_ROTATE_270: {
       StyleSheetSettings& ss = settings.stylesheetSettingsFor(set->stylesheetFor(card_list->getCard()));
       int a = ev.GetId() == ID_CARD_ROTATE_0   ? 0
@@ -322,6 +323,9 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
       if (focused_control(this) == ID_EDITOR) {
         ev.Enable(editor->canFormat(ev.GetId()));
         ev.Check (editor->hasFormat(ev.GetId()));
+      } else if (focused_control(this) == ID_CARD_LINK_EDITOR) {
+        ev.Enable(link_editor->canFormat(ev.GetId()));
+        ev.Check (link_editor->hasFormat(ev.GetId()));
       } else {
         ev.Enable(false);
         ev.Check(false);
@@ -338,7 +342,7 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
     case ID_INSERT_SYMBOL: ev.Enable(false); break;
 #else
     case ID_INSERT_SYMBOL: {
-      wxMenu* menu = editor->getMenu(ID_INSERT_SYMBOL);
+      wxMenu* menu = focused_editor->getMenu(ID_INSERT_SYMBOL);
       ev.Enable(menu);
       break;
     }
@@ -348,7 +352,7 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
 
 void CardsPanel::onMenuOpen(wxMenuEvent& ev) {
   if (ev.GetMenu() != menuFormat) return;
-  wxMenu* menu = editor->getMenu(ID_INSERT_SYMBOL);
+  wxMenu* menu = focused_editor->getMenu(ID_INSERT_SYMBOL);
   if (insertSymbolMenu->GetSubMenu() != menu || (menu && menu->GetParent() != menuFormat)) {
     // re-add the menu
     menuFormat->Remove(ID_INSERT_SYMBOL);
@@ -417,6 +421,9 @@ void CardsPanel::onCommand(int id) {
       if (focused_control(this) == ID_EDITOR) {
         editor->doFormat(id);
       }
+      else if (focused_control(this) == ID_CARD_LINK_EDITOR) {
+        link_editor->doFormat(id);
+      }
       break;
     }
     case ID_COLLAPSE_NOTES: {
@@ -438,7 +445,7 @@ void CardsPanel::onCommand(int id) {
     default: {
       if (id >= ID_INSERT_SYMBOL_MENU_MIN && id <= ID_INSERT_SYMBOL_MENU_MAX) {
         // pass on to editor
-        editor->onCommand(id);
+        focused_editor->onCommand(id);
       } else if (id >= ID_ADD_CARDS_MENU_MIN && id <= ID_ADD_CARDS_MENU_MAX) {
         // add multiple cards
         AddCardsScriptP script = set->game->add_cards_scripts.at(id - ID_ADD_CARDS_MENU_MIN);
@@ -459,10 +466,11 @@ bool CardsPanel::wantsToHandle(const Action&, bool undone) const {
 // determine what control to use for clipboard actions
 #define CUT_COPY_PASTE(op,return) \
   int id = focused_control(this); \
-  if      (id == ID_EDITOR)    { return editor->op();    } \
-  else if (id == ID_CARD_LIST) { return card_list->op(); } \
-  else if (id == ID_NOTES)     { return notes->op();     } \
-  else                         { return false;           }
+  if      (id == ID_EDITOR)           { return editor->op();      } \
+  else if (id == ID_CARD_LINK_EDITOR) { return link_editor->op(); } \
+  else if (id == ID_CARD_LIST)        { return card_list->op();   } \
+  else if (id == ID_NOTES)            { return notes->op();       } \
+  else                                { return false;             }
 
 bool CardsPanel::canCut()   const { CUT_COPY_PASTE(canCut,   return) }
 bool CardsPanel::canCopy()  const { CUT_COPY_PASTE(canCopy,  return) }
@@ -473,17 +481,19 @@ void CardsPanel::doCopy()         { CUT_COPY_PASTE(doCopy,   return (void)) }
 bool CardsPanel::canPaste() const {
   if (card_list->canPaste()) return true;
   int id = focused_control(this);
-  if      (id == ID_EDITOR) return editor->canPaste();
-  else if (id == ID_NOTES)  return notes->canPaste();
-  else                      return false;
+  if      (id == ID_EDITOR)           return editor->canPaste();
+  else if (id == ID_CARD_LINK_EDITOR) return link_editor->canPaste();
+  else if (id == ID_NOTES)            return notes->canPaste();
+  else                                return false;
 }
 void CardsPanel::doPaste() {
   if (card_list->canPaste()) {
     card_list->doPaste();
   } else {
     int id = focused_control(this);
-    if      (id == ID_EDITOR) editor->doPaste();
-    else if (id == ID_NOTES)  notes->doPaste();
+    if      (id == ID_EDITOR)           editor->doPaste();
+    else if (id == ID_CARD_LINK_EDITOR) link_editor->doPaste();
+    else if (id == ID_NOTES)            notes->doPaste();
   }
 }
 
@@ -646,11 +656,18 @@ void CardsPanel::setCard(const CardP& card, bool set_card_list) {
     link_viewer_4->setCard(card);
     //link_relation_4->SetLabel(wxEmptyString);
   }
-  updateNotesPosition();
-  Layout();
   if (count >= 5) {
     queue_message(MESSAGE_WARNING, "DEBUG More than 4 linked cards found for card: " + card->identification());
   }
+  updateNotesPosition();
+  Layout();
+  
+}
+
+void CardsPanel::setEditor(DataEditor* editor) {
+  focused_editor = editor;
+  //String editorName = editor->GetId() == ID_CARD_LINK_EDITOR ? _("link") : (editor->GetId() == ID_EDITOR ? _("base") : _("unknown"));
+  //queue_message(MESSAGE_WARNING, _("Focus Changed to ") + editorName);
 }
 
 void CardsPanel::getCardLists(vector<CardListBase*>& out) {

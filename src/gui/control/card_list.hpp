@@ -111,7 +111,7 @@ protected:
   void sortBy(long column, bool ascending) override;
   
   /// Send an 'item selected' event for the currently selected item (selected_item)
-  void sendEvent() override { sendEvent(EVENT_CARD_SELECT); }
+  void sendEvent() override { sendEvent(EVENT_CARD_SELECT); queue_message(MESSAGE_WARNING, _("Sent select event")); }
   void sendEvent(int type = EVENT_CARD_SELECT);
   /// Compare cards
   bool compareItems(void* a, void* b) const override;

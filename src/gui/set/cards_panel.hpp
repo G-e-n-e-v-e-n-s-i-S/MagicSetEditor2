@@ -82,11 +82,13 @@ public:
 
   void getCardLists(vector<CardListBase*>& out) override;
 
+  void setEditor(DataEditor* editor);
+
 private:
   // --------------------------------------------------- : Controls
   wxSizer*          s_left;
   wxSplitterWindow* splitter;
-  DataEditor*       editor, *link_editor;
+  DataEditor*       editor, *link_editor, *focused_editor;
   FilteredImageCardList* card_list;
   wxPanel*          nodes_panel;
   TextCtrl*         notes;
