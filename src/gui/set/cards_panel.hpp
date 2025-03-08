@@ -82,7 +82,7 @@ public:
 
   void getCardLists(vector<CardListBase*>& out) override;
 
-  void setEditor(DataEditor* editor);
+  void setFocusedEditor(DataEditor* editor);
 
 private:
   // --------------------------------------------------- : Controls

@@ -506,7 +506,7 @@ void DataEditor::onFocus(wxFocusEvent& ev) {
   }
   CardsPanel* panel = dynamic_cast<CardsPanel*> (GetParent());
   if (panel) {
-    panel->setEditor(this);
+    panel->setFocusedEditor(this);
   }
 }
 void DataEditor::onLoseFocus(wxFocusEvent& ev) {

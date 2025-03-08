@@ -514,7 +514,7 @@ public:
   SearchFindInfo(CardsPanel& panel, wxFindReplaceData& what) : FindInfo(what), panel(panel) {}
   bool handle(const CardP& card, const TextValueP& value, size_t pos, bool was_selection) override {
     // Select the card
-    panel.card_list->setCard(card);
+    panel.setCard(card, true);
     return true;
   }
 private:
@@ -526,7 +526,7 @@ public:
   ReplaceFindInfo(CardsPanel& panel, wxFindReplaceData& what) : FindInfo(what), panel(panel) {}
   bool handle(const CardP& card, const TextValueP& value, size_t pos, bool was_selection) override {
     // Select the card
-    panel.card_list->setCard(card);
+    panel.setCard(card, true);
     // Replace
     if (was_selection) {
       panel.editor->insert(escape(what.GetReplaceString()), _("Replace"));
@@ -561,8 +561,7 @@ bool CardsPanel::search(FindInfo& find, bool from_start) {
     if (include) {
       editor->setCard(card);
       if (editor->search(find, from_start || card != current)) {
-        // found a card
-        setCard(card, true);
+        // found a card, call handle
         return true;
       }
     }
@@ -663,10 +662,10 @@ void CardsPanel::setCard(const CardP& card, bool event) {
   card_list->setCard(card, event);
 }
 
-void CardsPanel::setEditor(DataEditor* editor) {
-  focused_editor = editor;
-}
-
 void CardsPanel::getCardLists(vector<CardListBase*>& out) {
   out.push_back(card_list);
+}
+
+void CardsPanel::setFocusedEditor(DataEditor* editor) {
+  focused_editor = editor;
 }
