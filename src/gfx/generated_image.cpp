@@ -318,6 +318,46 @@ bool ResizeImage::operator == (const GeneratedImage& that) const {
     && height == that2->height;
 }
 
+// ----------------------------------------------------------------------------- : InsertedImage
+
+Image InsertedImage::generate(const Options& opt) const {
+  Image base_img =     base_image->generate(opt);
+  Image inserted_img = inserted_image->generate(opt);
+  int base_x =     offset_x < 0 ? -offset_x : 0;
+  int base_y =     offset_y < 0 ? -offset_y : 0;
+  int inserted_x = offset_x < 0 ? 0         : offset_x;
+  int inserted_y = offset_y < 0 ? 0         : offset_y;
+  int width =  max(base_x + base_img.GetWidth(),  inserted_x + inserted_img.GetWidth());
+  int height = max(base_y + base_img.GetHeight(), inserted_y + inserted_img.GetHeight());
+  UInt size = width * height;
+  Image img = wxImage(width, height, false);
+  img.InitAlpha();
+  Byte* data = img.GetData();
+  Byte* alpha = img.GetAlpha();
+  for (UInt i = 0; i < size; ++i) {
+    data[0] = background_color.Red();
+    data[1] = background_color.Green();
+    data[2] = background_color.Blue();
+    data += 3;
+    alpha[0] = background_color.Alpha();
+    alpha += 1;
+  }
+  img.Paste(base_img, base_x, base_y, wxIMAGE_ALPHA_BLEND_COMPOSE);
+  img.Paste(inserted_img, inserted_x, inserted_y, wxIMAGE_ALPHA_BLEND_COMPOSE);
+  return img;
+}
+ImageCombine InsertedImage::combine() const {
+  return base_image->combine();
+}
+bool InsertedImage::operator == (const GeneratedImage& that) const {
+  const InsertedImage* that2 = dynamic_cast<const InsertedImage*>(&that);
+  return that2
+    && *base_image == *that2->base_image
+    && *inserted_image == *that2->inserted_image
+    && offset_x == that2->offset_x
+    && offset_y == that2->offset_y;
+}
+
 // ----------------------------------------------------------------------------- : CropImage
 
 Image CropImage::generate(const Options& opt) const {

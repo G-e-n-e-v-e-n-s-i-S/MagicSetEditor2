@@ -70,6 +70,15 @@ SCRIPT_FUNCTION(height_of) {
   SCRIPT_RETURN(image.GetHeight());
 }
 
+SCRIPT_FUNCTION(insert_image) {
+  SCRIPT_PARAM(GeneratedImageP, base_image);
+  SCRIPT_PARAM(GeneratedImageP, inserted_image);
+  SCRIPT_PARAM(int, offset_x);
+  SCRIPT_PARAM(int, offset_y);
+  SCRIPT_OPTIONAL_PARAM_(Color, background_color);
+  return make_intrusive<InsertedImage>(base_image, inserted_image, offset_x, offset_y, background_color);
+}
+
 SCRIPT_FUNCTION(linear_blend) {
   SCRIPT_PARAM(GeneratedImageP, image1);
   SCRIPT_PARAM(GeneratedImageP, image2);
@@ -263,6 +272,7 @@ void init_script_image_functions(Context& ctx) {
   ctx.setVariable(_("linear_blend"),     script_linear_blend);
   ctx.setVariable(_("masked_blend"),     script_masked_blend);
   ctx.setVariable(_("combine_blend"),    script_combine_blend);
+  ctx.setVariable(_("insert_image"),     script_insert_image);
   ctx.setVariable(_("set_mask"),         script_set_mask);
   ctx.setVariable(_("set_alpha"),        script_set_alpha);
   ctx.setVariable(_("set_combine"),      script_set_combine);

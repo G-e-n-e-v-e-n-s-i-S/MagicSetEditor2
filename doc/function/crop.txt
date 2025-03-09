@@ -5,11 +5,13 @@ Function: crop
 
 Shrink an image by cutting off some of the image, starting at the position denoted by the offsets. The resulting image size is specified in the parameters.
 
+Resulting image can be bigger than the original, if offset_x or offset_y are negative, or if width or height are bigger than the original width and height.
+
 --Parameters--
 ! Parameter		Type				Description
 | @input@		[[type:image]]		Image to enlarge
-| @height@		[[type:double]]		Height of the resulting image
-| @width@		[[type:double]]		Width of the resulting image
-| @offset_x@	[[type:double]]		Offset of crop, horizontally
-| @offset_y@	[[type:double]]		Offset of crop, vertically
+| @height@		[[type:double]]		Height of the resulting image, in pixels
+| @width@		[[type:double]]		Width of the resulting image, in pixels
+| @offset_x@	[[type:double]]		Offset of crop, horizontally, in pixels
+| @offset_y@	[[type:double]]		Offset of crop, vertically, in pixels
 

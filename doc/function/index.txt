@@ -93,6 +93,7 @@ These functions are built into the program, other [[type:function]]s can be defi
 | [[fun:flip_vertical]]		Flip an image vertically.
 | [[fun:rotate_image]]		Rotate an image.
 | [[fun:drop_shadow]]		Add a drop shadow to an image.
+| [[fun:insert_image]]		Insert an image inside another.
 | [[fun:symbol_variation]]	Render a variation of a [[type:symbol]].
 | [[fun:import_image]]	Load an image from outside the data folder.
 | [[fun:built_in_image]]	Return an image built into the program.

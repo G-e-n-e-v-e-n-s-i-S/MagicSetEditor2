@@ -1,0 +1,17 @@
+Function: insert_image
+
+--Usage--
+> insert_image(base_image: image, inserted_image: image, offset_x: coordinate, offset_y: coordinate, background_color: color)
+
+Insert an image inside another image.
+
+The inserted image can be put outside the bounds of the base image. The resulting image will be widened accordingly.
+
+--Parameters--
+! Parameter				Type				Description
+| @base_image@			[[type:image]]		Image that serves as the canvas
+| @inserted_image@		[[type:image]]		Image inserted on top of the base image
+| @offset_x@			[[type:double]]		Offset of insertion, horizontally, in pixels
+| @offset_y@			[[type:double]]		Offset of insertion, vertically, in pixels
+| @background_color@	[[type:double]]		Background color, optional, defaults to transparent
+

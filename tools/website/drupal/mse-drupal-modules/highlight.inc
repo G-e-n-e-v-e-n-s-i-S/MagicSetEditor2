@@ -89,6 +89,7 @@ $built_in_functions = array(
 	'flip_vertical'		=>'',
 	'rotate'		=>'',
 	'drop_shadow'		=>'',
+	'insert_image'		=>'',
 	'symbol_variation'	=>'',
 	'import_image'	=>'',
 	'built_in_image'	=>'',
