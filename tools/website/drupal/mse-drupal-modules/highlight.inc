@@ -95,6 +95,9 @@ $built_in_functions = array(
 	'built_in_image'	=>'',
 	// cards
 	'new_card'		=>'',
+	'has_link'		=>'',
+	'get_card_from_link'		=>'',
+	'get_card_from_uid'		=>'',
 	// html export
 	'to_html'		=>'',
 	'symbols_to_html'	=>'',

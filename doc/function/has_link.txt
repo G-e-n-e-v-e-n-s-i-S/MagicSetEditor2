@@ -1,0 +1,12 @@
+Function: has_link
+
+--Usage--
+> has_link(card: card, "link type")
+
+Inspects a given [[type:card]]'s links to find one of the given type.
+Returns true if such a link was found, false otherwise.
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	[[type:string]]		The type of link we want to find.
+| @card@	[[type:card]]		The card whose links we'll inspect.

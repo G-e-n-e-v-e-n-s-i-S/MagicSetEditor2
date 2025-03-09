@@ -1,0 +1,12 @@
+Function: get_card_from_uid
+
+--Usage--
+> get_card_from_uid(input: "uid")
+
+Returns the [[type:card]] with the given uid inside the set.
+Returns nil if no card was found.
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	[[type:string]]		The uid of the card we want to retrieve.
+| @set@		[[type:set]]		The set in which to look. This can be ommited since "set" is a predefined variable.

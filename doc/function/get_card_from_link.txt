@@ -1,0 +1,13 @@
+Function: get_card_from_link
+
+--Usage--
+> get_card_from_link(card: card, "link type")
+
+Inspects a given [[type:card]]'s links to find one of the given type, and returns the linked card.
+Returns nil if no card was found.
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	[[type:string]]		The type of link we want to find.
+| @card@	[[type:card]]		The card whose links we'll inspect.
+| @set@		[[type:set]]		The set in which to look. This can be ommited since "set" is a predefined variable.

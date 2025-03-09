@@ -78,9 +78,9 @@ void CardLinkWindow::setRelationType() {
   else {
     String relation = relation_type->GetString(sel);
     int delimiter_pos = relation.find("//");
-    selected_relation->ChangeValue(relation.substr(0, delimiter_pos).Trim());
+    selected_relation->ChangeValue(relation.substr(0, delimiter_pos).Trim().Trim(false));
     selected_relation->Enable(false);
-    linked_relation->ChangeValue(delimiter_pos + 2 < relation.Length() ? relation.substr(delimiter_pos + 2).Trim() : _LABEL_("custom link undefined"));
+    linked_relation->ChangeValue(delimiter_pos + 2 < relation.Length() ? relation.substr(delimiter_pos + 2).Trim().Trim(false) : _LABEL_("custom link undefined"));
     linked_relation->Enable(false);
   }
 }
