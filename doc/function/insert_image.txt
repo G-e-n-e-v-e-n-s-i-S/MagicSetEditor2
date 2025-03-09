@@ -13,5 +13,5 @@ The inserted image can be put outside the bounds of the base image. The resultin
 | @inserted_image@		[[type:image]]		Image inserted on top of the base image
 | @offset_x@			[[type:double]]		Offset of insertion, horizontally, in pixels
 | @offset_y@			[[type:double]]		Offset of insertion, vertically, in pixels
-| @background_color@	[[type:double]]		Background color, optional, defaults to transparent
+| @background_color@	[[type:color]]		Background color, optional, defaults to transparent
 
