@@ -57,6 +57,12 @@ CardsPanel::CardsPanel(Window* parent, int id)
   collapse_notes->SetExtraStyle(wxWS_EX_PROCESS_UI_UPDATES);
   filter          = nullptr;
   editor->next_in_tab_order = card_list;
+  wxFont font = link_relation_1->GetFont();
+  font.SetWeight(wxFONTWEIGHT_BOLD);
+  link_relation_1->SetFont(font);
+  link_relation_2->SetFont(font);
+  link_relation_3->SetFont(font);
+  link_relation_4->SetFont(font);
   // init sizer for notes panel
   wxSizer* sn = new wxBoxSizer(wxVERTICAL);
     wxSizer* sc = new wxBoxSizer(wxHORIZONTAL);
@@ -70,7 +76,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
   splitter->SetSashGravity(1.0);
   splitter->SplitHorizontally(card_list, nodes_panel, -40);
   notes_below_editor = false;
-  // init sizer
+  // init sizer for editors and viewers
   wxSizer* s = new wxBoxSizer(wxHORIZONTAL); // Global Sizer
     s_left = new wxBoxSizer(wxVERTICAL); // Sizer for the selected card, and it's linked cards
       wxSizer* card_and_link = new wxBoxSizer(wxHORIZONTAL);
@@ -347,11 +353,6 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
       break;
     }
 #endif
-    default: {
-      if (focused_control(this) == ID_CARD_LINK_EDITOR) {
-        refreshCard(link_editor->getCard());
-      }
-    }
   }
 }
 

@@ -361,6 +361,16 @@ void DataEditor::onMotion(wxMouseEvent& ev) {
   }
 }
 
+void DataEditor::onMouseEnter(wxMouseEvent& ev) {
+  ev.Skip();
+  if (GetId() == ID_CARD_LINK_EDITOR) {
+    CardsPanel* panel = dynamic_cast<CardsPanel*> (GetParent());
+    if (panel) {
+      panel->refreshCard(card);
+    }
+  }
+}
+
 void DataEditor::onMouseLeave(wxMouseEvent& ev) {
   // on mouse leave for editor
   if (hovered_viewer) {
@@ -463,6 +473,13 @@ void DataEditor::onChar(wxKeyEvent& ev) {
   } else {
     ev.Skip();
   }
+
+  if (GetId() == ID_CARD_LINK_EDITOR) {
+    CardsPanel* panel = dynamic_cast<CardsPanel*> (GetParent());
+    if (panel) {
+      panel->refreshCard(card);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------- : Menu events
@@ -525,6 +542,7 @@ BEGIN_EVENT_TABLE(DataEditor, CardViewer)
   EVT_RIGHT_DOWN     (DataEditor::onRightDown)
   EVT_MOTION         (DataEditor::onMotion)
   EVT_MOUSEWHEEL     (DataEditor::onMouseWheel)
+  EVT_ENTER_WINDOW   (DataEditor::onMouseEnter)
   EVT_LEAVE_WINDOW   (DataEditor::onMouseLeave)
   EVT_CONTEXT_MENU   (DataEditor::onContextMenu)
   EVT_MENU           (wxID_ANY, DataEditor::onMenu)
