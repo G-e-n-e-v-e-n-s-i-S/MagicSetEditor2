@@ -42,7 +42,9 @@ public:
   void selectFirst();
   /// Select all items
   void doSelectAll();
-  
+  /// Find the position for a given item
+  long findGivenItemPos(const VoidP& item);
+
   // --------------------------------------------------- : Clipboard
   
   virtual bool canCut()    const { return canCopy() && canDelete(); }

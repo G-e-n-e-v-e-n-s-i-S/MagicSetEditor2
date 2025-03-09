@@ -111,6 +111,14 @@ void ItemList::findSelectedItemPos() {
     }
   }
 }
+long ItemList::findGivenItemPos(const VoidP& item) {
+  long count = GetItemCount();
+  for (long pos = 0; pos < count; ++pos) {
+    if (getItem(pos) == item) {
+      return pos;
+    }
+  }
+}
 void ItemList::focusSelectedItem(bool force_focus) {
   if (GetItemCount() > 0) {
     if (selected_item_pos == -1 || (size_t)selected_item_pos > sorted_list.size()) {

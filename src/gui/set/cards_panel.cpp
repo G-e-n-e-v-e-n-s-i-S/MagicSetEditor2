@@ -347,6 +347,11 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
       break;
     }
 #endif
+    default: {
+      if (focused_control(this) == ID_CARD_LINK_EDITOR) {
+        refreshCard(link_editor->getCard());
+      }
+    }
   }
 }
 
@@ -660,6 +665,11 @@ void CardsPanel::selectFirstCard() {
 void CardsPanel::setCard(const CardP& card, bool event) {
   if (!set) return; // we want onChangeSet first
   card_list->setCard(card, event);
+}
+
+void CardsPanel::refreshCard(const CardP& card) {
+  if (!set) return; // we want onChangeSet first
+  card_list->RefreshItem(card_list->findGivenItemPos(card));
 }
 
 void CardsPanel::getCardLists(vector<CardListBase*>& out) {
