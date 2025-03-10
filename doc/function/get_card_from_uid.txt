@@ -9,4 +9,4 @@ Returns nil if no card was found.
 --Parameters--
 ! Parameter	Type				Description
 | @input@	[[type:string]]		The uid of the card we want to retrieve.
-| @set@		[[type:set]]		The set in which to look. This can be ommited since "set" is a predefined variable.
+| @set@		[[type:set]]		The set in which to look. This can be omited since 'set' is a predefined variable.

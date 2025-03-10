@@ -10,4 +10,4 @@ Returns nil if no card was found.
 ! Parameter	Type				Description
 | @input@	[[type:string]]		The type of link we want to find.
 | @card@	[[type:card]]		The card whose links we'll inspect.
-| @set@		[[type:set]]		The set in which to look. This can be ommited since "set" is a predefined variable.
+| @set@		[[type:set]]		The set in which to look. This can be omited since 'set' is a predefined variable.

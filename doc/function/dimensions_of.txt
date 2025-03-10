@@ -1,0 +1,11 @@
+Function: dimensions_of
+
+--Usage--
+> dimensions_of(input: image)
+
+Returns an array containing the width and height of the image in pixels.
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	[[type:image]]		Image to whos dimensions we want.
+

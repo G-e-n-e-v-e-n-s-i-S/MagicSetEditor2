@@ -90,6 +90,7 @@ $built_in_functions = array(
 	'rotate'		=>'',
 	'drop_shadow'		=>'',
 	'insert_image'		=>'',
+	'dimensions_of'		=>'',
 	'symbol_variation'	=>'',
 	'import_image'	=>'',
 	'built_in_image'	=>'',
