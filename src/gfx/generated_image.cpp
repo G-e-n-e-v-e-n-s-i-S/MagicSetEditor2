@@ -474,7 +474,7 @@ Image PackagedImage::generate(const Options& opt) const {
     if (img.HasMask()) img.InitAlpha(); // we can't handle masks
     return img;
   } else {
-    throw ScriptError(_("Unable to load image '") + filename + _("' from '" + opt.package->name() + _("'")));
+    throw ScriptError(_("Unable to load image '") + filename + _("' from '") + opt.package->name() + _("'"));
   }
 }
 bool PackagedImage::operator == (const GeneratedImage& that) const {
