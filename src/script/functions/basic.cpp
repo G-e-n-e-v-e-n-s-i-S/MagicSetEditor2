@@ -26,6 +26,10 @@ SCRIPT_FUNCTION(get_mse_version) {
   SCRIPT_RETURN(app_version.toString());
 }
 
+SCRIPT_FUNCTION(get_mse_locale) {
+  SCRIPT_RETURN(settings.locale);
+}
+
 SCRIPT_FUNCTION(trace) {
   SCRIPT_PARAM_C(String, input);
   #if defined(_DEBUG) && 0
@@ -809,6 +813,7 @@ SCRIPT_FUNCTION(rule) {
 void init_script_basic_functions(Context& ctx) {
   // debugging
   ctx.setVariable(_("get_mse_version"),      script_get_mse_version);
+  ctx.setVariable(_("get_mse_locale"),       script_get_mse_locale);
   ctx.setVariable(_("trace"),                script_trace);
   ctx.setVariable(_("warning"),              script_warning);
   ctx.setVariable(_("error"),                script_error);
