@@ -214,9 +214,9 @@ DisplayPreferencesPage::DisplayPreferencesPage(Window* parent)
   borders            = new wxCheckBox(this, wxID_ANY, _BUTTON_("show lines"));
   draw_editing       = new wxCheckBox(this, wxID_ANY, _BUTTON_("show editing hints"));
   spellcheck_enabled = new wxCheckBox(this, wxID_ANY, _BUTTON_("spellcheck enabled"));
-  non_normal_export = new wxCheckBox(this, wxID_ANY, _BUTTON_("zoom export"));
-  zoom = new wxComboBox(this, ID_ZOOM);
-  export_zoom = new wxComboBox(this, ID_EXPORT_ZOOM);
+  non_normal_export  = new wxCheckBox(this, wxID_ANY, _BUTTON_("zoom export"));
+  zoom               = new wxComboBox(this, ID_ZOOM);
+  export_zoom        = new wxComboBox(this, ID_EXPORT_ZOOM);
 
   //wxButton* columns = new wxButton(this, ID_SELECT_COLUMNS, _BUTTON_("select"));
   // set values
@@ -227,14 +227,14 @@ DisplayPreferencesPage::DisplayPreferencesPage(Window* parent)
   non_normal_export->SetValue(!settings.default_stylesheet_settings.card_normal_export());
     zoom_int = static_cast<int>(settings.default_stylesheet_settings.card_zoom() * 100);
     zoom->SetValue(String::Format(_("%d%%"),zoom_int));
-    int choices[] = { 50,66,75,100,120,150,175,200 };
-    for (unsigned int i = 0 ; i < sizeof(choices)/sizeof(choices[0]) ; ++i) {
-        zoom->Append(String::Format(_("%d%%"),choices[i]));
+    int zoom_choices[] = { 50,66,75,80,100,120,125,150,175,200 };
+    for (unsigned int i = 0 ; i < sizeof(zoom_choices)/sizeof(zoom_choices[0]) ; ++i) {
+        zoom->Append(String::Format(_("%d%%"), zoom_choices[i]));
     }
 
     export_zoom_int = static_cast<int>(settings.default_stylesheet_settings.export_zoom() * 100);
     export_zoom->SetValue(String::Format(_("%d%%"), export_zoom_int));
-    int export_choices[] = { 50,66,75,100,120,150,175,200 };
+    int export_choices[] = { 50,66,75,80,100,120,125,150,175,200 };
     for (unsigned int i = 0; i < sizeof(export_choices) / sizeof(export_choices[0]); ++i) {
         export_zoom->Append(String::Format(_("%d%%"), export_choices[i]));
     }
@@ -328,7 +328,7 @@ InternalPreferencesPage::InternalPreferencesPage(Window* parent) : PreferencesPa
   internal_scale_int = static_cast<int>(settings.internal_scale * 100);
   internal_scale->SetValue(String::Format(_("%d%%"), internal_scale_int));
 
-  int choices[] = { 100,200,300,400 };
+  int choices[] = { 100,120,125,150,175,200 };
   for (unsigned int i = 0; i < sizeof(choices) / sizeof(choices[0]); ++i) {
     internal_scale->Append(String::Format(_("%d%%"), choices[i]));
   }
