@@ -218,8 +218,38 @@ void Style::checkContentDependencies(Context& ctx, const Dependency& dep) const 
 
 void Style::markDependencyMember(const String& name, const Dependency& dep) const {
   // mark dependencies on content
-  if (dep.type == DEP_DUMMY && dep.index == false && (starts_with(name, _("content")) || name == "layout") ) {
-    // anything that starts with "content_" is a content property
+  if (
+    dep.type == DEP_DUMMY && dep.index == false && (
+      starts_with(name, _("content")) ||
+      name == "layout" ||
+      name == "lines" ||
+      name == "paragraphs" ||
+      name == "blocks" ||
+      name == "separators" ||
+      name == "font" ||
+      name == "symbol_font" ||
+      name == "always_symbol" ||
+      name == "allow_formating" ||
+      name == "alignment" ||
+      name == "padding_left" ||
+      name == "padding_right" ||
+      name == "padding_top" ||
+      name == "padding_bottom" ||
+      name == "padding_left_min" ||
+      name == "padding_right_min" ||
+      name == "padding_top_min" ||
+      name == "padding_bottom_min" ||
+      name == "line_height_soft" ||
+      name == "line_height_hard" ||
+      name == "line_height_line" ||
+      name == "line_height_soft_max" ||
+      name == "line_height_hard_max" ||
+      name == "line_height_line_max" ||
+      name == "paragraph_height" ||
+      name == "block_height_min" ||
+      name == "direction"
+    )
+  ) {
     const_cast<Dependency&>(dep).index = true;
   }
 }

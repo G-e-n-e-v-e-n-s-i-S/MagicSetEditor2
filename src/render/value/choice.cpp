@@ -49,9 +49,10 @@ bool prepare_choice_viewer(RotatedDC& dc, ValueViewer& viewer, ChoiceStyle& styl
       RealSize size;
       img.generateCached(img_options, &style.mask, &combine, &bitmap, &image, &size);
       // store content properties
-      if (style.content_width != size.width || style.content_height != size.height) {
-        style.content_width  = size.width / dc.getZoom();
-        style.content_height = size.height / dc.getZoom();
+      double zoom = dc.getZoom();
+      if (style.content_width != size.width / zoom || style.content_height != size.height / zoom) {
+        style.content_width  = size.width / zoom;
+        style.content_height = size.height / zoom;
         return true;
       }
     }
