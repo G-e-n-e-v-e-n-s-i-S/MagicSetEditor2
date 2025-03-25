@@ -394,7 +394,7 @@ void SymbolFont::getCharInfo(RotatedDC& dc, double font_size, const SplitSymbols
 
 RealSize SymbolFont::symbolSize(double font_size, const DrawableSymbol& sym) {
   if (sym.symbol) {
-    return add_diagonal(sym.symbol->size(*this, font_size), spacing);
+    return add_diagonal(sym.symbol->size(*this, font_size), spacingSize(font_size));
   } else {
     return defaultSymbolSize(font_size);
   }
@@ -403,12 +403,15 @@ RealSize SymbolFont::symbolSize(double font_size, const DrawableSymbol& sym) {
 RealSize SymbolFont::defaultSymbolSize(double font_size) {
   SymbolInFont* def = defaultSymbol();
   if (def) {
-    return add_diagonal(def->size(*this, font_size), spacing);
+    return add_diagonal(def->size(*this, font_size), spacingSize(font_size));
   } else {
-    return add_diagonal(RealSize(1,1), spacing);
+    return add_diagonal(RealSize(1,1), spacingSize(font_size));
   }
 }
 
+RealSize SymbolFont::spacingSize(double font_size) {
+  return RealSize(spacing.width * font_size / 15.0, spacing.height * font_size / 15.0);
+}
 
 // ----------------------------------------------------------------------------- : InsertSymbolMenu
 

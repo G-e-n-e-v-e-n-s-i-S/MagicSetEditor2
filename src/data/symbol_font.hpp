@@ -84,7 +84,7 @@ public:
     
 private:
   double img_size;  ///< Font size that the images use
-  RealSize spacing;  ///< Spacing between sybmols (for the default font size)
+  RealSize spacing;  ///< Spacing between sybmols, in pixels, for a font size of 15
   // writing text
   bool scale_text;  ///< Should text be scaled down to fit in a symbol?
   InsertSymbolMenuP insert_symbol_menu;
@@ -106,6 +106,9 @@ private:
 public:
   /// The default size of symbols, including spacing
   RealSize defaultSymbolSize(double font_size);
+  
+  /// The spacing between symbols, accounting for font size
+  RealSize SymbolFont::spacingSize(double font_size);
   
   DECLARE_REFLECTION();
 };
