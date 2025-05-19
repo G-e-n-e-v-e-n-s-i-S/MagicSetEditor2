@@ -12,6 +12,7 @@
 #include <data/field/choice.hpp>
 #include <data/field/multiple_choice.hpp>
 #include <data/field/boolean.hpp>
+#include <data/field/slider.hpp>
 #include <data/field/image.hpp>
 #include <data/field/symbol.hpp>
 #include <data/field/color.hpp>
@@ -80,6 +81,7 @@ intrusive_ptr<Field> read_new<Field>(Reader& reader) {
   else if (type == _("choice"))      field = make_intrusive<ChoiceField>();
   else if (type == _("multiple choice"))  field = make_intrusive<MultipleChoiceField>();
   else if (type == _("boolean"))      field = make_intrusive<BooleanField>();
+  else if (type == _("slider"))      field = make_intrusive<SliderField>();
   else if (type == _("image"))      field = make_intrusive<ImageField>();
   else if (type == _("symbol"))      field = make_intrusive<SymbolField>();
   else if (type == _("color"))      field = make_intrusive<ColorField>();
