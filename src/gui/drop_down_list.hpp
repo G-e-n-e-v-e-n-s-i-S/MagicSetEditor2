@@ -49,6 +49,9 @@ protected:
   
   inline bool isRoot() { return parent_menu == nullptr; }
   
+  /// Should the list of choices be displayed as a slider (if all choices are numbers)
+  bool is_slider = false;
+
   // --------------------------------------------------- : Selection
   static const size_t NO_SELECTION = (size_t)-1;
   
@@ -79,7 +82,13 @@ protected:
   
   static const int marginW = 0;
   static const int marginH = 0;
-  
+
+  static bool slider_loaded;
+  static wxBitmap slider_left;
+  static wxBitmap slider_right;
+  static wxBitmap slider_center;
+  static wxBitmap slider_tick;
+
   // may be changed by derived class
   int text_offset;  ///< Vertical distance between top of item and text
   RealSize item_size;  ///< Size of an item;

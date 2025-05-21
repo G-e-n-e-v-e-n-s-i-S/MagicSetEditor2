@@ -192,6 +192,11 @@ shape_align_middle IMAGE "shape_align_middle.png"
 shape_align_center IMAGE "shape_align_center.png"
 shape_align_both IMAGE "shape_align_both.png"
 
+slider_left IMAGE "slider_left.png"
+slider_right IMAGE "slider_right.png"
+slider_center IMAGE "slider_center.png"
+slider_tick IMAGE "slider_tick.png"
+
 // -------------------------------------------------------- : WX
 
 //wxBITMAP_STD_COLOURS BITMAP "wx/msw/colours.bmp"
