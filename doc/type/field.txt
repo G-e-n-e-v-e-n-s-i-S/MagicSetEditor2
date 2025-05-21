@@ -22,6 +22,7 @@ Fields are part of the [[file:style triangle]]:
 			* @multiple choice@
 			* @package choice@
 			* @boolean@
+			* @slider@
 			* @image@
 			* @symbol@
 			* @color@
@@ -49,6 +50,7 @@ The @type@ determines what values of this field contain:
 | @multiple choice@	Zero or more choices from a list					A single image or multiple images
 | @package choice@	A choice from a list of installed [[type:package]]s			Text and/or an image
 | @boolean@		@yes@ or @no@								Text or an image or both
+| @slider@		A choice from a list of numbers							Text or an image
 | @color@		Any color or a restricted selection from a list				A box filled with the color
 | @image@		Any image								The image
 | @symbol@		A [[type:symbol]] edited with the symbol editor				The image
@@ -78,6 +80,18 @@ Additional properties are available, depending on the type of field:
 		These choices must appear in the same order as they do in the @choices@ property.
 	
 | @"boolean"@	''A boolean field is a choice field with the choices @"yes"@ and @"no"@.''	<<<	<<<	<<<
+	
+| @"slider"@	''A slider field is a choice field where the choices are all numbers.''	<<<	<<<	<<<
+| ^^^		@script@	[[type:script]]		 	Script to apply to values of this field after each change.<br/>
+		 		 		 		If the script evaluates to a constant (i.e. doesn't use @value@) then values in this field can effectively not be edited.
+| ^^^		@default@	[[type:script]]		 	Script to determine the value when it is in the default state (not edited).
+| ^^^		@initial@	[[type:string]]		 	Initial value for new values for this field. Must be a number, otherwise it will be replaced with minimum.
+| ^^^		@default name@	[[type:string]]	@"Default"@	Name of the default state.
+| ^^^		@minimum@	[[type:integer]]	 	Minimum possible value for this field.
+| ^^^		@maximum@	[[type:integer]]	 	Maximum possible value for this field.
+| ^^^		@increment@	[[type:integer]]	 	Gap between possible values for this field.
+| ^^^		@choice colors@	[[type:map]] of opaque [[type:color]]s	 	Colors of the choices for statistics graphs.
+| ^^^		@choice colors cardlist@	[[type:map]] of opaque [[type:color]]s	 	Colors of the choices for lines in the card list,<br/> see also the @card list color script@ property of [[type:game]]s.
 	
 | @"package choice"@
 		@script@	[[type:script]]		 	Script to apply to values of this field after each change.<br/>

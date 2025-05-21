@@ -113,7 +113,7 @@ void DropDownList::show(bool in_place, wxPoint pos, RealRect* rect) {
   RealSize size;
   if (is_slider) {
     size.height = 70 + marginH * 2;
-    size.width = max(150.0, max(90.0 + count, item_size.width + marginW * 2));
+    size.width = min(1000.0, max(150.0, max(100.0 + count, item_size.width + marginW * 2)));
   } else {
     int line_count = 0;
     for (size_t i = 0; i < count; ++i) if (lineBelow(i)) line_count += 1;
@@ -320,7 +320,6 @@ void DropDownList::draw(DC& dc) {
   if (is_slider) {
     // If it's a slider, draw the slider
     cs = GetClientSize();
-    dc.Clear();
     dc.SetPen(*wxBLACK_PEN);
     dc.SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, _("Arial")));
     int first_text_width;
