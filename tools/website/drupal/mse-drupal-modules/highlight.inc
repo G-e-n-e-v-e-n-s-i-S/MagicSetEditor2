@@ -110,6 +110,7 @@ $built_in_functions = array(
 	// other
 	'get_mse_version'			=>'',
 	'get_mse_locale'			=>'',
+	'get_mse_path'			=>'',
 	'trace'			=>'',
 	'assert'		=>'',
 	'exists_in_package'		=>'',

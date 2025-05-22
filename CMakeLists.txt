@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 project(magicseteditor VERSION 2.6.0)
+
 add_definitions(-DUNOFFICIAL_BUILD)
 
 set(CMAKE_CXX_STANDARD 17)

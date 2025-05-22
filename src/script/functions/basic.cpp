@@ -19,11 +19,21 @@
 #include <data/card.hpp>
 #include <data/game.hpp>
 #include <random>
+#include <wx/filename.h>
+#include <wx/stdpaths.h>
+
 
 // ----------------------------------------------------------------------------- : Debugging
 
 SCRIPT_FUNCTION(get_mse_version) {
   SCRIPT_RETURN(app_version.toString());
+}
+
+SCRIPT_FUNCTION(get_mse_path) {
+  wxFileName app_path(wxStandardPaths::Get().GetExecutablePath());
+  String app_folder = app_path.GetPath();
+  app_folder.Replace("\\", "/");
+  SCRIPT_RETURN(app_folder);
 }
 
 SCRIPT_FUNCTION(get_mse_locale) {
@@ -814,6 +824,7 @@ void init_script_basic_functions(Context& ctx) {
   // debugging
   ctx.setVariable(_("get_mse_version"),      script_get_mse_version);
   ctx.setVariable(_("get_mse_locale"),       script_get_mse_locale);
+  ctx.setVariable(_("get_mse_path"),         script_get_mse_path);
   ctx.setVariable(_("trace"),                script_trace);
   ctx.setVariable(_("warning"),              script_warning);
   ctx.setVariable(_("error"),                script_error);

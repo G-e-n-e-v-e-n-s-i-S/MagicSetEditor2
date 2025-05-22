@@ -200,7 +200,29 @@ END_EVENT_TABLE()
 
 DropDownChoiceList::DropDownChoiceList(Window* parent, bool is_submenu, ValueViewer& cve, ChoiceField::ChoiceP group)
   : DropDownChoiceListBase(parent, is_submenu, cve, group)
-{}
+{
+  // determine if slider
+  size_t count = itemCount();
+  if (count > 2) {
+    int value;
+    try {
+      value = std::stoi(itemText(0).ToStdString());
+      value = std::stoi(itemText(1).ToStdString());
+      value = std::stoi(itemText(count - 1).ToStdString());
+      // the choices are numbers, use a slider
+      is_slider = true;
+      // load slider images if needed
+      if (!slider_loaded) {
+        slider_loaded = true;
+        slider_left = load_resource_image(_("slider_left"));
+        slider_right = load_resource_image(_("slider_right"));
+        slider_center = load_resource_image(_("slider_center"));
+        slider_tick = load_resource_image(_("slider_tick"));
+      }
+    }
+    catch (...) {}
+  }
+}
 
 void DropDownChoiceList::onShow() {
   DropDownChoiceListBase::onShow();

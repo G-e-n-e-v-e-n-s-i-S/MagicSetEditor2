@@ -1,0 +1,6 @@
+Function: get_mse_path
+
+--Usage--
+> get_mse_path()
+
+Returns the current MSE app folder absolute path.

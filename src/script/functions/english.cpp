@@ -153,6 +153,7 @@ SCRIPT_FUNCTION(english_number_ordinal) {
 // ----------------------------------------------------------------------------- : Singular/plural
 
 String english_singular(const String& str) {
+  if (str.Lower() == _("plains")) return str;
   if (str.size() > 3 && is_substr(str, str.size()-3, _("ies"))) {
     return str.substr(0, str.size() - 3) + _("y");
   } else if (str.size() > 3 && is_substr(str, str.size()-3, _("oes"))) {
@@ -174,6 +175,7 @@ String english_singular(const String& str) {
   }
 }
 String english_plural(const String& str) {
+  if (str.Lower() == _("plains")) return str;
   if (str.size() > 2) {
     Char a = str.GetChar(str.size() - 2);
     Char b = str.GetChar(str.size() - 1);

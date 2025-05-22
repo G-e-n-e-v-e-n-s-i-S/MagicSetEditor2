@@ -16,6 +16,12 @@
 #include <gfx/gfx.hpp>
 #include <wx/dcbuffer.h>
 
+bool DropDownList::slider_loaded;
+wxBitmap DropDownList::slider_left;
+wxBitmap DropDownList::slider_right;
+wxBitmap DropDownList::slider_center;
+wxBitmap DropDownList::slider_tick;
+
 // ----------------------------------------------------------------------------- : DropDownHider
 
 // Class that intercepts all events not directed to a DropDownList, and closes the list
@@ -29,7 +35,7 @@ private:
   bool ProcessEvent(wxEvent& ev) override {
     int t = ev.GetEventType();
     if ( t == wxEVT_LEFT_DOWN      || t == wxEVT_RIGHT_DOWN
-      || t == wxEVT_MOVE           || t == wxEVT_SIZE
+      || t == wxEVT_MOVE
       || t == wxEVT_MENU_HIGHLIGHT || t == wxEVT_MENU_OPEN    || t == wxEVT_MENU_OPEN
       || t == wxEVT_ACTIVATE       || t == wxEVT_CLOSE_WINDOW || t == wxEVT_KILL_FOCUS
       || t == wxEVT_COMMAND_TOOL_CLICKED)
@@ -91,7 +97,7 @@ void DropDownList::show(bool in_place, wxPoint pos, RealRect* rect) {
   onShow();
   // find selection
   selected_item = selection();
-  // width
+  // determine item width
   size_t count = itemCount();
   if (item_size.width == 100) { // not initialized
     wxClientDC dc(this);
@@ -102,16 +108,19 @@ void DropDownList::show(bool in_place, wxPoint pos, RealRect* rect) {
       item_size.width = max(item_size.width, text_width + icon_size.width + 14); // 14 = room for popup arrow + padding
     }
   }
-  // height
-  int line_count = 0;
-  for (size_t i = 0 ; i < count ; ++i) if (lineBelow(i)) line_count += 1;
-  // size
+  // determine dropdown size
   RealSize border_size(2,2); // GetClientSize() - GetSize(), assume 1px borders
-  RealSize size(
-    item_size.width + marginW * 2,
-    item_size.height * count + marginH * 2 + line_count
-  );
-  // placement
+  RealSize size;
+  if (is_slider) {
+    size.height = 70 + marginH * 2;
+    size.width = min(1000.0, max(150.0, max(100.0 + count, item_size.width + marginW * 2)));
+  } else {
+    int line_count = 0;
+    for (size_t i = 0; i < count; ++i) if (lineBelow(i)) line_count += 1;
+    size.height = item_size.height * count + marginH * 2 + line_count;
+    size.width = item_size.width + marginW * 2;
+  }
+  // determine placement
   int parent_height = 0;
   if (!in_place && viewer) {
     // Position the drop down list below the editor control (based on the style)
@@ -302,17 +311,48 @@ void DropDownList::onPaint(wxPaintEvent&) {
 void DropDownList::draw(DC& dc) {
   // Size
   wxSize cs = dc.GetSize();
+  size_t count = itemCount();
   // Draw background & frame
-  dc.SetPen  (*wxTRANSPARENT_PEN);
+  dc.SetPen(*wxTRANSPARENT_PEN);
   dc.SetBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
   dc.DrawRectangle(0, 0, cs.x, cs.y);
   dc.SetFont(*wxNORMAL_FONT);
-  // Draw items
-  int y = marginH - visible_start;
-  size_t count = itemCount();
-  for (size_t i = 0 ; i < count ; ++i) {
-    drawItem(dc, y, i);
-    y += (int)item_size.height + lineBelow(i);
+  if (is_slider) {
+    // If it's a slider, draw the slider
+    cs = GetClientSize();
+    dc.SetPen(*wxBLACK_PEN);
+    dc.SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, _("Arial")));
+    int first_text_width;
+    dc.GetTextExtent(capitalize(itemText(0)), &first_text_width, nullptr);
+    int last_text_width;
+    dc.GetTextExtent(capitalize(itemText(count-1)), &last_text_width, nullptr);
+    dc.DrawText(capitalize(itemText(0)),       marginW + 4,                          14);
+    dc.DrawText(capitalize(itemText(count-1)), cs.x - marginW - 4 - last_text_width, 14);
+
+    int slider_start =      first_text_width + marginW + 16;
+    int slider_end = cs.x - (last_text_width + marginW + 16);
+    dc.DrawBitmap(slider_left, slider_start, 14);
+    for (size_t i = slider_start + 19; i < slider_end - 19; i+=19) {
+      dc.DrawBitmap(slider_center, i, 14);
+    }
+    dc.DrawBitmap(slider_right, slider_end - 19, 14);
+
+    int selected_index = selected_item < 0 ? 0 : selected_item;
+    int slider_pos = round((double)selected_index/(count - 1) * (slider_end - slider_start)) + slider_start;
+    dc.DrawBitmap(slider_tick, slider_pos - 7, 9); // -7 cause the bitmap is 15 pixels wide
+
+    int selected_text_width;
+    dc.GetTextExtent(capitalize(itemText(selected_index)), &selected_text_width, nullptr);
+    dc.DrawText(capitalize(itemText(selected_index)), slider_pos - selected_text_width/2, 44);
+
+    dc.SetFont(*wxNORMAL_FONT);
+  } else {
+    // If it's not a slider, draw the list of items
+    int y = marginH - visible_start;
+    for (size_t i = 0; i < count; ++i) {
+      drawItem(dc, y, i);
+      y += (int)item_size.height + lineBelow(i);
+    }
   }
 }
 
@@ -385,20 +425,34 @@ void DropDownList::onMotion(wxMouseEvent& ev) {
     return;
   }
   // find selected item
-  int startY = marginH - visible_start;
   size_t count = itemCount();
-  for (size_t i = 0 ; i < count ; ++i) {
-    int endY = startY + (int)item_size.height;
-    if (ev.GetY() >= startY && ev.GetY() < endY) {
-      if (itemEnabled(i)) {
-        showSubMenu(i, startY);
+  if (is_slider) {
+    int first_text_width;
+    GetTextExtent(capitalize(itemText(0)), &first_text_width, nullptr);
+    int last_text_width;
+    GetTextExtent(capitalize(itemText(count - 1)), &last_text_width, nullptr);
+    int slider_start =      first_text_width + marginW + 16;
+    int slider_end = cs.x - (last_text_width + marginW + 16);
+    int slider_pos = ev.GetX();
+    if (slider_pos < slider_start) slider_pos = slider_start;
+    if (slider_pos > slider_end) slider_pos = slider_end;
+    int selected_item = round(((double)(slider_pos - slider_start)) / (slider_end - slider_start) * (count - 1));
+    selectItem(selected_item);
+  } else {
+    int startY = marginH - visible_start;
+    for (size_t i = 0; i < count; ++i) {
+      int endY = startY + (int)item_size.height;
+      if (ev.GetY() >= startY && ev.GetY() < endY) {
+        if (itemEnabled(i)) {
+          showSubMenu(i, startY);
+        }
+        selectItem(i);
+        return;
       }
-      selectItem(i);
-      return;
+      startY = endY + lineBelow(i);
     }
-    startY = endY + lineBelow(i);
+    hideSubMenu();
   }
-  hideSubMenu();
 }
 
 void DropDownList::onMouseLeave(wxMouseEvent& ev) {
