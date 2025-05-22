@@ -207,7 +207,7 @@ DropDownChoiceList::DropDownChoiceList(Window* parent, bool is_submenu, ValueVie
     int value;
     try {
       String first_item = capitalize(itemText(0));
-      if (first_item != _("Default")) value = std::stoi(itemText(0).ToStdString());
+      if (first_item != _("Default")) value = std::stoi(first_item.ToStdString());
       value = std::stoi(itemText(1).ToStdString());
       value = std::stoi(itemText(count - 2).ToStdString());
       value = std::stoi(itemText(count - 1).ToStdString());
