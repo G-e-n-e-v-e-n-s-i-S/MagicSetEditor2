@@ -338,12 +338,12 @@ void DropDownList::draw(DC& dc) {
     dc.DrawBitmap(slider_right, slider_end - 19, 14);
 
     int selected_index = selected_item < 0 ? 0 : selected_item;
-    int slider_middle = round((double)selected_index/(count - 1) * (slider_end - slider_start)) + slider_start;
-    dc.DrawBitmap(slider_tick, slider_middle - 7, 9); // -7 cause the bitmap is 15 pixels wide
+    int slider_pos = round((double)selected_index/(count - 1) * (slider_end - slider_start)) + slider_start;
+    dc.DrawBitmap(slider_tick, slider_pos - 7, 9); // -7 cause the bitmap is 15 pixels wide
 
     int selected_text_width;
     dc.GetTextExtent(capitalize(itemText(selected_index)), &selected_text_width, nullptr);
-    dc.DrawText(capitalize(itemText(selected_index)), slider_middle - selected_text_width/2, 44);
+    dc.DrawText(capitalize(itemText(selected_index)), slider_pos - selected_text_width/2, 44);
 
     dc.SetFont(*wxNORMAL_FONT);
   } else {
@@ -433,10 +433,10 @@ void DropDownList::onMotion(wxMouseEvent& ev) {
     GetTextExtent(capitalize(itemText(count - 1)), &last_text_width, nullptr);
     int slider_start =      first_text_width + marginW + 16;
     int slider_end = cs.x - (last_text_width + marginW + 16);
-    int slider_x = ev.GetX();
-    if (slider_x < slider_start) slider_x = slider_start;
-    if (slider_x > slider_end) slider_x = slider_end;
-    int selected_item = round(((double)(slider_x - slider_start)) / (slider_end - slider_start) * (count - 1));
+    int slider_pos = ev.GetX();
+    if (slider_pos < slider_start) slider_pos = slider_start;
+    if (slider_pos > slider_end) slider_pos = slider_end;
+    int selected_item = round(((double)(slider_pos - slider_start)) / (slider_end - slider_start) * (count - 1));
     selectItem(selected_item);
   } else {
     int startY = marginH - visible_start;
