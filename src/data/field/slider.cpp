@@ -61,7 +61,7 @@ void SliderField::after_reading(Version ver) {
 SliderStyle::SliderStyle(const ChoiceFieldP& field)
   : ChoiceStyle(field)
 {
-  render_style = RENDER_BOTH;
+  render_style = RENDER_TEXT;
 }
 
 IMPLEMENT_REFLECTION(SliderStyle) {
