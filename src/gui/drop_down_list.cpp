@@ -35,7 +35,7 @@ private:
   bool ProcessEvent(wxEvent& ev) override {
     int t = ev.GetEventType();
     if ( t == wxEVT_LEFT_DOWN      || t == wxEVT_RIGHT_DOWN
-      || t == wxEVT_MOVE           || t == wxEVT_SIZE
+      || t == wxEVT_MOVE
       || t == wxEVT_MENU_HIGHLIGHT || t == wxEVT_MENU_OPEN    || t == wxEVT_MENU_OPEN
       || t == wxEVT_ACTIVATE       || t == wxEVT_CLOSE_WINDOW || t == wxEVT_KILL_FOCUS
       || t == wxEVT_COMMAND_TOOL_CLICKED)
@@ -340,10 +340,10 @@ void DropDownList::draw(DC& dc) {
       dc.DrawBitmap(slider_center, i, 14);
     }
     dc.DrawBitmap(slider_right, slider_end - 19, 14);
-
     int selected_index = selected_item < 0 ? 0 : selected_item;
     int slider_pos = round((double)selected_index/(count-1) * (slider_end - slider_start)) + slider_start;
     dc.DrawBitmap(slider_tick, slider_pos - 7, 9); // -7 cause the slider_tick bitmap is 15 pixels wide
+
     int selected_text_width;
     dc.GetTextExtent(capitalize(itemText(selected_index)), &selected_text_width, nullptr);
     dc.DrawText(capitalize(itemText(selected_index)), slider_pos - selected_text_width/2, 44);

@@ -104,6 +104,7 @@ $built_in_functions = array(
 	'write_set_file'	=>'',
 	// other
 	'get_mse_version'			=>'',
+	'get_mse_path'			=>'',
 	'trace'			=>'',
 	'assert'		=>'',
 	'exists_in_package'		=>'',
