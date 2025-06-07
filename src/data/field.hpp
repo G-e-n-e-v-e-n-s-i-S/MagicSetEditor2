@@ -44,6 +44,7 @@ public:
   
   size_t    index;            ///< Used by IndexMap
   String    name;             ///< Name of the field, for refering to it from scripts and files
+  vector<String>    alt_names;             ///< Other names this field might go by, for example in CSV files
   LocalizedString caption;    ///< Caption for NativeLookEditor
   LocalizedString description;///< Description, used in status bar
   String    icon_filename;    ///< Filename for an icon (for list of fields)

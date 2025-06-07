@@ -13,6 +13,7 @@ $built_in_functions = array(
 	'to_color'		=>'',
 	'to_image'		=>'',
 	'to_date'		=>'',
+	'make_map'		=>'',
 	// numbers
 	'abs'			=>'',
 	'random_int'		=>'',

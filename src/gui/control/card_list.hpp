@@ -77,7 +77,8 @@ public:
   bool doCopy() override;
   bool doPaste() override;
   bool doDelete() override;
-  
+  bool doAddCSV();
+
   // --------------------------------------------------- : Set actions
   
   void onBeforeChangeSet() override;

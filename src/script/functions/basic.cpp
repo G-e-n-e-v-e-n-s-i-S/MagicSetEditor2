@@ -684,6 +684,30 @@ SCRIPT_FUNCTION(random_select_many) {
   return ret;
 }
 
+SCRIPT_FUNCTION(make_map) {
+  SCRIPT_PARAM(ScriptValueP, keys);
+  SCRIPT_PARAM(ScriptValueP, values);
+  ScriptValueP keys_it = keys->makeIterator();
+  ScriptValueP key;
+  ScriptValueP values_it = values->makeIterator();
+  ScriptValueP value;
+  ScriptCustomCollectionP map = make_intrusive<ScriptCustomCollection>();
+  while (key = keys_it->next()) {
+    if (key == script_nil) continue;
+    if (value = values_it->next()) {
+      map->key_value[key->toString()] = value;
+    }
+    else {
+      queue_message(MESSAGE_WARNING, "More keys than values given in function make_map!");
+      break;
+    }
+  }
+  if (value = values_it->next()) {
+    queue_message(MESSAGE_WARNING, "More values than keys given in function make_map!");
+  }
+  return map;
+}
+
 SCRIPT_FUNCTION(get_card_styling) {
   SCRIPT_PARAM_C(ScriptValueP, input);
   SCRIPT_PARAM_C(ScriptValueP, set);
@@ -795,6 +819,7 @@ void init_script_basic_functions(Context& ctx) {
   ctx.setVariable(_("to_date"),              script_to_date);
   ctx.setVariable(_("to_code"),              script_to_code);
   ctx.setVariable(_("type_name"),            script_type_name);
+  ctx.setVariable(_("make_map"),             script_make_map);
   ctx.setVariable(_("get_card_styling"),     script_get_card_styling);
   ctx.setVariable(_("get_card_stylesheet"),  script_get_card_stylesheet);
   // math

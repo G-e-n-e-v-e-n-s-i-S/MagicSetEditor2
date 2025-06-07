@@ -108,6 +108,9 @@ enum ChildMenuID {
   ID_CARD_ROTATE_270,
   // CardList
   ID_SELECT_COLUMNS,
+  ID_CARD_ADD_CSV,
+  ID_CARD_ADD_CSV_SEP,
+  ID_CARD_ADD_CSV_BROWSE,
 
   // Keyword menu
   ID_KEYWORD_ADD = 6101,

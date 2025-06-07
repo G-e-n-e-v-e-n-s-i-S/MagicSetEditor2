@@ -48,7 +48,8 @@ public:
   vector<WordListP>       word_lists;        ///< Word lists for editing with a drop down list
   vector<AddCardsScriptP> add_cards_scripts;    ///< Scripts for adding multiple cards to the set
   vector<AutoReplaceP>  auto_replaces;      ///< Things to autoreplace in textboxes
-  
+  map<String,String>      card_fields_alt_names;  ///< Other names that fields might go by, for example in CSV files
+
   bool                    has_keywords;           ///< Does this game use keywords?
   OptionalScript          keyword_match_script;  ///< For the keyword editor
   vector<KeywordParamP>   keyword_parameter_types;///< Types of keyword parameters

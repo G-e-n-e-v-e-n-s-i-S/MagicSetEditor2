@@ -34,6 +34,13 @@ SCRIPT_FUNCTION(new_card) {
     // find value to update
     IndexMap<FieldP,ValueP>::const_iterator value_it = new_card->data.find(name);
     if (value_it == new_card->data.end()) {
+      // look among alternate names
+      map<String, String>::iterator it2 = game->card_fields_alt_names.find(unified_form(name));
+      if (it2 != game->card_fields_alt_names.end()) {
+        value_it = new_card->data.find(it2->second);
+      }
+    }
+    if (value_it == new_card->data.end()) {
       throw ScriptError(_ERROR_1_("no field with name", name));
     }
     Value* value = value_it->get();

@@ -48,6 +48,7 @@ IMPLEMENT_REFLECTION(Field) {
     REFLECT(type);
   }
   REFLECT(name);
+  REFLECT(alt_names);
   REFLECT_LOCALIZED(caption);
   REFLECT_LOCALIZED(description); // FIXME: This field is both unused and uninitialized.
   REFLECT_N("icon", icon_filename);
