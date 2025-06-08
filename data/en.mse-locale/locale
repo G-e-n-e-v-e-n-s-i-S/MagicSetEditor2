@@ -52,7 +52,7 @@ menu:
 	add card:							&Add Card	Ctrl+Enter
 	add cards:							Add &Multiple Cards...
 	remove card:						&Delete Selected Card
-	add card csv:						Add cards from CSV or TSV...
+	add card csv:						Add Cards from CSV or TSV...
 	orientation:						&Orientation
 	rotate 0:							&Normal
 	rotate 270:							Rotated 90° &Clockwise
@@ -731,7 +731,7 @@ title:
 	export html:						Export to HTML
 	save html:							Export to HTML
 	# import
-	add card csv:						Add cards from CSV or TSV file
+	add card csv:						Add Cards from CSV or TSV file
 	add card csv file:					Open CSV or TSV file
 	# auto replace
 	auto replaces:						Auto Replace

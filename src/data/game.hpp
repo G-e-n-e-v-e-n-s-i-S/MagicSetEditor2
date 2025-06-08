@@ -41,25 +41,26 @@ public:
   vector<FieldP>          set_fields;             ///< Fields for set information
   IndexMap<FieldP,StyleP> default_set_style;      ///< Default style for the set fields, because it is often the same
   vector<FieldP>          card_fields;            ///< Fields on each card
-  OptionalScript          card_list_color_script;  ///< Script that determines the color of items in the card list
+  OptionalScript          card_list_color_script; ///< Script that determines the color of items in the card list
+  OptionalScript          construction_script;    ///< Script applied as the last step of the new_card function
   vector<StatsDimensionP> statistics_dimensions;  ///< (Additional) statistics dimensions
   vector<StatsCategoryP>  statistics_categories;  ///< (Additional) statistics categories
-  vector<PackTypeP>       pack_types;        ///< Types of random card packs to generate
-  vector<WordListP>       word_lists;        ///< Word lists for editing with a drop down list
-  vector<AddCardsScriptP> add_cards_scripts;    ///< Scripts for adding multiple cards to the set
-  vector<AutoReplaceP>  auto_replaces;      ///< Things to autoreplace in textboxes
+  vector<PackTypeP>       pack_types;             ///< Types of random card packs to generate
+  vector<WordListP>       word_lists;             ///< Word lists for editing with a drop down list
+  vector<AddCardsScriptP> add_cards_scripts;      ///< Scripts for adding multiple cards to the set
+  vector<AutoReplaceP>    auto_replaces;          ///< Things to autoreplace in textboxes
   map<String,String>      card_fields_alt_names;  ///< Other names that fields might go by, for example in CSV files
 
   bool                    has_keywords;           ///< Does this game use keywords?
-  OptionalScript          keyword_match_script;  ///< For the keyword editor
+  OptionalScript          keyword_match_script;   ///< For the keyword editor
   vector<KeywordParamP>   keyword_parameter_types;///< Types of keyword parameters
   vector<KeywordModeP>    keyword_modes;          ///< Modes of keywords
   vector<KeywordP>        keywords;               ///< Keywords for use in text
   
   Dependencies dependent_scripts_cards;           ///< scripts that depend on the card list
   Dependencies dependent_scripts_keywords;        ///< scripts that depend on the keywords
-  Dependencies dependent_scripts_stylesheet;    ///< scripts that depend on the card's stylesheet
-  bool dependencies_initialized;                  ///< are the script dependencies comming from this game all initialized?
+  Dependencies dependent_scripts_stylesheet;      ///< scripts that depend on the card's stylesheet
+  bool         dependencies_initialized;          ///< are the script dependencies comming from this game all initialized?
   
   /// Loads the game with a particular name, for example "magic"
   static GameP byName(const String& name);
