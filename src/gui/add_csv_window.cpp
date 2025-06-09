@@ -112,9 +112,13 @@ std::vector<std::string> AddCSVWindow::readCSVRow(const std::string& row) {
 }
 
 void AddCSVWindow::onOk(wxCommandEvent&) {
-  /// Perform the adding
+  /// Perform the import
   // Read the file, put it into a table
   auto in = std::ifstream(file_path->GetValue().ToStdString());
+  if (in.fail()) {
+    queue_message(MESSAGE_ERROR, _ERROR_("add card csv file not found"));
+    return;
+  }
   std::vector<std::vector<std::string>> table;
   std::string row;
   while (!in.eof()) {
@@ -125,20 +129,29 @@ void AddCSVWindow::onOk(wxCommandEvent&) {
     auto fields = readCSVRow(row);
     table.push_back(fields);
   }
+  // ensure table is square
+  int count = table[0].size();
+  for (int y = 1; y < table.size(); ++y) {
+    if (table[y].size() != count) {
+      queue_message(MESSAGE_ERROR, _ERROR_1_("add card csv file malformed", wxString::Format(wxT("%i"), y+1)));
+      return;
+    }
+  }
   // produce script from table
   std::ostringstream stream;
   stream << "[";
   for (int y = 1; y < table.size(); ++y) {
     stream << "new_card([";
-    for (int x = 0; x < table[0].size(); ++x) {
+    for (int x = 0; x < count; ++x) {
       stream << "\"" << table[0][x] << "\": \"" << table[y][x] << "\"";
-      if (x < table[0].size() - 1) stream << ",";
+      if (x < count - 1) stream << ",";
     }
     stream << "])";
     if (y < table.size() - 1) stream << ",";
   }
   stream << "]";
   String string(stream.str().c_str(), wxConvUTF8);
+  string.Replace("{", "\\{"); string.Replace("}", "\\}");
   ScriptP script = parse(string, nullptr, false);
   Context& ctx = set->getContext();
   ScriptValueP result = script->eval(ctx, false);

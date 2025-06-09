@@ -28,6 +28,7 @@ Fields are part of the [[file:style triangle]]:
 			* @color@
 			* @info@
 | @name@		[[type:string]]		''required''	Name of the field.
+| @alt names@		[[type:list]] of [[type:string]]		 	Possible alternate names for this field, mainly to look for it when importing CSV files. They are trimmed, made case insensitive, and don't distinguish between spaces and underscores.
 | @description@		[[type:localized string]]		@""@		Description of the field, shown in the status bar when the mouse is over the field.
 | @icon@		[[type:filename]]	 		Filename of an icon for this field, used for automatically generated [[type:statistics category]]s.
 | @editable@		[[type:boolean]]	@true@		Can values of this field be edited?
@@ -42,6 +43,10 @@ Fields are part of the [[file:style triangle]]:
 | @card list name@	[[type:localized string]]		field name	Alternate name to use for the card list, for example an abbreviation.
 | @card list alignment@	[[type:alignment]]	@left@		Alignment of the card list column.
 | @sort script@		[[type:script]]		 		Alternate way to sort the card list when using this column to sort the list.
+| @construction script@		[[type:script]]		 		Script applied to the value given when creating a card with the new_card function.
+			 			 		For example, the pt field should not be initialized directly, since it is a combination of the power field and toughness field.
+			 			 		So if a value is given for pt, it must be redirected to power and toughness like so: {split := split_text(value, match:"/"); [power:split[0], toughness:split[1]]}.
+			 			 		The script must return a map from field names to values. Use the make_map function to dynamically create maps.
 
 The @type@ determines what values of this field contain:
 ! Type			Values contain								Displayed as
