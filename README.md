@@ -73,30 +73,20 @@ cmake --build build
 
  Use `CMAKE_BUILD_TYPE=Debug` for a debug build.
 
-## Building on Linux
-
- * Install the dependencies; for example, on a Debian-based system:
-
-```
-sudo apt install g++
-sudo apt install libboost-dev libwxgtk3.0-gtk3-dev libhunspell-dev
-```
-
-Then use cmake to build:
-
-```
-mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-cmake --build .
-```
-
- Use `CMAKE_BUILD_TYPE=Debug` for a debug build.
-
-## Building on FreeBSD
+## Building on Linux / FreeBSD
 
  * Install the dependencies:
 
 ```
+# debian 12+ / ubuntu 24.04+
+sudo apt install libboost-dev libboost-regex-dev libwxgtk3.2-dev libhunspell-dev cmake
+# debian 11 / ubuntu 22.04
+sudo apt install libboost-dev libboost-regex-dev libwxgtk3.0-gtk3-dev libhunspell-dev cmake
+# fedora / centos
+sudo dnf install boost-devel wxGTK-devel hunspell-devel git cmake
+# archlinux / manjaro
+sudo pacman -Syu wxgtk3 hunspell boost git cmake
+# freebsd
 sudo pkg install hunspell cmake wx30-gtk3 boost-all
 ```
 
@@ -108,7 +98,14 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ```
 
- Use `CMAKE_BUILD_TYPE=Debug` for a debug build.
+ Use `-CMAKE_BUILD_TYPE=Debug` for a debug build.
+
+### wx-config can't be found
+On old versions it's possible that cmake can't find wx-config, to solve this add the tool to the cmake command manually like this: `-DwxWidgets_CONFIG_EXECUTABLE=/usr/bin/wx-config-gtk3`
+
+### Installing resources
+Install the resource folder to the .magicseteditor dir: `mkdir -p $HOME/.magicseteditor && cp -r ./resources $HOME/.magicseteditor/resources`
+Templates are installed to `~/.magicseteditor/data`. Fonts are installed to `~/.local/share/fonts`.
 
 ## Building on Mac OS
 
