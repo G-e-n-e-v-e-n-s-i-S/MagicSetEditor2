@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <regex>
 #include <util/prec.hpp>
 #include <data/game.hpp>
 #include <data/set.hpp>
@@ -71,35 +72,35 @@ void AddCSVWindow::onBrowseFiles(wxCommandEvent&) {
 std::vector<std::string> AddCSVWindow::readCSVRow(const std::string& row) {
   CSVState state = CSVState::UnquotedField;
   std::vector<std::string> fields{ "" };
-  size_t i = 0; // index of the current field
+  size_t f = 0; // index of the current field
   for (char c : row) {
     switch (state) {
     case CSVState::UnquotedField:
       if (c == separator) { // end of field
-        fields.push_back(""); i++;
+        fields.push_back(""); f++;
       }
       else if (c == '"') {
         state = CSVState::QuotedField;
       }
       else {
-        fields[i].push_back(c);
+        fields[f].push_back(c);
       }
       break;
     case CSVState::QuotedField:
       switch (c) {
       case '"': state = CSVState::QuotedQuote;
         break;
-      default:  fields[i].push_back(c);
+      default:  fields[f].push_back(c);
         break;
       }
       break;
     case CSVState::QuotedQuote:
       if (c == separator) { // separator after closing quote
-        fields.push_back(""); i++;
+        fields.push_back(""); f++;
         state = CSVState::UnquotedField;
       }
       else if (c == '"') { // "" -> "
-        fields[i].push_back('"');
+        fields[f].push_back('"');
         state = CSVState::QuotedField;
       }
       else { // end of quote
@@ -107,6 +108,12 @@ std::vector<std::string> AddCSVWindow::readCSVRow(const std::string& row) {
       }
       break;
     }
+  }
+  // escape " { }
+  for (f = 0; f < fields.size(); ++f) {
+    fields[f] = std::regex_replace(fields[f], std::regex("\""), "\\\"");
+    fields[f] = std::regex_replace(fields[f], std::regex("\\{"), "\\{");
+    fields[f] = std::regex_replace(fields[f], std::regex("\\}"), "\\}");
   }
   return fields;
 }
@@ -151,7 +158,6 @@ void AddCSVWindow::onOk(wxCommandEvent&) {
   }
   stream << "]";
   String string(stream.str().c_str(), wxConvUTF8);
-  string.Replace("{", "\\{"); string.Replace("}", "\\}");
   ScriptP script = parse(string, nullptr, false);
   Context& ctx = set->getContext();
   ScriptValueP result = script->eval(ctx, false);
