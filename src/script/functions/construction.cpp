@@ -70,15 +70,35 @@ static bool set_builtin_container(GameP& game, CardP& card, ScriptValueP& value,
   } else if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
     if (trim(value->toString()) != wxEmptyString) card->stylesheet = StyleSheet::byGameAndName(*game, value->toString());
     return true;
+  } else if (key_name == _("id") || key_name == _("uid") || key_name == _("multiverse_id")) {
+    card->uid = value->toString();
+    return true;
+  } else if (key_name == _("linked_card_1") || key_name == _("linked_card")) {
+    card->linked_card_1 = value->toString();
+    return true;
+  } else if (key_name == _("linked_card_2")) {
+    card->linked_card_2 = value->toString();
+    return true;
+  } else if (key_name == _("linked_card_3")) {
+    card->linked_card_3 = value->toString();
+    return true;
+  } else if (key_name == _("linked_card_4")) {
+    card->linked_card_4 = value->toString();
+    return true;
+  } else if (key_name == _("linked_relation_1") || key_name == _("link_relation_1") || key_name == _("linked_relation") || key_name == _("link_relation")) {
+    card->linked_relation_1 = value->toString();
+    return true;
+  } else if (key_name == _("linked_relation_2") || key_name == _("link_relation_2")) {
+    card->linked_relation_2 = value->toString();
+    return true;
+  } else if (key_name == _("linked_relation_3") || key_name == _("link_relation_3")) {
+    card->linked_relation_3 = value->toString();
+    return true;
+  } else if (key_name == _("linked_relation_4") || key_name == _("link_relation_4")) {
+    card->linked_relation_4 = value->toString();
+    return true;
   }
-  // else if (key_name == _("id") || key_name == _("multiverse_id")) {
-  //  card->id = value->toString();
-  //  return true;
-  //}
-  
-  //styling_data;
-  //linked_card;
-  //linked_relation_1;
+  //TODO: handle styling_data?
   return false;
 }
 
