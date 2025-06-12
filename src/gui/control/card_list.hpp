@@ -78,9 +78,10 @@ public:
   bool doCopyCardAndLinkedCards();
   bool doPaste() override;
   bool doDelete() override;
-
+  bool doAddCSV();
+  
   // --------------------------------------------------- : Card linking
-
+  
   bool canLink()    const;
   bool doLink();
   bool doUnlink(CardP unlinked_card);

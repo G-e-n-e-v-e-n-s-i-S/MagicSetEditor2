@@ -40,6 +40,7 @@ Field::~Field() {}
 
 void Field::initDependencies(Context& ctx, const Dependency& dep) const {
   sort_script.initDependencies(ctx, dep);
+  construction_script.initDependencies(ctx, dep);
 }
 
 IMPLEMENT_REFLECTION(Field) {
@@ -48,6 +49,7 @@ IMPLEMENT_REFLECTION(Field) {
     REFLECT(type);
   }
   REFLECT(name);
+  REFLECT(alt_names);
   REFLECT_LOCALIZED(caption);
   REFLECT_LOCALIZED(description); // FIXME: This field is both unused and uninitialized.
   REFLECT_N("icon", icon_filename);
@@ -62,6 +64,7 @@ IMPLEMENT_REFLECTION(Field) {
   REFLECT(card_list_allow);
   REFLECT_LOCALIZED(card_list_name);
   REFLECT(sort_script);
+  REFLECT(construction_script);
   REFLECT_N("card_list_alignment", card_list_align);
 }
 

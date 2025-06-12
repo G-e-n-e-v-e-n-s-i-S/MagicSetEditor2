@@ -25,6 +25,7 @@ IMPLEMENT_REFLECTION(SliderField) {
   REFLECT_BASE(Field); // NOTE: don't reflect as a ChoiceField
   REFLECT(script);
   REFLECT_N("default", default_script);
+  REFLECT_N("choices", choices->choices);
   REFLECT(initial);
   REFLECT(minimum);
   REFLECT(maximum);
@@ -33,6 +34,8 @@ IMPLEMENT_REFLECTION(SliderField) {
 
 void SliderField::after_reading(Version ver) {
   Field::after_reading(ver);
+
+  int choice_count = choices->choices.size();
 
   if (maximum < minimum) {
     int temp = maximum;
@@ -54,6 +57,21 @@ void SliderField::after_reading(Version ver) {
   catch (...) {
     initial = wxString::Format(wxT("%i"), minimum);
   }
+
+  // Move individual choices that are greater than maximum to the end
+  for (int i = 0; i < choice_count; ++i) {
+    try {
+      int choice_int = std::stoi(choices->choices[i].get()->name.ToStdString());
+      if (choice_int >= maximum) {
+        auto it = choices->choices.begin() + i;
+        std::rotate(it, it + 1, choices->choices.end());
+        --i;
+        --choice_count;
+      }
+    }
+    catch (...) {}
+  }
+
   choices->initIds();
 }
 // ----------------------------------------------------------------------------- : SliderStyle

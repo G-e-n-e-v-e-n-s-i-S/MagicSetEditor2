@@ -12,6 +12,7 @@
 #include <gui/set/window.hpp> // for sorting all cardlists in a window
 #include <gui/card_link_window.hpp>
 #include <gui/util.hpp>
+#include <gui/add_csv_window.hpp>
 #include <data/game.hpp>
 #include <data/field.hpp>
 #include <data/field/choice.hpp>
@@ -226,6 +227,14 @@ bool CardListBase::doLink() {
 bool CardListBase::doUnlink(CardP unlinked_card) {
   set->actions.addAction(make_unique<UnlinkCardsAction>(*set, getCard(), unlinked_card));
   return true;
+}
+bool CardListBase::doAddCSV() {
+  AddCSVWindow wnd(this, set, true);
+  if (wnd.ShowModal() == wxID_OK) {
+    // The actual adding is done in this window's onOk function
+    return true;
+  }
+  return false;
 }
 
 // ----------------------------------------------------------------------------- : CardListBase : Building the list

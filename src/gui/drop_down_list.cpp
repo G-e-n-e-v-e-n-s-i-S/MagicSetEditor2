@@ -322,24 +322,27 @@ void DropDownList::draw(DC& dc) {
     cs = GetClientSize();
     dc.SetPen(*wxBLACK_PEN);
     dc.SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, _("Arial")));
-    int first_text_width;
-    dc.GetTextExtent(capitalize(itemText(0)), &first_text_width, nullptr);
-    int last_text_width;
-    dc.GetTextExtent(capitalize(itemText(count-1)), &last_text_width, nullptr);
-    dc.DrawText(capitalize(itemText(0)),       marginW + 4,                          14);
-    dc.DrawText(capitalize(itemText(count-1)), cs.x - marginW - 4 - last_text_width, 14);
 
-    int slider_start =      first_text_width + marginW + 16;
-    int slider_end = cs.x - (last_text_width + marginW + 16);
+    String first_item = capitalize(itemText(0));
+    if (first_item == _("Default")) first_item = capitalize(itemText(1));
+    String last_item = capitalize(itemText(count-1));
+    int first_text_width;
+    int last_text_width;
+    dc.GetTextExtent(first_item, &first_text_width, nullptr);
+    dc.GetTextExtent(last_item,  &last_text_width,  nullptr);
+    dc.DrawText(first_item,                         marginW + 8, 14);
+    dc.DrawText(last_item, cs.x - last_text_width - marginW - 8, 14);
+
+    int slider_start =      first_text_width + marginW + 20;
+    int slider_end = cs.x - last_text_width  - marginW - 20;
     dc.DrawBitmap(slider_left, slider_start, 14);
     for (size_t i = slider_start + 19; i < slider_end - 19; i+=19) {
       dc.DrawBitmap(slider_center, i, 14);
     }
     dc.DrawBitmap(slider_right, slider_end - 19, 14);
-
     int selected_index = selected_item < 0 ? 0 : selected_item;
-    int slider_pos = round((double)selected_index/(count - 1) * (slider_end - slider_start)) + slider_start;
-    dc.DrawBitmap(slider_tick, slider_pos - 7, 9); // -7 cause the bitmap is 15 pixels wide
+    int slider_pos = round((double)selected_index/(count-1) * (slider_end - slider_start)) + slider_start;
+    dc.DrawBitmap(slider_tick, slider_pos - 7, 9); // -7 cause the slider_tick bitmap is 15 pixels wide
 
     int selected_text_width;
     dc.GetTextExtent(capitalize(itemText(selected_index)), &selected_text_width, nullptr);
@@ -427,16 +430,19 @@ void DropDownList::onMotion(wxMouseEvent& ev) {
   // find selected item
   size_t count = itemCount();
   if (is_slider) {
+    String first_item = capitalize(itemText(0));
+    if (first_item == _("Default")) first_item = capitalize(itemText(1));
+    String last_item = capitalize(itemText(count-1));
     int first_text_width;
-    GetTextExtent(capitalize(itemText(0)), &first_text_width, nullptr);
     int last_text_width;
-    GetTextExtent(capitalize(itemText(count - 1)), &last_text_width, nullptr);
-    int slider_start =      first_text_width + marginW + 16;
-    int slider_end = cs.x - (last_text_width + marginW + 16);
+    GetTextExtent(first_item, &first_text_width, nullptr);
+    GetTextExtent(last_item,  &last_text_width,  nullptr);
+    int slider_start =      first_text_width + marginW + 20;
+    int slider_end = cs.x - last_text_width  - marginW - 20;
     int slider_pos = ev.GetX();
     if (slider_pos < slider_start) slider_pos = slider_start;
-    if (slider_pos > slider_end) slider_pos = slider_end;
-    int selected_item = round(((double)(slider_pos - slider_start)) / (slider_end - slider_start) * (count - 1));
+    if (slider_pos > slider_end)   slider_pos = slider_end;
+    int selected_item = round(((double)(slider_pos - slider_start)) / (slider_end - slider_start) * (count-1));
     selectItem(selected_item);
   } else {
     int startY = marginH - visible_start;

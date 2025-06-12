@@ -132,6 +132,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
     // NOTE: space after "Del" prevents wx from making del an accellerator
     // otherwise we delete a card when delete is pressed inside the editor
     // Adding a space never hurts, please keep it just to be safe.
+    add_menu_item(menuCard, ID_CARD_ADD_CSV, "card_add_multiple", _MENU_("add card csv") + _(" "), _HELP_("add card csv"));
     add_menu_item(menuCard, ID_CARD_REMOVE, "card_del", _MENU_("remove card") + _(" "), _HELP_("remove card"));
     add_menu_item(menuCard, ID_CARD_LINK, "card_link", _MENU_("link card") + _(" "), _HELP_("link card"));
     add_menu_item(menuCard, ID_CARD_AND_LINK_COPY, "card_copy", _MENU_("copy card and links") + _(" "), _HELP_("copy card and links"));
@@ -382,6 +383,9 @@ void CardsPanel::onCommand(int id) {
       break;
     case ID_CARD_ADD:
       set->actions.addAction(make_unique<AddCardAction>(*set));
+      break;
+    case ID_CARD_ADD_CSV:
+      card_list->doAddCSV();
       break;
     case ID_CARD_REMOVE:
       card_list->doDelete();

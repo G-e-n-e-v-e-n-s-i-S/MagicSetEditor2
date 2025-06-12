@@ -1,0 +1,17 @@
+Function: make_map
+
+--Usage--
+> make_map(keys: some_list, values: some_list)
+
+Creates a new map. Converts the elements in keys to strings, and uses them as keys for the elements in values.
+
+Produces a warning if keys and values are not of the same size.
+nil keys will be ignored.
+
+--Parameters--
+! Parameter	Type				Description
+| @keys@	[[type:list]]		List of keys.
+| @values@	[[type:list]]		List of values.
+
+--Examples--
+> make_map(keys:["apple", "durian", 3], values:["good", "bad", "not edible"]) == ["apple":"good", "durian":"bad", "3":"not edible"]

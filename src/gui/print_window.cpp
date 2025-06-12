@@ -103,7 +103,7 @@ void CardsPrintout::OnPreparePrinting() {
 
 bool CardsPrintout::OnPrintPage(int page) {
   DC& dc = *GetDC();
-  // scale factors
+  // scale factors (pixels per mm)
   int pw_mm, ph_mm;
   GetPageSizeMM(&pw_mm, &ph_mm);
   int pw_px, ph_px;
@@ -122,12 +122,12 @@ bool CardsPrintout::OnPrintPage(int page) {
 void CardsPrintout::drawCard(DC& dc, const CardP& card, int card_nr) {
   const StyleSheet& stylesheet = job->set->stylesheetFor(card);
   // determine dpi factor for this card
-  double dpi_factor = stylesheet.card_dpi / job->layout.card_dpi;
+  double px_per_mm = stylesheet.card_dpi / 25.4;
   // determine position
   int col = card_nr % job->layout.cols;
   int row = card_nr / job->layout.cols;
-  RealPoint pos((job->layout.margin_left + (job->layout.card_size.width  + job->layout.card_spacing.width)  * col) * dpi_factor
-               ,(job->layout.margin_top  + (job->layout.card_size.height + job->layout.card_spacing.height) * row) * dpi_factor);
+  RealPoint pos((job->layout.margin_left + (job->layout.card_size.width  + job->layout.card_spacing.width)  * col) / scale_x * px_per_mm
+               ,(job->layout.margin_top  + (job->layout.card_size.height + job->layout.card_spacing.height) * row) / scale_y * px_per_mm);
   // determine rotation
   Radians rotation = 0;
   if ((stylesheet.card_width > stylesheet.card_height) != job->layout.card_landscape) {
@@ -146,19 +146,16 @@ void CardsPrintout::drawCard(DC& dc, const CardP& card, int card_nr) {
   int w = int(stylesheet.card_width), h = int(stylesheet.card_height); // in pixels
   if (is_rad90(rotation)) swap(w,h);
   // Draw using text buffer
-  double zoom = 4;
-  wxBitmap buffer(w*zoom,h*zoom,32);
+  wxBitmap buffer(w,h,32);
   wxMemoryDC bufferDC;
   bufferDC.SelectObject(buffer);
   clearDC(bufferDC,*wxWHITE_BRUSH);
-  RotatedDC rdc(bufferDC, rotation, stylesheet.getCardRect(), zoom, QUALITY_AA, ROTATION_ATTACH_TOP_LEFT);
+  RotatedDC rdc(bufferDC, rotation, stylesheet.getCardRect(), 1.0, QUALITY_AA, ROTATION_ATTACH_TOP_LEFT);
   // render card to dc
   viewer.setCard(card);
   viewer.draw(rdc, *wxWHITE);
   // render buffer to device
-  double px_per_mm = zoom * stylesheet.card_dpi / 25.4;
   dc.SetUserScale(scale_x / px_per_mm, scale_y / px_per_mm);
-  dc.SetDeviceOrigin(0, 0);
   bufferDC.SelectObject(wxNullBitmap);
   dc.DrawBitmap(buffer, int(scale_x * pos.x), int(scale_y * pos.y));
 }

@@ -137,6 +137,15 @@ void uncanonical_name_form_in_place(String& str) {
   }
 }
 
+String unified_form(String& str) {
+  str = trim(str);
+  for (String::iterator it = str.begin(); it != str.end(); ++it) {
+    if (*it == ' ') *it = '_';
+    else *it = toLower(*it);
+  }
+  return str;
+}
+
 String name_to_caption(const String& str) {
   String ret;
   ret.reserve(str.size());

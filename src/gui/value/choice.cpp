@@ -203,11 +203,13 @@ DropDownChoiceList::DropDownChoiceList(Window* parent, bool is_submenu, ValueVie
 {
   // determine if slider
   size_t count = itemCount();
-  if (count > 2) {
+  if (count > 3) {
     int value;
     try {
-      value = std::stoi(itemText(0).ToStdString());
+      String first_item = capitalize(itemText(0));
+      if (first_item != _("Default")) value = std::stoi(first_item.ToStdString());
       value = std::stoi(itemText(1).ToStdString());
+      value = std::stoi(itemText(count - 2).ToStdString());
       value = std::stoi(itemText(count - 1).ToStdString());
       // the choices are numbers, use a slider
       is_slider = true;

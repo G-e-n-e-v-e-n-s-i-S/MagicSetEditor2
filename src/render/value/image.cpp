@@ -99,19 +99,20 @@ bool very_light(const Image& image) {
   return total >= 210 * 3;
 }
 
-Bitmap ImageValueViewer::imagePlaceholder(const Rotation& rot, UInt w, UInt h, const Image& background, bool editing) {
+Bitmap ImageValueViewer::imagePlaceholder(const Rotation& rot, UInt w, UInt h, const Image& default_image, bool editing) {
   // Bitmap and memory dc
-  Bitmap bmp(w, h, 24);
+  Bitmap bmp(w, h, 32);
   wxMemoryDC mdc;
   mdc.SelectObject(bmp);
   RealRect rect(0,0,w,h);
   RotatedDC dc(mdc, 0, rect, 1.0, QUALITY_AA);
   // Draw (checker) background
-  if (!background.Ok() || background.HasAlpha()) {
+  if (!default_image.Ok()) {
     draw_checker(dc, rect);
   }
-  if (background.Ok()) {
-    dc.DrawImage(background, RealPoint(0,0));
+  else {
+    if (default_image.HasAlpha()) bmp.UseAlpha(true);
+    dc.DrawImage(default_image, RealPoint(0,0));
   }
   // Draw text
   if (editing) {
@@ -122,7 +123,7 @@ Bitmap ImageValueViewer::imagePlaceholder(const Rotation& rot, UInt w, UInt h, c
       if (rs.width <= w - 10 && rs.height < h - 10) {
         // text fits
         RealPoint pos = align_in_rect(ALIGN_MIDDLE_CENTER, rs, rect);
-        bool black_on_white = !background.Ok() || very_light(background);
+        bool black_on_white = !default_image.Ok() || very_light(default_image);
         dc.SetTextForeground(black_on_white ? *wxWHITE : *wxBLACK);
         dc.DrawText(_("double click to load image"), pos, 2, 4); // blurred
         dc.SetTextForeground(black_on_white ? *wxBLACK : *wxWHITE);

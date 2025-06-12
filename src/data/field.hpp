@@ -42,25 +42,27 @@ public:
   Field();
   virtual ~Field();
   
-  size_t    index;            ///< Used by IndexMap
-  String    name;             ///< Name of the field, for refering to it from scripts and files
-  LocalizedString caption;    ///< Caption for NativeLookEditor
-  LocalizedString description;///< Description, used in status bar
-  String    icon_filename;    ///< Filename for an icon (for list of fields)
-  bool      editable;         ///< Can values of this field be edited?
-  bool      save_value;       ///< Should values of this field be written to files? Can be false for script generated fields.
-  bool      show_statistics;  ///< Should this field appear as a group by choice in the statistics panel?
-  int       position_hint;    ///< Position in the statistics list
-  bool      identifying;      ///< Does this field give Card::identification()?
-  int       card_list_column; ///< What column to use in the card list?
-  UInt      card_list_width;  ///< Width of the card list column (pixels).
-  bool      card_list_visible;///< Is this field shown in the card list?
-  bool      card_list_allow;  ///< Is this field allowed to appear in the card list?
-  LocalizedString  card_list_name; ///< Name to use in card list.
-  Alignment card_list_align;  ///< Alignment of the card list colummn.
-  OptionalScript sort_script; ///< The script to use when sorting this, if not the value.
-  Dependencies dependent_scripts; ///< Scripts that depend on values of this field
-  String package_relative_filename;
+  size_t          index;                     ///< Used by IndexMap
+  String          name;                      ///< Name of the field, for refering to it from scripts and files
+  vector<String>  alt_names;                 ///< Other names this field might go by, mainly in CSV files
+  LocalizedString caption;                   ///< Caption for NativeLookEditor
+  LocalizedString description;               ///< Description, used in status bar
+  String          icon_filename;             ///< Filename for an icon (for list of fields)
+  bool            editable;                  ///< Can values of this field be edited?
+  bool            save_value;                ///< Should values of this field be written to files? Can be false for script generated fields.
+  bool            show_statistics;           ///< Should this field appear as a group by choice in the statistics panel?
+  int             position_hint;             ///< Position in the statistics list
+  bool            identifying;               ///< Does this field give Card::identification()?
+  int             card_list_column;          ///< What column to use in the card list?
+  UInt            card_list_width;           ///< Width of the card list column (pixels).
+  bool            card_list_visible;         ///< Is this field shown in the card list?
+  bool            card_list_allow;           ///< Is this field allowed to appear in the card list?
+  LocalizedString card_list_name;            ///< Name to use in card list.
+  Alignment       card_list_align;           ///< Alignment of the card list colummn.
+  OptionalScript  sort_script;               ///< The script to use when sorting this, if not the value.
+  OptionalScript  construction_script;       ///< The script to apply to the supplied value, when creating a new card.
+  Dependencies    dependent_scripts;         ///< Scripts that depend on values of this field
+  String          package_relative_filename;
   
   /// Creates a new Value corresponding to this Field
   virtual ValueP newValue() = 0;

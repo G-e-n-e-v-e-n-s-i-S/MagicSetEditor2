@@ -32,6 +32,6 @@ private:
   bool    is_default; ///< Is the default placeholder image used?
   
   /// Generate a placeholder image
-  static Bitmap imagePlaceholder(const Rotation& rot, UInt w, UInt h, const Image& background, bool editing);
+  static Bitmap imagePlaceholder(const Rotation& rot, UInt w, UInt h, const Image& default_image, bool editing);
 };
 

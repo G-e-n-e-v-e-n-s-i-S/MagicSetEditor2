@@ -50,6 +50,7 @@ IMPLEMENT_REFLECTION(Game) {
   REFLECT_NO_SCRIPT(card_fields);
   REFLECT_NO_SCRIPT(card_links);
   REFLECT_NO_SCRIPT(card_list_color_script);
+  REFLECT_NO_SCRIPT(construction_script);
   REFLECT_NO_SCRIPT(statistics_dimensions);
   REFLECT_NO_SCRIPT(statistics_categories);
   REFLECT_COMPAT(<308, "pack_item", pack_types);
@@ -94,6 +95,28 @@ void Game::validate(Version v) {
     pack->filter = OptionalScript(_("true"));
     pack->select = SELECT_NO_REPLACE;
     pack_types.push_back(pack);
+  }
+  // alternate card field names map
+  for (auto it = card_fields.begin(); it != card_fields.end(); ++it) {
+    FieldP field = *it;
+    String unified_name = unified_form(field->name);
+    if (card_fields_alt_names.count(unified_name)) {
+      queue_message(MESSAGE_WARNING, _("Duplicate alternate card field name: ") + unified_name);
+    }
+    else {
+      card_fields_alt_names.emplace(unified_name, field->name);
+    }
+    //String column_name = field->card_list_name.get();
+    //card_fields_alt_names.emplace(unified_form(column_name), field->name);
+    for (auto it2 = field->alt_names.begin(); it2 != field->alt_names.end(); ++it2) {
+      unified_name = unified_form(*it2);
+      if (card_fields_alt_names.count(unified_name)) {
+        queue_message(MESSAGE_WARNING, _("Duplicate alternate card field name: ") + unified_name);
+      }
+      else {
+        card_fields_alt_names.emplace(unified_name, field->name);
+      }
+    }
   }
 }
 
