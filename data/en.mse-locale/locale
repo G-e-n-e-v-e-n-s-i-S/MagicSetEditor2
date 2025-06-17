@@ -841,6 +841,9 @@ error:
 	can't create file stream:			Failed to create file stream: '%s'
 	can't write image to set:			Failed to write image to set: '%s'
 	can't import image:					Failed to import image: '%s'
+	import missing fields:				
+		The %s file contains the following entries that could not
+		be imported, because no corresponding card field was found: %s
 
 	# Card creation
 	no field with name:					Card doesn't have a field named '%s'

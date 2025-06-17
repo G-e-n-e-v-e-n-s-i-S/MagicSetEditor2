@@ -78,6 +78,7 @@ public:
   bool doPaste() override;
   bool doDelete() override;
   bool doAddCSV();
+  bool doAddJSON();
 
   // --------------------------------------------------- : Set actions
   

@@ -12,6 +12,7 @@ NOTE: you should use underscores instead of spaces in field names.
 --Parameters--
 ! Parameter	Type							Description
 | @input@	[[type:map]] of field names to field values		Field values to set
+| @ignore_field_not_found@	[[type:boolean]]		Optional. If set to true, key/value pairs that don't correspond to a card field will be ignored instead of throwing.
 
 --Examples--
 > # Create a new card

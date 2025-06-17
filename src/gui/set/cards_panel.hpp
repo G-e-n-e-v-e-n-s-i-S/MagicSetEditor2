@@ -88,8 +88,11 @@ private:
   HoverButton*      collapse_notes;
   FilterCtrl*       filter;
   String            filter_value; // value of filter, need separate variable because the control is destroyed
+  wxStaticText*     counts;
   bool              notes_below_editor;
-  
+
+  /// Update card counts
+  void updateCardCounts();
   /// Move the notes panel below the editor or below the card list
   void updateNotesPosition();
   // before Layout, call updateNotesPosition.

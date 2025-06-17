@@ -111,6 +111,9 @@ enum ChildMenuID {
   ID_CARD_ADD_CSV,
   ID_CARD_ADD_CSV_SEP,
   ID_CARD_ADD_CSV_BROWSE,
+  ID_CARD_ADD_JSON,
+  ID_CARD_ADD_JSON_ARRAY,
+  ID_CARD_ADD_JSON_BROWSE,
 
   // Keyword menu
   ID_KEYWORD_ADD = 6101,
@@ -188,6 +191,7 @@ enum ChildMenuID {
   // On cards panel
   ID_COLLAPSE_NOTES = 8001,
   ID_CARD_FILTER,
+  ID_CARD_COUNTER,
   
   // Style panel
   ID_STYLE_USE_FOR_ALL = 8011,

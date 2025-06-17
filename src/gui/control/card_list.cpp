@@ -12,6 +12,7 @@
 #include <gui/set/window.hpp> // for sorting all cardlists in a window
 #include <gui/util.hpp>
 #include <gui/add_csv_window.hpp>
+#include <gui/add_json_window.hpp>
 #include <data/game.hpp>
 #include <data/field.hpp>
 #include <data/field/choice.hpp>
@@ -184,6 +185,15 @@ bool CardListBase::doDelete() {
 
 bool CardListBase::doAddCSV() {
   AddCSVWindow wnd(this, set, true);
+  if (wnd.ShowModal() == wxID_OK) {
+    // The actual adding is done in this window's onOk function
+    return true;
+  }
+  return false;
+}
+
+bool CardListBase::doAddJSON() {
+  AddJSONWindow wnd(this, set, true);
   if (wnd.ShowModal() == wxID_OK) {
     // The actual adding is done in this window's onOk function
     return true;
