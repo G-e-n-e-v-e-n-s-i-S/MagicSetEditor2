@@ -79,7 +79,8 @@ public:
   bool doPaste() override;
   bool doDelete() override;
   bool doAddCSV();
-  
+  bool doAddJSON();
+
   // --------------------------------------------------- : Card linking
   
   bool canLink()    const;

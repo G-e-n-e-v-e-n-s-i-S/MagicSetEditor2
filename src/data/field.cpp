@@ -40,7 +40,7 @@ Field::~Field() {}
 
 void Field::initDependencies(Context& ctx, const Dependency& dep) const {
   sort_script.initDependencies(ctx, dep);
-  construction_script.initDependencies(ctx, dep);
+  import_script.initDependencies(ctx, dep);
 }
 
 IMPLEMENT_REFLECTION(Field) {
@@ -64,7 +64,7 @@ IMPLEMENT_REFLECTION(Field) {
   REFLECT(card_list_allow);
   REFLECT_LOCALIZED(card_list_name);
   REFLECT(sort_script);
-  REFLECT(construction_script);
+  REFLECT(import_script);
   REFLECT_N("card_list_alignment", card_list_align);
 }
 

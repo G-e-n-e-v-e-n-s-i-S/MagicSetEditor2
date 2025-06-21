@@ -17,7 +17,7 @@ The MSE source code is subdivided into several directories, with the following m
  - <tt>gfx</tt>:  Graphics related functions, again mostly independent of MSE.
                   This directory contains algorithms for image blending, scaling, and bezier curve functions.
  - <tt>data</tt>: Data structures, like sets, cards, symbols, etc.
-                  These data structures are documented in the <a href="http://magicseteditor.sourceforge.net/extending">'Extending MSE'</a> section of the official documentation.
+                  These data structures are documented in the <a href="https://mseverse.miraheze.org/wiki/Dev:Data_types">'Data types'</a> section of the documentation.
      - <tt>data/action</tt>: Actions that can be applied to those data structures.
      - <tt>data/field</tt>:  Data types for fields, values and styles. One source file per type.
      - <tt>data/format</tt>: File formats and import/export stuff.

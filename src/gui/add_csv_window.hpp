@@ -14,10 +14,7 @@ DECLARE_POINTER_TYPE(Set);
 
 // ----------------------------------------------------------------------------- : AddCSVWindow
 
-/// A window for selecting a subset of the cards from a set,
-/** and selecting a link relation type.
-/** this is used when linking cards
- */
+/// A window for selecting a CSV or TSV file, and importing cards from it.
 class AddCSVWindow : public wxDialog {
 public:
 	AddCSVWindow(Window* parent, const SetP& set, bool sizer);
@@ -31,11 +28,11 @@ protected:
 	SetP            set;
 	char            separator;
 
+	bool readCSV(std::ifstream& in, std::vector<String> headers_out, std::vector<std::vector<ScriptValueP>>& table_out);
 	std::vector<std::string> readCSVRow(const std::string& row);
 	
-	void setSeparatorType();
-
 	void onSeparatorTypeChange(wxCommandEvent&);
+	void setSeparatorType();
 
 	void onBrowseFiles(wxCommandEvent&);
 

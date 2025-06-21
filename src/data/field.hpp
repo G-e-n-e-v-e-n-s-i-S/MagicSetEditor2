@@ -60,7 +60,7 @@ public:
   LocalizedString card_list_name;            ///< Name to use in card list.
   Alignment       card_list_align;           ///< Alignment of the card list colummn.
   OptionalScript  sort_script;               ///< The script to use when sorting this, if not the value.
-  OptionalScript  construction_script;       ///< The script to apply to the supplied value, when creating a new card.
+  OptionalScript  import_script;             ///< The script to apply to the supplied value, when creating a new card.
   Dependencies    dependent_scripts;         ///< Scripts that depend on values of this field
   String          package_relative_filename;
   

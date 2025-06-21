@@ -43,7 +43,8 @@ public:
   vector<FieldP>          card_fields;            ///< Fields on each card
   vector<String>          card_links;             ///< Possible links between cards
   OptionalScript          card_list_color_script; ///< Script that determines the color of items in the card list
-  OptionalScript          construction_script;    ///< Script applied as the last step of the new_card function
+  OptionalScript          import_script;          ///< Script applied as the last step of the new_card function
+  vector<String>          json_paths;             ///< Paths inside JSON files to find the card array
   vector<StatsDimensionP> statistics_dimensions;  ///< (Additional) statistics dimensions
   vector<StatsCategoryP>  statistics_categories;  ///< (Additional) statistics categories
   vector<PackTypeP>       pack_types;             ///< Types of random card packs to generate

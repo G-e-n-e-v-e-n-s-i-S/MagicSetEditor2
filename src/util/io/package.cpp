@@ -567,6 +567,7 @@ template <> void Writer::handle(const PackageDependency& dep) {
 IMPLEMENT_REFLECTION(Packaged) {
   REFLECT(short_name);
   REFLECT(full_name);
+  REFLECT(folder_name);
   REFLECT_N("icon", icon_filename);
   REFLECT_NO_SCRIPT(position_hint);
   REFLECT(installer_group);
@@ -648,10 +649,11 @@ void Packaged::saveCopy(const String& package) {
 }
 
 void Packaged::validate(Version) {
+  folder_name = name();
   // a default for the short name
   if (short_name.empty()) {
     if (!full_name.empty()) short_name = full_name;
-    short_name = name();
+    else short_name = folder_name;
   }
   // check dependencies
   FOR_EACH(dep, dependencies) {

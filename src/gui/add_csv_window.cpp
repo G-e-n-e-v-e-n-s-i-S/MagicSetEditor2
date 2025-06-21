@@ -10,13 +10,14 @@
 #include <sstream>
 #include <regex>
 #include <util/prec.hpp>
+#include <util/window_id.hpp>
 #include <data/game.hpp>
 #include <data/set.hpp>
 #include <data/card.hpp>
 #include <data/stylesheet.hpp>
-#include <gui/add_csv_window.hpp>
-#include <util/window_id.hpp>
 #include <data/action/set.hpp>
+#include <gui/add_csv_window.hpp>
+#include <script/functions/construction_helper.hpp>
 #include <wx/statline.h>
 
 // ----------------------------------------------------------------------------- : AddCSV
@@ -32,6 +33,7 @@ AddCSVWindow::AddCSVWindow(Window* parent, const SetP& set, bool sizer)
   separator_type->Clear();
   separator_type->Append(_LABEL_("add card csv tab"));
   separator_type->Append(_LABEL_("add card csv comma"));
+  separator_type->Append(_LABEL_("add card csv semicolon"));
   separator_type->SetSelection(0);
   setSeparatorType();
   // init sizers
@@ -39,7 +41,7 @@ AddCSVWindow::AddCSVWindow(Window* parent, const SetP& set, bool sizer)
     wxSizer* s = new wxBoxSizer(wxVERTICAL);
     s->Add(new wxStaticText(this, -1, _LABEL_("add card csv sep")), 0, wxALL, 8);
     s->Add(separator_type, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
-    s->Add(new wxStaticText(this, -1, _("  ") + _LABEL_("add card csv file")), 0, wxALL | (wxALL & ~wxTOP), 8);
+    s->Add(new wxStaticText(this, -1, _("  ") + _LABEL_("add card csv file")), 0, wxALL, 8);
     s->Add(file_path, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
     wxSizer* s2 = new wxBoxSizer(wxHORIZONTAL);
       s2->Add(file_browse, 0, wxEXPAND | wxRIGHT, 8);
@@ -55,7 +57,8 @@ AddCSVWindow::AddCSVWindow(Window* parent, const SetP& set, bool sizer)
 void AddCSVWindow::setSeparatorType() {
   int sel = separator_type->GetSelection();
   if (sel == 0) separator = '	';
-  else  separator = ',';
+  else if (sel == 1) separator = ',';
+  else  separator = ';';
 }
 
 void AddCSVWindow::onSeparatorTypeChange(wxCommandEvent&) {
@@ -109,73 +112,87 @@ std::vector<std::string> AddCSVWindow::readCSVRow(const std::string& row) {
       break;
     }
   }
-  // escape " { }
-  for (f = 0; f < fields.size(); ++f) {
-    fields[f] = std::regex_replace(fields[f], std::regex("\""), "\\\"");
-    fields[f] = std::regex_replace(fields[f], std::regex("\\{"), "\\{");
-    fields[f] = std::regex_replace(fields[f], std::regex("\\}"), "\\}");
-  }
   return fields;
+}
+
+bool AddCSVWindow::readCSV(std::ifstream& in, std::vector<String> headers_out, std::vector<std::vector<ScriptValueP>>& table_out) {
+  // Get the rows
+  vector<std::string> raw_rows;
+  std::string raw_row;
+  while (std::getline(in, raw_row)) {
+    raw_rows.push_back(raw_row);
+  }
+  // Check for quoted new line characters
+  vector<std::string> rows;
+  std::string row = "";
+  for (int y = 0; y < raw_rows.size(); ++y) {
+    row = row + raw_rows[y];
+    int quote_count = 0;
+    std::string::size_type pos = 0;
+    while ((pos = row.find("\"", pos)) != std::string::npos) {
+      ++quote_count;
+      ++pos;
+    }
+    if (quote_count % 2 == 0) {
+      if (row.find_first_not_of(' ') != std::string::npos) rows.push_back(row);
+      row = "";
+    } else {
+      row = row + "\n";
+    }
+  }
+  if (rows.size() == 0) {
+    queue_message(MESSAGE_ERROR, _ERROR_1_("import empty file", _("CSV / TSV")));
+    return false;
+  }
+  // Parse headers
+  std::vector<std::string> headers = readCSVRow(rows[0]);
+  for (int x = 0; x < headers.size(); ++x) {
+    String wxstring(headers[x].c_str(), wxConvUTF8);
+    headers_out.push_back(wxstring);
+  }
+  // Parse rows, add to table
+  for (int y = 0; y < rows.size(); ++y) {
+    auto fields = readCSVRow(rows[y]);
+    std::vector<ScriptValueP> values;
+    for (int x = 0; x < fields.size(); ++x) {
+      String wxstring(fields[x].c_str(), wxConvUTF8);
+      values.push_back(to_script(wxstring));
+    }
+    table_out.push_back(values);
+  }
+  return true;
 }
 
 void AddCSVWindow::onOk(wxCommandEvent&) {
   /// Perform the import
-  // Read the file, put it into a table
-  auto in = std::ifstream(file_path->GetValue().ToStdString());
-  if (in.fail()) {
+  wxBusyCursor wait;
+  // Read the file
+  auto file = std::ifstream(file_path->GetValue().ToStdString());
+  if (file.fail()) {
     queue_message(MESSAGE_ERROR, _ERROR_("add card csv file not found"));
     EndModal(wxID_ABORT);
     return;
   }
-  std::vector<std::vector<std::string>> table;
-  std::string row;
-  while (!in.eof()) {
-    std::getline(in, row);
-    if (in.bad() || in.fail()) {
-      break;
-    }
-    auto fields = readCSVRow(row);
-    table.push_back(fields);
+  // Put values into a table
+  std::vector<String> headers;
+  std::vector<std::vector<ScriptValueP>> table;
+  if (!readCSV(file, headers, table)) {
+    EndModal(wxID_ABORT);
+    return;
   }
-  // ensure table is square
-  int count = table[0].size();
-  for (int y = 1; y < table.size(); ++y) {
-    if (table[y].size() != count) {
-      queue_message(MESSAGE_ERROR, _ERROR_1_("add card csv file malformed", wxString::Format(wxT("%i"), y+1)));
-      EndModal(wxID_ABORT);
-      return;
-    }
+  // Check for missing fields
+  String missing_fields;
+  check_table_headers(set->game, headers, _("CSV / TSV"), missing_fields);
+  if (missing_fields.size() > 0) {
+    queue_message(MESSAGE_WARNING, _ERROR_2_("import missing fields", _("CSV / TSV"), missing_fields));
   }
-  // produce script from table
-  std::ostringstream stream;
-  stream << "[";
-  for (int y = 1; y < table.size(); ++y) {
-    stream << "new_card([";
-    for (int x = 0; x < count; ++x) {
-      stream << "\"" << table[0][x] << "\": \"" << table[y][x] << "\"";
-      if (x < count - 1) stream << ",";
-    }
-    stream << "])";
-    if (y < table.size() - 1) stream << ",";
-  }
-  stream << "]";
-  String string(stream.str().c_str(), wxConvUTF8);
-  ScriptP script = parse(string, nullptr, false);
-  Context& ctx = set->getContext();
-  ScriptValueP result = script->eval(ctx, false);
-  // create cards
+  // Produce cards from the table
   vector<CardP> cards;
-  ScriptValueP it = result->makeIterator();
-  while (ScriptValueP item = it->next()) {
-    CardP card = from_script<CardP>(item);
-    // is this a new card?
-    if (contains(set->cards, card) || contains(cards, card)) {
-      // make copy
-      card = make_intrusive<Card>(*card);
-    }
-    cards.push_back(card);
+  if (!cards_from_table(set, headers, table, true, _("CSV / TSV"), cards)) {
+    EndModal(wxID_ABORT);
+    return;
   }
-  // add to set
+  // Add cards to set
   if (!cards.empty()) {
     // TODO: change the name of the action somehow
     set->actions.addAction(make_unique<AddCardAction>(ADD, *set, cards));
@@ -185,7 +202,7 @@ void AddCSVWindow::onOk(wxCommandEvent&) {
 }
 
 BEGIN_EVENT_TABLE(AddCSVWindow, wxDialog)
-EVT_BUTTON(wxID_OK, AddCSVWindow::onOk)
-EVT_BUTTON(ID_CARD_ADD_CSV_BROWSE, AddCSVWindow::onBrowseFiles)
-EVT_CHOICE(ID_CARD_ADD_CSV_SEP, AddCSVWindow::onSeparatorTypeChange)
+  EVT_BUTTON(wxID_OK, AddCSVWindow::onOk)
+  EVT_BUTTON(ID_CARD_ADD_CSV_BROWSE, AddCSVWindow::onBrowseFiles)
+  EVT_CHOICE(ID_CARD_ADD_CSV_SEP, AddCSVWindow::onSeparatorTypeChange)
 END_EVENT_TABLE()
