@@ -61,5 +61,5 @@ To translate the MSE user interface:
 * Add new keys for game, stylesheet or symbol font specific keys as described above.
 * Save the file, select the new locale from Edit->Preferences.
 * Restart MSE, and make sure everything looks right.
-* Submit the new locale to the [[http://magicseteditor.sourceforge.net/forum/7|MSE forum].
+* Submit the new locale as a pull request to the [[https://github.com/MagicSetEditorPacks/Full-Magic-Pack|Full-Magic-Pack repository].
 * Maintain the locale when new versions of MSE come out. A new version may have new user interface items and therefore new keys.

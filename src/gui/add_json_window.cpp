@@ -26,6 +26,43 @@
 
 // ----------------------------------------------------------------------------- : AddJSON
 
+AddJSONWindow::AddJSONWindow(Window* parent, const SetP& set, bool sizer)
+  : wxDialog(parent, wxID_ANY, _TITLE_("add card json"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+  , set(set)
+{
+  // init controls
+  file_path = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  file_browse = new wxButton(this, ID_CARD_ADD_JSON_BROWSE, _BUTTON_("browse"));
+  json_type = new wxChoice(this, ID_CARD_ADD_JSON_ARRAY, wxDefaultPosition, wxDefaultSize, 0, nullptr);
+  json_type->Clear();
+  FOR_EACH(type, set->game->json_paths) {
+    int delimiter_pos = type.find("//");
+    json_type->Append(type.substr(0, delimiter_pos).Trim().Trim(false));
+  }
+  json_type->Append(_LABEL_("add card json custom"));
+  json_type->SetSelection(0);
+  card_array_path = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  setJSONType();
+  // init sizers
+  if (sizer) {
+    wxSizer* s = new wxBoxSizer(wxVERTICAL);
+    s->Add(new wxStaticText(this, -1, _LABEL_("add card json type")), 0, wxALL, 8);
+    s->Add(json_type, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
+    s->Add(new wxStaticText(this, -1, _LABEL_("add card json path")), 0, wxALL & ~wxTOP, 8);
+    s->Add(card_array_path, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
+    s->Add(new wxStaticText(this, -1, _LABEL_("add card json file")), 0, wxALL, 8);
+    s->Add(file_path, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
+    wxSizer* s2 = new wxBoxSizer(wxHORIZONTAL);
+      s2->Add(file_browse, 0, wxEXPAND | wxRIGHT, 8);
+      s2->Add(CreateButtonSizer(wxOK | wxCANCEL), 1, wxEXPAND, 8);
+    s->Add(s2, 0, wxEXPAND | wxALL, 12);
+    file_browse->SetFocus();
+    s->SetSizeHints(this);
+    SetSizer(s);
+    SetSize(500, 110);
+  }
+}
+
 static ScriptValueP json_to_script(boost::json::value jv) {
   if (jv == nullptr) return script_nil;
   else if (jv.is_null()) return script_nil;
@@ -69,44 +106,8 @@ static ScriptValueP json_to_script(boost::json::value jv) {
     return result;
   }
   else {
-    queue_message(MESSAGE_ERROR, _ERROR_("import unknown json type"));
+    queue_message(MESSAGE_ERROR, _ERROR_("add card json unknown type"));
     return script_nil;
-  }
-}
-
-AddJSONWindow::AddJSONWindow(Window* parent, const SetP& set, bool sizer)
-  : wxDialog(parent, wxID_ANY, _TITLE_("add card json"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
-  , set(set)
-{
-  // init controls
-  file_path = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
-  file_browse = new wxButton(this, ID_CARD_ADD_JSON_BROWSE, _BUTTON_("browse"));
-  json_type = new wxChoice(this, ID_CARD_ADD_JSON_ARRAY, wxDefaultPosition, wxDefaultSize, 0, nullptr);
-  json_type->Clear();
-  FOR_EACH(type, set->game->json_paths) {
-    int delimiter_pos = type.find("//");
-    json_type->Append(type.substr(0, delimiter_pos).Trim().Trim(false));
-  }
-  json_type->Append(_LABEL_("add card json custom link"));
-  json_type->SetSelection(0);
-  card_array_path = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
-  setJSONType();
-  // init sizers
-  if (sizer) {
-    wxSizer* s = new wxBoxSizer(wxVERTICAL);
-    s->Add(new wxStaticText(this, -1, _LABEL_("add card json array")), 0, wxALL, 8);
-    s->Add(json_type, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
-    s->Add(card_array_path, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
-    s->Add(new wxStaticText(this, -1, _LABEL_("add card json file:")), 0, wxALL, 8);
-    s->Add(file_path, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
-    wxSizer* s2 = new wxBoxSizer(wxHORIZONTAL);
-      s2->Add(file_browse, 0, wxEXPAND | wxRIGHT, 8);
-      s2->Add(CreateButtonSizer(wxOK | wxCANCEL), 1, wxEXPAND, 8);
-    s->Add(s2, 0, wxEXPAND | wxALL, 12);
-    file_browse->SetFocus();
-    s->SetSizeHints(this);
-    SetSizer(s);
-    SetSize(500, 110);
   }
 }
 

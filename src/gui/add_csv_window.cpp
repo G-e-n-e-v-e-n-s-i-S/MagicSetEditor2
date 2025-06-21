@@ -141,7 +141,7 @@ bool AddCSVWindow::readCSV(std::ifstream& in, std::vector<String> headers_out, s
     }
   }
   if (rows.size() == 0) {
-    queue_message(MESSAGE_ERROR, _ERROR_("import empty file"));
+    queue_message(MESSAGE_ERROR, _ERROR_1_("import empty file", _("CSV / TSV")));
     return false;
   }
   // Parse headers

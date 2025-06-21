@@ -102,11 +102,26 @@ CardsPanel::CardsPanel(Window* parent, int id)
 }
 
 void CardsPanel::updateCardCounts() {
-  if (counts && card_list && set) {
-    counts->SetLabel(_LABEL_3_("card counts",
-      wxString::Format(wxT("%i"), card_list->GetSelectedItemCount()),
-      wxString::Format(wxT("%i"), card_list->GetItemCount()),
-      wxString::Format(wxT("%i"), set->cards.size())));
+  if (counts) {
+    if (card_list && set) {
+      int selected = card_list->GetSelectedItemCount();
+      int filtered = card_list->GetItemCount();
+      int total = set->cards.size();
+      if (filtered == total) {
+        counts->SetLabel(_TOOL_2_("card counts 2",
+          wxString::Format(wxT("%i"), selected),
+          wxString::Format(wxT("%i"), total)));
+      }
+      else {
+        counts->SetLabel(_TOOL_3_("card counts 3",
+          wxString::Format(wxT("%i"), selected),
+          wxString::Format(wxT("%i"), filtered),
+          wxString::Format(wxT("%i"), total)));
+      }
+      
+    } else {
+      counts->SetLabel(_(""));
+    }
   }
 }
 
@@ -215,7 +230,7 @@ void CardsPanel::initUI(wxToolBar* tb, wxMenuBar* mb) {
   // Filter/search textbox
   tb->AddSeparator();
   assert(!filter);
-  filter = new FilterCtrl(tb, ID_CARD_FILTER, _LABEL_("search cards"), _HELP_("search_cards_control"));
+  filter = new FilterCtrl(tb, ID_CARD_FILTER, _TOOL_("search cards"), _HELP_("search cards control"));
   filter->setFilter(filter_value);
   tb->AddControl(filter);
   counts = new wxStaticText(tb, ID_CARD_COUNTER, _(""));

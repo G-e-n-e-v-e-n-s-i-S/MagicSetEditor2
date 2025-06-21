@@ -178,13 +178,13 @@ Settings::Settings()
   , internal_scale       (1.0)
   , internal_image_extension(true)
   #if USE_OLD_STYLE_UPDATE_CHECKER
-  , updates_url          (_("http://magicseteditor.sourceforge.net/updates"))
+  , updates_url          (_("https://magicseteditor.boards.net/page/downloads"))
   #endif
-  , package_versions_url (_("http://magicseteditor.sourceforge.net/packages"))
-  , installer_list_url   (_("http://magicseteditor.sourceforge.net/installers"))
+  , package_versions_url (_("https://magicseteditor.boards.net/page/downloads"))
+  , installer_list_url   (_("https://magicseteditor.boards.net/page/downloads"))
   , check_updates        (CHECK_IF_CONNECTED)
   , check_updates_all    (true)
-  , website_url          (_("http://magicseteditor.sourceforge.net/"))
+  , website_url          (_("https://magicseteditor.boards.net/"))
   , install_type         (INSTALL_DEFAULT)
 {}
 
