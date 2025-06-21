@@ -80,13 +80,14 @@ public:
   bool doDelete() override;
   bool doAddCSV();
   bool doAddJSON();
+  bool doBulkModification();
 
   // --------------------------------------------------- : Card linking
   
   bool canLink()    const;
   bool doLink();
   bool doUnlink(CardP unlinked_card);
-  
+
   // --------------------------------------------------- : Set actions
   
   void onBeforeChangeSet() override;
