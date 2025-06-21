@@ -214,14 +214,6 @@ void AddJSONWindow::onBrowseFiles(wxCommandEvent&) {
     }
     table_out.push_back(row);
   }
-  // escape " { }
-  //for (int y = 0; y < out.size(); ++y) {
-  //  for (int x = 0; x < out[y].size(); ++x) {
-  //    out[y][x] = std::regex_replace(out[y][x], std::regex("\""), "\\\"");
-  //    out[y][x] = std::regex_replace(out[y][x], std::regex("\\{"), "\\{");
-  //    out[y][x] = std::regex_replace(out[y][x], std::regex("\\}"), "\\}");
-  //  }
-  //}
   return true;
 }
 

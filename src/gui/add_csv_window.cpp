@@ -160,14 +160,6 @@ bool AddCSVWindow::readCSV(std::ifstream& in, std::vector<String> headers_out, s
     }
     table_out.push_back(values);
   }
-  // escape " { }
-  //for (int y = 0; y < out.size(); ++y) {
-  //  for (int x = 0; x < out[y].size(); ++x) {
-  //    out[y][x] = std::regex_replace(out[y][x], std::regex("\""), "\\\"");
-  //    out[y][x] = std::regex_replace(out[y][x], std::regex("\\{"), "\\{");
-  //    out[y][x] = std::regex_replace(out[y][x], std::regex("\\}"), "\\}");
-  //  }
-  //}
   return true;
 }
 

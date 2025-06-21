@@ -69,13 +69,13 @@ CardsPanel::CardsPanel(Window* parent, int id)
     add_menu_item_tr(menuCard, ID_CARD_NEXT, nullptr, "next card");
     add_menu_item_tr(menuCard, ID_CARD_SEARCH, nullptr, "search cards");
     menuCard->AppendSeparator();
-    add_menu_item_tr(menuCard, ID_CARD_ADD, "card_add", "add_card");
     insertManyCardsMenu = add_menu_item_tr(menuCard, ID_CARD_ADD_MULT, "card_add_multiple", "add cards");
     // NOTE: space after "Del" prevents wx from making del an accellerator
     // otherwise we delete a card when delete is pressed inside the editor
     // Adding a space never hurts, please keep it just to be safe.
     add_menu_item(menuCard, ID_CARD_ADD_CSV, "card_add_multiple", _MENU_("add card csv") + _(" "), _HELP_("add card csv"));
     add_menu_item(menuCard, ID_CARD_ADD_JSON, "card_add_multiple", _MENU_("add card json") + _(" "), _HELP_("add card json"));
+    add_menu_item_tr(menuCard, ID_CARD_ADD, "card_add", "add_card");
     add_menu_item(menuCard, ID_CARD_REMOVE, "card_del", _MENU_("remove card")+_(" "), _HELP_("remove card"));
     menuCard->AppendSeparator();
     auto menuRotate = new wxMenu();
