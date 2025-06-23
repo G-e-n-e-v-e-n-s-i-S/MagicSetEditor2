@@ -288,7 +288,7 @@ String filter_choices(const String& input, const vector<String>& choices, int mi
   }
   // keep less choices
   if (count > max) {
-    for (size_t i = choices.size() - 1 ; i >= 0 ; --i) {
+    for (int i = choices.size() - 1 ; i >= 0 ; --i) {
       if (count <= max) break;
       if (seen[i]) {
         if (max > 0 && choices[i] == prefered) continue; // we would rather not remove prefered choice

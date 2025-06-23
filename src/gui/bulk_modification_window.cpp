@@ -14,11 +14,14 @@
 #include <data/set.hpp>
 #include <data/card.hpp>
 #include <data/stylesheet.hpp>
-#include <script/functions/construction_helpers.hpp>
+#include <data/field/multiple_choice.hpp>
+#include <data/field/symbol.hpp>
+#include <data/action/set.hpp>
+#include <data/action/value.hpp>
+#include <script/functions/construction_helper.hpp>
 #include <gui/bulk_modification_window.hpp>
 #include <gui/control/card_list.hpp>
 #include <util/window_id.hpp>
-#include <data/action/set.hpp>
 #include <wx/statline.h>
 
 // ----------------------------------------------------------------------------- : AddCSV
@@ -29,21 +32,29 @@ BulkModificationWindow::BulkModificationWindow(Window* parent, const SetP& set, 
 {
   // init controls
   predicate_description = new wxStaticText(this, -1, _LABEL_("bulk modify predicate description"));
-  predicate = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  predicate = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+  predicate->SetHint("example (tiny creatures):\ncard.cmc <= 3 and contains(card.type, match:\"Creature\")");
   modification_description = new wxStaticText(this, -1, _LABEL_("bulk modify modification description"));
-  modification = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  modification = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
   modification_type = new wxChoice(this, ID_CARD_BULK_TYPE, wxDefaultPosition, wxDefaultSize, 0, nullptr);
   modification_type->Clear();
+  modification_type->Append(_LABEL_("bulk modify all"));
   modification_type->Append(_LABEL_("bulk modify selected"));
   modification_type->Append(_LABEL_("bulk modify predicate"));
   modification_type->SetSelection(0);
   setType();
-  field_type = new wxChoice(this, ID_CARD_BULK_FIELD, wxDefaultPosition, wxDefaultSize, 0, nullptr);
+  field_type = new wxChoice(this, ID_CARD_BULK_FIELD, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxCB_SORT);
   field_type->Clear();
+  String default_selection = "";
+  field_type->Append("stylesheet");
+  field_type->Append("notes");
   FOR_EACH(field, set->game->card_fields) {
     field_type->Append(field->name);
+    if (field->identifying) default_selection = field->name;
   }
-  field_type->SetSelection(0);
+  int default_index = field_type->FindString(default_selection);
+  if (default_index == wxNOT_FOUND) default_index = 0;
+  field_type->SetSelection(default_index);
   setField();
   // init sizers
   if (sizer) {
@@ -64,7 +75,14 @@ BulkModificationWindow::BulkModificationWindow(Window* parent, const SetP& set, 
 }
 
 void BulkModificationWindow::setType() {
-
+  if (modification_type->GetSelection() <= 1) {
+    predicate_description->Hide();
+    predicate->Hide();
+  } else {
+    predicate_description->Show();
+    predicate->Show();
+  }
+  Layout();
 }
 
 void BulkModificationWindow::onTypeChange(wxCommandEvent&) {
@@ -80,6 +98,7 @@ void BulkModificationWindow::onFieldChange(wxCommandEvent&) {
 }
 
 void BulkModificationWindow::onOk(wxCommandEvent&) {
+  wxBusyCursor wait;
   // get the context
   CardListBase* card_list_window = dynamic_cast<CardListBase*>(parent);
   if (!card_list_window) {
@@ -92,10 +111,11 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
   ScriptValueP ctx_stylesheet = ctx.getVariableOpt(SCRIPT_VAR_stylesheet);
   // get the cards
   vector<CardP> cards;
-  if (modification_type->GetSelection() == 0) { // Modify from selection
+  if (modification_type->GetSelection() == 0) { // all
+    cards = set->cards;
+  } else if (modification_type->GetSelection() == 1) { // selection
     card_list_window->getSelection(cards);
-  }
-  else { // Modify from predicate
+  } else { // predicate
     ScriptP predicate_script = parse(predicate->GetValue(), nullptr, false);
     FOR_EACH(card, set->cards) {
       ctx.setVariable(SCRIPT_VAR_card, to_script(card));
@@ -111,15 +131,87 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
       }
     }
   }
-  // Make modifications
-  String field_name = field_type->GetString(field_type->GetSelection());
-  ScriptP modification_script = parse(modification->GetValue(), nullptr, false);
-  FOR_EACH(card, cards) {
-    Value* container = get_container(set->game, card, field_name);
-    ctx.setVariable(SCRIPT_VAR_card, to_script(card));
-    ctx.setVariable(SCRIPT_VAR_stylesheet, card->stylesheet ? to_script(card->stylesheet) : to_script(set->stylesheet));
-    ScriptValueP value = modification_script->eval(ctx, false);
-    set_container(container, value, field_name);
+  // get the new script values
+  if (!cards.empty()) {
+    vector<shared_ptr<Action>> actions;
+    String field_name = field_type->GetString(field_type->GetSelection());
+    ScriptP modification_script = parse(modification->GetValue(), nullptr, false);
+    vector<Value*> values;
+    vector<ScriptValueP> new_values;
+    FOR_EACH(card, cards) {
+      Value* value = get_container(set->game, card, field_name, false);
+      values.push_back(value);
+      ctx.setVariable(SCRIPT_VAR_card, to_script(card));
+      ctx.setVariable(SCRIPT_VAR_stylesheet, card->stylesheet ? to_script(card->stylesheet) : to_script(set->stylesheet));
+      ScriptValueP new_value = modification_script->eval(ctx, false);
+      new_values.push_back(new_value);
+    }
+    int count = cards.size();
+    assert(count == values.size());
+    assert(count == new_values.size());
+    // make the modifications (I have lost my battle with c++ templates)
+    if (dynamic_cast<TextValue*>(values.front())) {
+      for (int i = 0; i < count; ++i) {
+        TextValue* value = dynamic_cast<TextValue*>(values[i]);
+        TextValue::ValueType new_value = new_values[i]->toString();
+        shared_ptr<Action> action = make_shared<SimpleValueAction<TextValue, false>>(value, new_value);
+        actions.push_back(action);
+      }
+    }
+    else if (dynamic_cast<MultipleChoiceValue*>(values.front())) {
+      for (int i = 0; i < count; ++i) {
+        MultipleChoiceValue* value = dynamic_cast<MultipleChoiceValue*>(values[i]);
+        MultipleChoiceValue::ValueType new_value = { new_values[i]->toString(), _("") };
+        shared_ptr<Action> action = make_shared<SimpleValueAction<MultipleChoiceValue, false>>(value, new_value);
+        actions.push_back(action);
+      }
+    }
+    else if (dynamic_cast<ChoiceValue*>(values.front())) {
+      for (int i = 0; i < count; ++i) {
+        ChoiceValue* value = dynamic_cast<ChoiceValue*>(values[i]);
+        ChoiceValue::ValueType new_value = new_values[i]->toString();
+        shared_ptr<Action> action = make_shared<SimpleValueAction<ChoiceValue, false>>(value, new_value);
+        actions.push_back(action);
+      }
+    }
+    else if (dynamic_cast<PackageChoiceValue*>(values.front())) {
+      for (int i = 0; i < count; ++i) {
+        PackageChoiceValue* value = dynamic_cast<PackageChoiceValue*>(values[i]);
+        PackageChoiceValue::ValueType new_value = new_values[i]->toString();
+        shared_ptr<Action> action = make_shared<SimpleValueAction<PackageChoiceValue, false>>(value, new_value);
+        actions.push_back(action);
+      }
+    }
+    else if (dynamic_cast<ColorValue*>(values.front())) {
+      for (int i = 0; i < count; ++i) {
+        ColorValue* value = dynamic_cast<ColorValue*>(values[i]);
+        ColorValue::ValueType new_value = new_values[i]->toColor();
+        shared_ptr<Action> action = make_shared<SimpleValueAction<ColorValue, false>>(value, new_value);
+        actions.push_back(action);
+      }
+    }
+    else if (dynamic_cast<ImageValue*>(values.front())) {
+      for (int i = 0; i < count; ++i) {
+        ImageValue* value = dynamic_cast<ImageValue*>(values[i]);
+        wxFileName fname(static_cast<ExternalImage*>(new_values[i].get())->toString());
+        ImageValue::ValueType new_value = LocalFileName::fromReadString(fname.GetName(), "");
+        shared_ptr<Action> action = make_shared<SimpleValueAction<ImageValue, false>>(value, new_value);
+        actions.push_back(action);
+      }
+    }
+    else if (dynamic_cast<SymbolValue*>(values.front())) {
+      for (int i = 0; i < count; ++i) {
+        SymbolValue* value = dynamic_cast<SymbolValue*>(values[i]);
+        wxFileName fname(static_cast<ExternalImage*>(new_values[i].get())->toString());
+        SymbolValue::ValueType new_value = LocalFileName::fromReadString(fname.GetName(), "");
+        shared_ptr<Action> action = make_shared<SimpleValueAction<SymbolValue, false>>(value, new_value);
+        actions.push_back(action);
+      }
+    }
+    else {
+      queue_message(MESSAGE_ERROR, _ERROR_("bulk modify script type unknown"));
+    }
+    set->actions.addAction(make_unique<BulkAction>(actions, set), false);
   }
   // restore context variables
   if (ctx_card) ctx.setVariable(SCRIPT_VAR_card, ctx_card);

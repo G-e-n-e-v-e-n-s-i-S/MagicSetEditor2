@@ -16,6 +16,13 @@
 #include <util/prec.hpp>
 #include <util/action_stack.hpp>
 #include <util/defaultable.hpp>
+#include <data/field/text.hpp>
+#include <data/field/choice.hpp>
+#include <data/field/multiple_choice.hpp>
+#include <data/field/color.hpp>
+#include <data/field/image.hpp>
+#include <data/field/symbol.hpp>
+#include <data/field/package_choice.hpp>
 
 class StyleSheet;
 class LocalFileName;
@@ -23,15 +30,8 @@ DECLARE_POINTER_TYPE(Card);
 DECLARE_POINTER_TYPE(Set);
 DECLARE_POINTER_TYPE(Value);
 DECLARE_POINTER_TYPE(Style);
-DECLARE_POINTER_TYPE(TextValue);
-DECLARE_POINTER_TYPE(ChoiceValue);
-DECLARE_POINTER_TYPE(MultipleChoiceValue);
-DECLARE_POINTER_TYPE(ColorValue);
-DECLARE_POINTER_TYPE(ImageValue);
-DECLARE_POINTER_TYPE(SymbolValue);
-DECLARE_POINTER_TYPE(PackageChoiceValue);
 
-// ----------------------------------------------------------------------------- : ValueAction (based class)
+// ----------------------------------------------------------------------------- : ValueAction (base class)
 
 /// An Action the changes a Value
 class ValueAction : public Action {
@@ -53,13 +53,53 @@ private:
 
 // ----------------------------------------------------------------------------- : Simple
 
+/// Swap the value in a Value object with a new one
+inline void swap_value(ChoiceValue&         a, ChoiceValue        ::ValueType& b);
+inline void swap_value(ColorValue&          a, ColorValue         ::ValueType& b);
+inline void swap_value(ImageValue&          a, ImageValue         ::ValueType& b);
+inline void swap_value(SymbolValue&         a, SymbolValue        ::ValueType& b);
+inline void swap_value(TextValue&           a, TextValue          ::ValueType& b);
+inline void swap_value(PackageChoiceValue&  a, PackageChoiceValue ::ValueType& b);
+inline void swap_value(MultipleChoiceValue& a, MultipleChoiceValue::ValueType& b);
+
 /// Action that updates a Value to a new value
+unique_ptr<ValueAction> value_action(const TextValueP&           value, const Defaultable<String>& new_value);
 unique_ptr<ValueAction> value_action(const ChoiceValueP&         value, const Defaultable<String>& new_value);
 unique_ptr<ValueAction> value_action(const MultipleChoiceValueP& value, const Defaultable<String>& new_value, const String& last_change);
 unique_ptr<ValueAction> value_action(const ColorValueP&          value, const Defaultable<Color>&  new_value);
 unique_ptr<ValueAction> value_action(const ImageValueP&          value, const LocalFileName&       new_value);
 unique_ptr<ValueAction> value_action(const SymbolValueP&         value, const LocalFileName&       new_value);
 unique_ptr<ValueAction> value_action(const PackageChoiceValueP&  value, const String&              new_value);
+
+/// A ValueAction that swaps between old and new values
+template <typename T, bool ALLOW_MERGE>
+class SimpleValueAction : public ValueAction {
+public:
+  inline SimpleValueAction(const intrusive_ptr<T>& value, const typename T::ValueType& new_value)
+    : ValueAction(value), new_value(new_value)
+  {}
+  
+  void perform(bool to_undo) override {
+    ValueAction::perform(to_undo);
+    swap_value(static_cast<T&>(*valueP), new_value);
+    valueP->onAction(*this, to_undo); // notify value
+  }
+  
+  bool merge(const Action& action) override {
+    if (!ALLOW_MERGE) return false;
+    TYPE_CASE(action, SimpleValueAction) {
+      if (action.valueP == valueP) {
+        // adjacent actions on the same value, discard the other one,
+        // because it only keeps an intermediate value
+        return true;
+      }
+    }
+    return false;
+  }
+  
+private:
+  typename T::ValueType new_value;
+};
 
 // ----------------------------------------------------------------------------- : Text
 
@@ -156,6 +196,26 @@ public:
   
   const StyleSheet* stylesheet; ///< StyleSheet the style is for
   const Style*      style;      ///< The modified style
+};
+
+
+// ----------------------------------------------------------------------------- : Bulk action
+
+// An action that's just a list of other actions
+class BulkAction : public Action {
+public:
+  BulkAction(const vector<shared_ptr<Action>>& actions, const SetP& set);
+  ~BulkAction() override;
+
+  String getName(bool to_undo) const override;
+  void perform(bool to_undo) override;
+  bool merge(const Action& action) override;
+
+private:
+  String name_do;
+  String name_undo;
+  vector<shared_ptr<Action>> actions;
+  SetP set;
 };
 
 

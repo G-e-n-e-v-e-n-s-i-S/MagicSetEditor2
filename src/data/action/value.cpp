@@ -56,36 +56,9 @@ inline void swap_value(MultipleChoiceValue& a, MultipleChoiceValue::ValueType& b
   swap(a.last_change, b.last_change);
 }
 
-/// A ValueAction that swaps between old and new values
-template <typename T, bool ALLOW_MERGE>
-class SimpleValueAction : public ValueAction {
-public:
-  inline SimpleValueAction(const intrusive_ptr<T>& value, const typename T::ValueType& new_value)
-    : ValueAction(value), new_value(new_value)
-  {}
-  
-  void perform(bool to_undo) override {
-    ValueAction::perform(to_undo);
-    swap_value(static_cast<T&>(*valueP), new_value);
-    valueP->onAction(*this, to_undo); // notify value
-  }
-  
-  bool merge(const Action& action) override {
-    if (!ALLOW_MERGE) return false;
-    TYPE_CASE(action, SimpleValueAction) {
-      if (action.valueP == valueP) {
-        // adjacent actions on the same value, discard the other one,
-        // because it only keeps an intermediate value
-        return true;
-      }
-    }
-    return false;
-  }
-  
-private:
-  typename T::ValueType new_value;
-};
-
+unique_ptr<ValueAction> value_action(const TextValueP& value, const Defaultable<String>& new_value) {
+  return make_unique<SimpleValueAction<TextValue, false>>(value, new_value);
+}
 unique_ptr<ValueAction> value_action(const ChoiceValueP& value, const Defaultable<String>& new_value) {
   return make_unique<SimpleValueAction<ChoiceValue, true>>(value, new_value);
 }
@@ -255,6 +228,33 @@ String ScriptStyleEvent::getName(bool) const {
 void ScriptStyleEvent::perform(bool) {
   assert(false); // this action is just an event, it should not be performed
 }
+
+// ----------------------------------------------------------------------------- : Bulk action
+
+BulkAction::BulkAction(const vector<shared_ptr<Action>>& actions, const SetP& set)
+  : actions(actions), set(set)
+{
+  if (actions.empty()) throw InternalError(_("BulkAction created with no actions"));
+  name_do = actions.front()->getName(false) + _(" ") + _ACTION_("bulk");
+  name_undo = actions.front()->getName(true) + _(" ") + _ACTION_("bulk");
+}
+BulkAction::~BulkAction() {}
+
+String BulkAction::getName(bool to_undo) const {
+  return to_undo ? name_undo : name_do;
+}
+
+void BulkAction::perform(bool to_undo) {
+  FOR_EACH(action, actions) {
+    action->perform(to_undo);
+    set->actions.tellListeners(*action, to_undo);
+  }
+}
+
+bool BulkAction::merge(const Action& action) {
+  return false;
+}
+
 
 // ----------------------------------------------------------------------------- : Action performer
 
