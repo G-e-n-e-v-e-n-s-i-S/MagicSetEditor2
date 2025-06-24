@@ -29,19 +29,19 @@ bool ImageValueEditor::onLeftDClick(const RealPoint&, wxMouseEvent&) {
       wxLogNull noLog;
       image = wxImage(filename);
     }
-    sliceImage(image);
+    sliceImage(image, filename);
   }
   return true;
 }
 
-void ImageValueEditor::sliceImage(const Image& image) {
+void ImageValueEditor::sliceImage(const Image& image, const String& filename) {
   if (!image.Ok()) return;
   // mask
   GeneratedImage::Options options((int)style().width, (int)style().height, &parent.getStylePackage(), &parent.getLocalPackage());
   AlphaMask mask;
   style().mask.getNoCache(options,mask);
   // slice
-  ImageSliceWindow s(wxGetTopLevelParent(&editor()), image, style().getSize(), mask);
+  ImageSliceWindow s(wxGetTopLevelParent(&editor()), image, filename, style().getSize(), mask);
   // clicked ok?
   if (s.ShowModal() == wxID_OK) {
     // store the image into the set
@@ -88,7 +88,7 @@ bool ImageValueEditor::doPaste() {
   wxTheClipboard->Close();
   if (!ok)  return false;
   // slice
-  sliceImage(data.GetBitmap().ConvertToImage());
+  sliceImage(data.GetBitmap().ConvertToImage(), _("clipboard"));
   return true;
 }
 

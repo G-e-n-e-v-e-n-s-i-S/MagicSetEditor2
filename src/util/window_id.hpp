@@ -287,6 +287,7 @@ enum ControlID {
   ID_PREVIEW,
   ID_SELECTOR,
   ID_SIZE,
+  ID_GRID,
   ID_LEFT,
   ID_TOP,
   ID_WIDTH,
