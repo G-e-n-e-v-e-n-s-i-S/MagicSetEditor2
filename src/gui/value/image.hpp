@@ -32,7 +32,7 @@ public:
   bool onChar(wxKeyEvent&) override;
   
 private:
-  // Open the image slice window showing the give image
-  void sliceImage(const Image&);
+  // Open the image slice window showing the given image
+  void sliceImage(const Image&, const String& filename, const String& cardname);
 };
 

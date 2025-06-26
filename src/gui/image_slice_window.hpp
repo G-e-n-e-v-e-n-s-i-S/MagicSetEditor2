@@ -28,17 +28,20 @@ enum PreferedProperty
 /// A slice of an image, i.e. a selected rectangle
 class ImageSlice {
 public:
-  ImageSlice(const Image& source, const wxSize& target_size);
+  ImageSlice(const Image& source, const String& source_path, const String& card_name, const wxSize& target_size);
   
-  Image  source;    ///< The source image
-  wxSize target_size;  ///< Size of the target image
-  Color  background;  ///< Color for areas outside the source image
-  wxRect selection;  ///< Area to slect from source
-  bool allow_outside;
-  bool aspect_fixed;  ///< Aspect ratio lock?
+  Image  source;        ///< The source image
+  String source_path;   ///< The filename of the source image (only used to find previously used settings)
+  String card_name;     ///< The identification of the card we're on (only used to find previously used settings)
+  wxSize target_size;   ///< Size of the target image
+  wxRect selection;     ///< Area to slice from source
+  Color  background;    ///< Color for areas outside the source image
+  bool   allow_outside; ///< Allow the slice to extend outside the source image?
+  bool   aspect_fixed;  ///< Aspect ratio lock?
+  
   // Filters
-  bool sharpen;
-  int sharpen_amount;
+  bool   sharpen;
+  int    sharpen_amount;
   
   /// Enforce relations between values
   void constrain(PreferedProperty prefer = PREFER_NONE);
@@ -62,11 +65,16 @@ public:
 /// Dialog for selecting a slice of an image
 class ImageSliceWindow : public wxDialog {
 public:
-  ImageSliceWindow(Window* parent, const Image& source, const wxSize& target_size, const AlphaMask& target_mask);
+  ImageSliceWindow(Window* parent, const Image& source, const String& filename, const String& cardname, const wxSize& target_size, const AlphaMask& target_mask);
   
   /// Return the sliced image
   Image getImage(double scale) const;
-  
+
+  // --------------------------------------------------- : Previously Used Settings
+
+  static map<String, String> previously_used_settings_path;  // map from cardname to filename
+  static map<pair<String, String>, pair<wxRect, int>> previously_used_settings_value; // map from filename+cardname pair to settings
+
   // --------------------------------------------------- : Data
 private:
   // The slice we are extracting
@@ -74,7 +82,7 @@ private:
   // Gui items
   ImageSlicePreview*   preview;
   ImageSliceSelector*  selector;
-  wxRadioBox*          size;
+  wxRadioBox*          size, *grid;
   wxSpinCtrl*          top, *left, *width, *height;
   wxCheckBox*          fix_aspect;
   wxSpinCtrl*          zoom, *zoom_x, *zoom_y;
@@ -91,11 +99,12 @@ private:
   void onSize               (wxSizeEvent&);
   
   void onChangeSize         (wxCommandEvent&);
+  void onChangeGrid         (wxCommandEvent&);
   void onChangeLeft         (wxCommandEvent&);
   void onChangeTop          (wxCommandEvent&);
   void onChangeWidth        (wxCommandEvent&);
   void onChangeHeight       (wxCommandEvent&);
-  void onSelectionCenter(wxCommandEvent&);
+  void onSelectionCenter    (wxCommandEvent&);
   void onChangeFixAspect    (wxCommandEvent&);
   void onChangeZoom         (wxSpinEvent&);
   void onChangeZoomX        (wxSpinEvent&);
@@ -120,11 +129,13 @@ private:
 /// A preview of the sliced image
 class ImageSlicePreview : public wxControl {
 public:
-  ImageSlicePreview(Window* parent, int id, ImageSlice& slice, const AlphaMask& mask);
+  ImageSlicePreview(Window* parent, int id, ImageSlice& slice, const AlphaMask& mask, const int grid);
   
   /// Notify that the slice was updated
   void update();
   
+  int grid;
+
   // --------------------------------------------------- : Data
 private:
   Bitmap bitmap;

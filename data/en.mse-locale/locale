@@ -491,7 +491,7 @@ label:
 	select linked cards:				Choose up to 4 cards to link:
 
 	# Open dialogs
-	all files:			All Files
+	all files:							All Files
 	
 	# Other set window dialogs
 	save changes:						
@@ -586,6 +586,12 @@ label:
 	zoom %:								%
 	filter:								Filter
 	sharpen filter:						&Sharpen filter
+	grid:								Grid
+	grid halves:						Halves
+	grid thirds:						Thirds
+	grid fourths:						Fourths
+	grid fifths:						Fifths
+	none:								None
 
 	# Auto replace
 	auto match:							Match

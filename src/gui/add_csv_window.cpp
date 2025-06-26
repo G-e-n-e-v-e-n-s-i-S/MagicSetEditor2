@@ -151,7 +151,7 @@ bool AddCSVWindow::readCSV(std::ifstream& in, std::vector<String> headers_out, s
     headers_out.push_back(wxstring);
   }
   // Parse rows, add to table
-  for (int y = 0; y < rows.size(); ++y) {
+  for (int y = 1; y < rows.size(); ++y) {
     auto fields = readCSVRow(rows[y]);
     std::vector<ScriptValueP> values;
     for (int x = 0; x < fields.size(); ++x) {

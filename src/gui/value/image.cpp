@@ -11,6 +11,7 @@
 #include <gui/image_slice_window.hpp>
 #include <data/format/clipboard.hpp>
 #include <data/action/value.hpp>
+#include <data/card.hpp>
 #include <wx/clipbrd.h>
 #include <gui/util.hpp>
 
@@ -19,7 +20,19 @@
 IMPLEMENT_VALUE_EDITOR(Image) {}
 
 bool ImageValueEditor::onLeftDClick(const RealPoint&, wxMouseEvent&) {
-  String filename = wxFileSelector(_("Open image file"), settings.default_image_dir, _(""), _(""),
+  String directory = settings.default_image_dir;
+  String filename = _("");
+  CardP card = parent.getCard();
+  String cardname = card ? card->identification() : _("clipboard");
+  if (ImageSliceWindow::previously_used_settings_path.find(cardname) != ImageSliceWindow::previously_used_settings_path.end()) {
+    String filepath = ImageSliceWindow::previously_used_settings_path[cardname];
+    size_t pos = filepath.rfind(wxFileName::GetPathSeparator());
+    if (pos != String::npos) {
+      directory = filepath.substr(0, pos+1);
+      filename = filepath.substr(pos+1);
+    }
+  }
+  filename = wxFileSelector(_("Open image file"), directory, filename, _(""),
                                  _("All images|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.tif;*.tiff|Windows bitmaps (*.bmp)|*.bmp|JPEG images (*.jpg;*.jpeg)|*.jpg;*.jpeg|PNG images (*.png)|*.png|GIF images (*.gif)|*.gif|TIFF images (*.tif;*.tiff)|*.tif;*.tiff"),
                                  wxFD_OPEN, wxGetTopLevelParent(&editor()));
   if (!filename.empty()) {
@@ -29,19 +42,19 @@ bool ImageValueEditor::onLeftDClick(const RealPoint&, wxMouseEvent&) {
       wxLogNull noLog;
       image = wxImage(filename);
     }
-    sliceImage(image);
+    sliceImage(image, filename, cardname);
   }
   return true;
 }
 
-void ImageValueEditor::sliceImage(const Image& image) {
+void ImageValueEditor::sliceImage(const Image& image, const String& filename, const String& cardname) {
   if (!image.Ok()) return;
   // mask
   GeneratedImage::Options options((int)style().width, (int)style().height, &parent.getStylePackage(), &parent.getLocalPackage());
   AlphaMask mask;
   style().mask.getNoCache(options,mask);
   // slice
-  ImageSliceWindow s(wxGetTopLevelParent(&editor()), image, style().getSize(), mask);
+  ImageSliceWindow s(wxGetTopLevelParent(&editor()), image, filename, cardname, style().getSize(), mask);
   // clicked ok?
   if (s.ShowModal() == wxID_OK) {
     // store the image into the set
@@ -88,7 +101,9 @@ bool ImageValueEditor::doPaste() {
   wxTheClipboard->Close();
   if (!ok)  return false;
   // slice
-  sliceImage(data.GetBitmap().ConvertToImage());
+  CardP card = parent.getCard();
+  String cardname = card ? card->identification() : _("clipboard");
+  sliceImage(data.GetBitmap().ConvertToImage(), _("clipboard"), cardname);
   return true;
 }
 
