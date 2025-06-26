@@ -33,6 +33,6 @@ public:
   
 private:
   // Open the image slice window showing the given image
-  void sliceImage(const Image&, const String& filename);
+  void sliceImage(const Image&, const String& filename, const String& cardname);
 };
 

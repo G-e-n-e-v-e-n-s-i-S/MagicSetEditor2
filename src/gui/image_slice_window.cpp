@@ -15,12 +15,12 @@
 #include <wx/spinctrl.h>
 #include <wx/dcbuffer.h>
 
-unordered_map<String, pair<wxRect, int>> ImageSliceWindow::previously_used_settings;
+unordered_map<pair<String, String>, pair<wxRect, int>> ImageSliceWindow::previously_used_settings;
 
 // ----------------------------------------------------------------------------- : ImageSlice
 
-ImageSlice::ImageSlice(const Image& source, const String& source_path, const wxSize& target_size)
-  : source(source), source_path(source_path), target_size(target_size)
+ImageSlice::ImageSlice(const Image& source, const String& source_path, const String& card_name, const wxSize& target_size)
+  : source(source), source_path(source_path), card_name(card_name), target_size(target_size)
   , selection(0, 0, source.GetWidth(), source.GetHeight())
   , allow_outside(false), aspect_fixed(true)
   , sharpen(false), sharpen_amount(0)
@@ -95,18 +95,19 @@ DEFINE_EVENT_TYPE(EVENT_SLICE_CHANGED);
 
 // ----------------------------------------------------------------------------- : ImageSliceWindow
 
-ImageSliceWindow::ImageSliceWindow(Window* parent, const Image& source, const String& filename, const wxSize& target_size, const AlphaMask& mask)
+ImageSliceWindow::ImageSliceWindow(Window* parent, const Image& source, const String& filename, const String& cardname, const wxSize& target_size, const AlphaMask& mask)
   : wxDialog(parent,wxID_ANY,_TITLE_("slice image"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxFULL_REPAINT_ON_RESIZE)
-  , slice(source, filename, target_size)
+  , slice(source, filename, cardname, target_size)
   , initialized(false)
 {
   // init slice
-  if (previously_used_settings.find(filename) != previously_used_settings.end()) {
+  pair<String, String> settings_entry = { filename, cardname };
+  if (previously_used_settings.find(settings_entry) != previously_used_settings.end()) {
     slice.allow_outside = true;
     slice.aspect_fixed = false;
     slice.sharpen = true;
-    slice.sharpen_amount = previously_used_settings[filename].second;
-    slice.selection = previously_used_settings[filename].first;
+    slice.sharpen_amount = previously_used_settings[settings_entry].second;
+    slice.selection = previously_used_settings[settings_entry].first;
     slice.constrain();
   }
   else {
@@ -242,7 +243,7 @@ void ImageSliceWindow::onOk(wxCommandEvent&) {
 
 Image ImageSliceWindow::getImage(double scale) const {
   Image img = slice.getSlice(scale);
-  previously_used_settings[slice.source_path] = { slice.selection, slice.sharpen_amount };
+  previously_used_settings[{ slice.source_path, slice.card_name }] = { slice.selection, slice.sharpen_amount };
   return img;
 }
 

@@ -11,6 +11,7 @@
 #include <gui/image_slice_window.hpp>
 #include <data/format/clipboard.hpp>
 #include <data/action/value.hpp>
+#include <data/card.hpp>
 #include <wx/clipbrd.h>
 #include <gui/util.hpp>
 
@@ -29,19 +30,21 @@ bool ImageValueEditor::onLeftDClick(const RealPoint&, wxMouseEvent&) {
       wxLogNull noLog;
       image = wxImage(filename);
     }
-    sliceImage(image, filename);
+    CardP card = parent.getCard();
+    String cardname = card ? card->identification() : _("clipboard");
+    sliceImage(image, filename, cardname);
   }
   return true;
 }
 
-void ImageValueEditor::sliceImage(const Image& image, const String& filename) {
+void ImageValueEditor::sliceImage(const Image& image, const String& filename, const String& cardname) {
   if (!image.Ok()) return;
   // mask
   GeneratedImage::Options options((int)style().width, (int)style().height, &parent.getStylePackage(), &parent.getLocalPackage());
   AlphaMask mask;
   style().mask.getNoCache(options,mask);
   // slice
-  ImageSliceWindow s(wxGetTopLevelParent(&editor()), image, filename, style().getSize(), mask);
+  ImageSliceWindow s(wxGetTopLevelParent(&editor()), image, filename, cardname, style().getSize(), mask);
   // clicked ok?
   if (s.ShowModal() == wxID_OK) {
     // store the image into the set
@@ -88,7 +91,9 @@ bool ImageValueEditor::doPaste() {
   wxTheClipboard->Close();
   if (!ok)  return false;
   // slice
-  sliceImage(data.GetBitmap().ConvertToImage(), _("clipboard"));
+  CardP card = parent.getCard();
+  String cardname = card ? card->identification() : _("clipboard");
+  sliceImage(data.GetBitmap().ConvertToImage(), _("clipboard"), cardname);
   return true;
 }
 

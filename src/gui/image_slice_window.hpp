@@ -28,10 +28,11 @@ enum PreferedProperty
 /// A slice of an image, i.e. a selected rectangle
 class ImageSlice {
 public:
-  ImageSlice(const Image& source, const String& source_path, const wxSize& target_size);
+  ImageSlice(const Image& source, const String& source_path, const String& card_name, const wxSize& target_size);
   
   Image  source;        ///< The source image
   String source_path;   ///< The filename of the source image
+  String card_name;     ///< The identification of the card we're on
   wxSize target_size;   ///< Size of the target image
   wxRect selection;     ///< Area to slice from source
   Color  background;    ///< Color for areas outside the source image
@@ -64,14 +65,14 @@ public:
 /// Dialog for selecting a slice of an image
 class ImageSliceWindow : public wxDialog {
 public:
-  ImageSliceWindow(Window* parent, const Image& source, const String& filename, const wxSize& target_size, const AlphaMask& target_mask);
+  ImageSliceWindow(Window* parent, const Image& source, const String& filename, const String& cardname, const wxSize& target_size, const AlphaMask& target_mask);
   
   /// Return the sliced image
   Image getImage(double scale) const;
 
   // --------------------------------------------------- : Previously Used Settings
 
-  static unordered_map<String, pair<wxRect, int>> previously_used_settings;
+  static unordered_map<pair<String, String>, pair<wxRect, int>> previously_used_settings;
 
   // --------------------------------------------------- : Data
 private:
