@@ -31,8 +31,8 @@ public:
   ImageSlice(const Image& source, const String& source_path, const String& card_name, const wxSize& target_size);
   
   Image  source;        ///< The source image
-  String source_path;   ///< The filename of the source image
-  String card_name;     ///< The identification of the card we're on
+  String source_path;   ///< The filename of the source image (only used to find previously used settings)
+  String card_name;     ///< The identification of the card we're on (only used to find previously used settings)
   wxSize target_size;   ///< Size of the target image
   wxRect selection;     ///< Area to slice from source
   Color  background;    ///< Color for areas outside the source image
@@ -72,7 +72,8 @@ public:
 
   // --------------------------------------------------- : Previously Used Settings
 
-  static unordered_map<pair<String, String>, pair<wxRect, int>> previously_used_settings;
+  static map<String, String> previously_used_settings_path;  // map from cardname to filename
+  static map<pair<String, String>, pair<wxRect, int>> previously_used_settings_value; // map from filename+cardname pair to settings
 
   // --------------------------------------------------- : Data
 private:

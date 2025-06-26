@@ -20,7 +20,19 @@
 IMPLEMENT_VALUE_EDITOR(Image) {}
 
 bool ImageValueEditor::onLeftDClick(const RealPoint&, wxMouseEvent&) {
-  String filename = wxFileSelector(_("Open image file"), settings.default_image_dir, _(""), _(""),
+  String directory = settings.default_image_dir;
+  String filename = _("");
+  CardP card = parent.getCard();
+  String cardname = card ? card->identification() : _("clipboard");
+  if (ImageSliceWindow::previously_used_settings_path.find(cardname) != ImageSliceWindow::previously_used_settings_path.end()) {
+    String filepath = ImageSliceWindow::previously_used_settings_path[cardname];
+    size_t pos = filepath.rfind(wxFileName::GetPathSeparator());
+    if (pos != String::npos) {
+      directory = filepath.substr(0, pos+1);
+      filename = filepath.substr(pos+1);
+    }
+  }
+  filename = wxFileSelector(_("Open image file"), directory, filename, _(""),
                                  _("All images|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.tif;*.tiff|Windows bitmaps (*.bmp)|*.bmp|JPEG images (*.jpg;*.jpeg)|*.jpg;*.jpeg|PNG images (*.png)|*.png|GIF images (*.gif)|*.gif|TIFF images (*.tif;*.tiff)|*.tif;*.tiff"),
                                  wxFD_OPEN, wxGetTopLevelParent(&editor()));
   if (!filename.empty()) {
@@ -30,8 +42,6 @@ bool ImageValueEditor::onLeftDClick(const RealPoint&, wxMouseEvent&) {
       wxLogNull noLog;
       image = wxImage(filename);
     }
-    CardP card = parent.getCard();
-    String cardname = card ? card->identification() : _("clipboard");
     sliceImage(image, filename, cardname);
   }
   return true;

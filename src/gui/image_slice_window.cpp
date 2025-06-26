@@ -15,7 +15,8 @@
 #include <wx/spinctrl.h>
 #include <wx/dcbuffer.h>
 
-unordered_map<pair<String, String>, pair<wxRect, int>> ImageSliceWindow::previously_used_settings;
+map<String, String> ImageSliceWindow::previously_used_settings_path;
+map<pair<String, String>, pair<wxRect, int>> ImageSliceWindow::previously_used_settings_value;
 
 // ----------------------------------------------------------------------------- : ImageSlice
 
@@ -102,12 +103,12 @@ ImageSliceWindow::ImageSliceWindow(Window* parent, const Image& source, const St
 {
   // init slice
   pair<String, String> settings_entry = { filename, cardname };
-  if (previously_used_settings.find(settings_entry) != previously_used_settings.end()) {
-    slice.allow_outside = true;
+  if (previously_used_settings_value.find(settings_entry) != previously_used_settings_value.end()) {
+    //slice.allow_outside = true; this currrently crashes
     slice.aspect_fixed = false;
     slice.sharpen = true;
-    slice.sharpen_amount = previously_used_settings[settings_entry].second;
-    slice.selection = previously_used_settings[settings_entry].first;
+    slice.sharpen_amount = previously_used_settings_value[settings_entry].second;
+    slice.selection = previously_used_settings_value[settings_entry].first;
     slice.constrain();
   }
   else {
@@ -243,7 +244,8 @@ void ImageSliceWindow::onOk(wxCommandEvent&) {
 
 Image ImageSliceWindow::getImage(double scale) const {
   Image img = slice.getSlice(scale);
-  previously_used_settings[{ slice.source_path, slice.card_name }] = { slice.selection, slice.sharpen_amount };
+  previously_used_settings_path[slice.card_name] = slice.source_path;
+  previously_used_settings_value[{ slice.source_path, slice.card_name }] = { slice.selection, slice.sharpen_amount };
   return img;
 }
 
