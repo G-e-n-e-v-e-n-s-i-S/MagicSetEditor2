@@ -63,7 +63,7 @@ AddJSONWindow::AddJSONWindow(Window* parent, const SetP& set, bool sizer)
   }
 }
 
-static ScriptValueP json_to_script(boost::json::value jv) {
+static ScriptValueP json_to_script(boost::json::value& jv) {
   if (jv == nullptr) return script_nil;
   else if (jv.is_null()) return script_nil;
   else if (jv.is_bool()) return to_script(jv.get_bool());
@@ -237,7 +237,7 @@ void AddJSONWindow::onOk(wxCommandEvent&) {
   // Check for missing fields
   String missing_fields;
   check_table_headers(set->game, headers, _("JSON"), missing_fields);
-  if (missing_fields.size() > 0) {
+  if (!missing_fields.empty()) {
     queue_message(MESSAGE_WARNING, _ERROR_2_("import missing fields", _("JSON"), missing_fields));
   }
   // Produce cards from the table

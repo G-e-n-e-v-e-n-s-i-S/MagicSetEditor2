@@ -115,7 +115,7 @@ std::vector<std::string> AddCSVWindow::readCSVRow(const std::string& row) {
   return fields;
 }
 
-bool AddCSVWindow::readCSV(std::ifstream& in, std::vector<String> headers_out, std::vector<std::vector<ScriptValueP>>& table_out) {
+bool AddCSVWindow::readCSV(std::ifstream& in, std::vector<String>& headers_out, std::vector<std::vector<ScriptValueP>>& table_out) {
   // Get the rows
   vector<std::string> raw_rows;
   std::string raw_row;
@@ -140,7 +140,7 @@ bool AddCSVWindow::readCSV(std::ifstream& in, std::vector<String> headers_out, s
       row = row + "\n";
     }
   }
-  if (rows.size() == 0) {
+  if (rows.empty()) {
     queue_message(MESSAGE_ERROR, _ERROR_1_("import empty file", _("CSV / TSV")));
     return false;
   }
@@ -183,7 +183,7 @@ void AddCSVWindow::onOk(wxCommandEvent&) {
   // Check for missing fields
   String missing_fields;
   check_table_headers(set->game, headers, _("CSV / TSV"), missing_fields);
-  if (missing_fields.size() > 0) {
+  if (!missing_fields.empty()) {
     queue_message(MESSAGE_WARNING, _ERROR_2_("import missing fields", _("CSV / TSV"), missing_fields));
   }
   // Produce cards from the table
