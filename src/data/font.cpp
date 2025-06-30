@@ -31,7 +31,7 @@ bool Font::PreloadResourceFonts(String fontsDirectoryPath, bool recursive) {
 #if wxUSE_PRIVATE_FONTS
   String pathSeparator(wxFileName::GetPathSeparator());
   String appPath( wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetPath() );
-  fontsDirectoryPath = appPath + pathSeparator + fontsDirectoryPath + (fontsDirectoryPath.EndsWith(pathSeparator) ? "" : pathSeparator);
+  fontsDirectoryPath = appPath + pathSeparator + fontsDirectoryPath + (fontsDirectoryPath.EndsWith(pathSeparator) ? wxString() : pathSeparator);
 
   if (!wxDirExists(fontsDirectoryPath)) return false;
   

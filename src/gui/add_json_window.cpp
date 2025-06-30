@@ -122,7 +122,7 @@ void AddJSONWindow::setJSONType() {
     FOR_EACH(type, set->game->json_paths) {
       if (type.starts_with(selection)) {
         int delimiter_pos = type.find("//");
-        card_array_path->ChangeValue(delimiter_pos + 2 < type.Length() ? type.substr(delimiter_pos + 2).Trim().Trim(false) : wxEmptyString);
+        card_array_path->ChangeValue(delimiter_pos + 2 < type.Length() ? type.substr(delimiter_pos + 2).Trim().Trim(false) : wxString());
         card_array_path->Enable(false);
         break;
       }
