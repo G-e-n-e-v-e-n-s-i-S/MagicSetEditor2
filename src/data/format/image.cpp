@@ -9,6 +9,8 @@
 #include <util/prec.hpp>
 #include <util/tagged_string.hpp>
 #include <data/format/formats.hpp>
+#include <data/format/clipboard.hpp>
+#include <data/game.hpp>
 #include <data/set.hpp>
 #include <data/card.hpp>
 #include <data/stylesheet.hpp>
@@ -17,18 +19,14 @@
 #include <render/card/viewer.hpp>
 #include <wx/filename.h>
 
-// ----------------------------------------------------------------------------- : Single card export
+#define wxIMAGE_OPTION_PNG_DESCRIPTION wxString("PngDescription")
 
-void export_image(const SetP& set, const CardP& card, const String& filename) {
-  Image img = export_bitmap(set, card).ConvertToImage();
-  img.SaveFile(filename);  // can't use Bitmap::saveFile, it wants to know the file type
-              // but image.saveFile determines it automagicly
-}
+// ----------------------------------------------------------------------------- : Card export
 
 class UnzoomedDataViewer : public DataViewer {
 public:
   UnzoomedDataViewer();
-  UnzoomedDataViewer(double zoom, double angle);
+  UnzoomedDataViewer(double zoom, Radians angle);
   virtual ~UnzoomedDataViewer() {};
   Rotation getRotation() const override;
 private:
@@ -65,6 +63,8 @@ Rotation UnzoomedDataViewer::getRotation() const {
   }
 }
 
+// ----------------------------------------------------------------------------- : wxBitmap export
+
 Bitmap export_bitmap(const SetP& set, const CardP& card) {
   if (!set) throw Error(_("no set"));
   UnzoomedDataViewer viewer = UnzoomedDataViewer();
@@ -83,9 +83,9 @@ Bitmap export_bitmap(const SetP& set, const CardP& card) {
   return bitmap;
 }
 
-Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, const Radians angle = 0.0) {
+Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians) {
   if (!set) throw Error(_("no set"));
-  UnzoomedDataViewer viewer = UnzoomedDataViewer(zoom, angle);
+  UnzoomedDataViewer viewer = UnzoomedDataViewer(zoom, angle_radians);
   viewer.setSet(set);
   viewer.setCard(card);
   // size of cards
@@ -102,7 +102,7 @@ Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, cons
 }
 
 // put multiple card images into one bitmap
-Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle = 0.0) {
+Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians) {
   if (!set) throw Error(_("no set"));
   vector<Bitmap> bitmaps;
   int width = 0;
@@ -121,7 +121,7 @@ Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_
       double dpi = max(set->stylesheetFor(card).card_dpi, 150.0);
       scaled_zoom *= lowest_dpi / dpi;
     }
-    UnzoomedDataViewer viewer = UnzoomedDataViewer(scaled_zoom, angle);
+    UnzoomedDataViewer viewer = UnzoomedDataViewer(scaled_zoom, angle_radians);
     viewer.setSet(set);
     viewer.setCard(card);
     RealSize size = viewer.getRotation().getExternalSize();
@@ -152,8 +152,39 @@ Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_
   return global_bitmap;
 }
 
-// ----------------------------------------------------------------------------- : Multiple card export
+// ----------------------------------------------------------------------------- : wxImage export
 
+Image export_image(const SetP& set, const CardP& card) {
+  Bitmap bitmap = export_bitmap(set, card);
+  Image img = bitmap.ConvertToImage();
+  vector<CardP> cards = { card };
+  CardsDataObject data(set, cards);
+  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, _("<mse-data-start>") + data.GetText() + _("<mse-data-end>"));
+  return img;
+}
+
+Image export_image(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians) {
+  Bitmap bitmap = export_bitmap(set, card, zoom, angle_radians);
+  Image img = bitmap.ConvertToImage();
+  vector<CardP> cards = { card };
+  CardsDataObject data(set, cards);
+  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, _("<mse-data-start>") + data.GetText() + _("<mse-data-end>"));
+  return img;
+}
+
+Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians) {
+  Bitmap bitmap = export_bitmap(set, cards, scale_to_lowest_dpi, padding, zoom, angle_radians);
+  Image img = bitmap.ConvertToImage();
+  CardsDataObject data(set, cards);
+  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, _("<mse-data-start>") + data.GetText() + _("<mse-data-end>"));
+  return img;
+}
+
+void export_image(const SetP& set, const CardP& card, const String& filename) {
+  Image img = export_image(set, card);
+  img.SaveFile(filename); // can't use Bitmap::saveFile, it wants to know the file type
+                          // but image.saveFile determines it automagicly
+}
 
 void export_images(const SetP& set, const vector<CardP>& cards,
                    const String& path, const String& filename_template, FilenameConflicts conflicts)

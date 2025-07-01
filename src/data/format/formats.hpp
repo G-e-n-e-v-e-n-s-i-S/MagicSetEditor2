@@ -88,20 +88,22 @@ FileFormatP mtg_editor_file_format();
 
 // ----------------------------------------------------------------------------- : Other ways to export
 
-/// Export images for each card in a set to a list of files
-void export_images(Window* parent, const SetP& set);
+/// Generate a wxBitmap of one or more cards
+Bitmap export_bitmap(const SetP& set, const CardP& card);
+Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians = 0.0);
+Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians = 0.0);
 
-/// Export the image for each card in a list of cards
-void export_images(const SetP& set, const vector<CardP>& cards,
-                   const String& path, const String& filename_template, FilenameConflicts conflicts);
+/// Generate a wxImage of one or more cards
+Image export_image(const SetP& set, const CardP& card);
+Image export_image(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians = 0.0);
+Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians = 0.0);
 
-/// Export the image of a single card
+/// Export the image of a single card to a given filename
 void export_image(const SetP& set, const CardP& card, const String& filename);
 
-/// Generate a bitmap image of a card
-Bitmap export_bitmap(const SetP& set, const CardP& card);
-Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians);
-Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians);
+/// Export the image for each card in a list of cards to given filenames
+void export_images(const SetP& set, const vector<CardP>& cards,
+                   const String& path, const String& filename_template, FilenameConflicts conflicts);
 
 /// Export a set to Magic Workstation format
 void export_mws(Window* parent, const SetP& set);

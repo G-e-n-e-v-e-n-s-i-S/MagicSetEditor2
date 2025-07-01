@@ -435,7 +435,7 @@ SCRIPT_FUNCTION(write_image_file) {
   Image image;
   GeneratedImage::Options options(width, height, ei.export_template.get(), ei.set.get());
   if (card) {
-    image = conform_image(export_bitmap(ei.set, card->getValue()).ConvertToImage(), options);
+    image = conform_image(export_image(ei.set, card->getValue()), options);
   } else {
     image = input->toImage()->generateConform(options);
   }
