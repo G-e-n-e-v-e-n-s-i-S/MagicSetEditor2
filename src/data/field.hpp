@@ -63,7 +63,8 @@ public:
   OptionalScript  import_script;             ///< The script to apply to the supplied value, when creating a new card.
   Dependencies    dependent_scripts;         ///< Scripts that depend on values of this field
   String          package_relative_filename;
-  
+  StyleP          styleP;                    ///< Style for this field, should have the right type! Can be null.
+
   /// Creates a new Value corresponding to this Field
   virtual ValueP newValue() = 0;
   /// Creates a new Style corresponding to this Field

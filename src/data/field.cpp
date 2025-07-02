@@ -114,9 +114,14 @@ Style::Style(const FieldP& field)
   , visible(true)
   , automatic_side(AUTO_UNKNOWN)
   , content_dependent(false)
-{}
+{
+  field->styleP = this;
+}
 
-Style::~Style() {}
+Style::~Style()
+{
+  fieldP->styleP = nullptr;
+}
 
 IMPLEMENT_REFLECTION(Style) {
   REFLECT(z_index);

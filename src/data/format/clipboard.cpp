@@ -71,6 +71,7 @@ CardsDataObject::CardsDataObject(const SetP& set, const vector<CardP>& cards) {
   }
   WrappedCards data = { set->game.get(), set->game->name(), cards };
   SetText(serialize_for_clipboard(*set, data));
+  queue_message(MESSAGE_WARNING, GetText());
   // restore cards
   for (size_t i = 0 ; i < cards.size() ; ++i) {
     if (has_styling[i]) {

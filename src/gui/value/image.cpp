@@ -45,7 +45,13 @@ void ImageValueEditor::sliceImage(const Image& image) {
   // clicked ok?
   if (s.ShowModal() == wxID_OK) {
     // store the image into the set
-    LocalFileName new_image_file = getLocalPackage().newFileName(field().name, settings.internal_image_extension ? _(".png") : _("")); // a new unique name in the package
+    StyleP style = field().styleP;
+    String rect = style ? _("--") + wxString::Format(wxT("%i"), (int)(style->left)) +
+                          _("--") + wxString::Format(wxT("%i"), (int)(style->top)) +
+                          _("--") + wxString::Format(wxT("%i"), (int)(style->width)) +
+                          _("--") + wxString::Format(wxT("%i"), (int)(style->height)) : _("");
+    String extension = settings.internal_image_extension ? _(".png") : _("");
+    LocalFileName new_image_file = getLocalPackage().newFileName(field().name, rect + extension); // a new unique name in the package
 
     // Specify a desired size based on the stylesheet and a scale multiplier defined within the user's settings.
     // Storing at a greater than 100% resolution allows for better exports >100%, but may change how images look when filters (sharpen) are applied.
