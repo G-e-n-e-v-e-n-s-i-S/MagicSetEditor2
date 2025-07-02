@@ -164,6 +164,9 @@ public:
   /** change_info is a subset of StyleChange flags */
   void tellListeners(int changes);
   
+  /// Store where on the card the field goes, to save it in filenames
+  String getRect();
+
 private:
   DECLARE_REFLECTION_VIRTUAL();
   /// Things that are listening to changes in this style

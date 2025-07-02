@@ -53,6 +53,15 @@ public:
 
   inline String const& toStringForKey() const { return fn; }
 
+  /// Retreive a rect from a filename
+  static String getRect(const String& file) {
+      size_t first = file.find(_("---"));
+      if (first == String::npos) return _("");
+      size_t last = file.find(_("---"), first+3);
+      if (first == last) return _("");
+      return file.substr(first, last + 3 - first);
+  }
+
 private:
   LocalFileName(const wxString& fn) : fn(fn) {}
   String fn;
