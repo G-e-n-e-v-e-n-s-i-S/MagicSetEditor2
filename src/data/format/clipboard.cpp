@@ -141,10 +141,7 @@ KeywordP KeywordDataObject::getKeyword(const SetP& set) {
 // ----------------------------------------------------------------------------- : Card on clipboard
 
 CardsOnClipboard::CardsOnClipboard(const SetP& set, const vector<CardP>& cards) {
-  // Conversion to text format
-    // TODO
-    //Add( new TextDataObject(_("card"))) 
-  // Conversion to bitmap format
+  // Conversion to image format
     if (cards.size() == 1) {
       Add(new wxImageDataObject(export_image(set, cards[0])));
     }
