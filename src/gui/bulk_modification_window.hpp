@@ -23,18 +23,28 @@ public:
 protected:
   DECLARE_EVENT_TABLE();
   
-  wxChoice*       modification_type, *field_type;
-  wxStaticText*   modification_description, *predicate_description;
+  wxChoice*       modification_selection, *field_type;
+  wxStaticText*   modification_description, *modification_errors, *predicate_description, *predicate_errors;
   wxTextCtrl*     modification, *predicate;
+  bool            modification_parsed, predicate_parsed;
+  wxButton*       ok_button;
   SetP            set;
   Window*         parent;
+  ScriptP         modification_script, predicate_script;
 
-  void onTypeChange(wxCommandEvent&);
-  void setType();
+  void onSelectionChange(wxCommandEvent&);
+  void changeSelection();
   
-  void onFieldChange(wxCommandEvent&);
-  void setField();
-  
+  void onPredicateChange(wxCommandEvent&);
+  void parsePredicate();
+
+  void onModificationChange(wxCommandEvent&);
+  void parseModification();
+
+  void updateOkButton();
+
+  void setContextVariables(CardP& card, Context& ctx);
+
   void onOk(wxCommandEvent&);
   
 };
