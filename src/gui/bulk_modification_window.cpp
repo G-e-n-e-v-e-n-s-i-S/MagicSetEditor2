@@ -91,17 +91,6 @@ BulkModificationWindow::BulkModificationWindow(Window* parent, const SetP& set, 
   }
 }
 
-void BulkModificationWindow::setContextVariables(CardP& card, Context& ctx)
-{
-  StyleSheetP stylesheet = set->stylesheetForP(card);
-  ctx.setVariable(SCRIPT_VAR_stylesheet,       to_script(stylesheet));
-  ctx.setVariable(SCRIPT_VAR_card_style,       to_script(&stylesheet->card_style));
-  ctx.setVariable(SCRIPT_VAR_card,             to_script(card));
-  ctx.setVariable(SCRIPT_VAR_styling,          to_script(&set->stylingDataFor(card)));
-  ctx.setVariable(SCRIPT_VAR_extra_card_style, to_script(&stylesheet->extra_card_style));
-  ctx.setVariable(SCRIPT_VAR_extra_card,       to_script(&card->extraDataFor(*stylesheet)));
-}
-
 void BulkModificationWindow::updateOkButton() {
   if (predicate_parsed && modification_parsed) {
     ok_button->Enable(true);
@@ -180,14 +169,6 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
     EndModal(wxID_ABORT);
     return;
   }
-  Context& ctx = set->getContext();
-  ScriptValueP ctx_stylesheet =       ctx.getVariableOpt(SCRIPT_VAR_stylesheet);
-  ScriptValueP ctx_card_style =       ctx.getVariableOpt(SCRIPT_VAR_card_style);
-  ScriptValueP ctx_card =             ctx.getVariableOpt(SCRIPT_VAR_card);
-  ScriptValueP ctx_styling =          ctx.getVariableOpt(SCRIPT_VAR_styling);
-  ScriptValueP ctx_extra_card_style = ctx.getVariableOpt(SCRIPT_VAR_extra_card_style);
-  ScriptValueP ctx_extra_card =       ctx.getVariableOpt(SCRIPT_VAR_extra_card);
-
   // get the cards
   vector<CardP> cards;
   int selection_type = modification_selection->GetSelection();
@@ -203,7 +184,7 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
     card_list_window->getSelection(cards);
   } else { // predicate
     FOR_EACH(card, set->cards) {
-      setContextVariables(card, ctx);
+      Context& ctx = set->getContext(card);
       ScriptValueP result = predicate_script->eval(ctx, false);
       if (result->type() != SCRIPT_BOOL) {
         queue_message(MESSAGE_ERROR, _ERROR_("bulk modify predicate is not bool"));
@@ -224,7 +205,7 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
     FOR_EACH(card, cards) {
       Value* value = get_container(set->game, card, field_name, false);
       values.push_back(value);
-      setContextVariables(card, ctx);
+      Context& ctx = set->getContext(card);
       ScriptValueP new_value = modification_script->eval(ctx, false);
       new_values.push_back(new_value);
     }
@@ -236,7 +217,8 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
       for (int i = 0; i < count; ++i) {
         TextValue* value = dynamic_cast<TextValue*>(values[i]);
         TextValue::ValueType new_value = new_values[i]->toString();
-        shared_ptr<Action> action = make_shared<SimpleValueAction<TextValue, false>>(value, new_value);
+        shared_ptr<SimpleValueAction<TextValue, false>> action = make_shared<SimpleValueAction<TextValue, false>>(value, new_value);
+        action->setCard(cards[i]);
         actions.push_back(action);
       }
     }
@@ -244,7 +226,8 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
       for (int i = 0; i < count; ++i) {
         MultipleChoiceValue* value = dynamic_cast<MultipleChoiceValue*>(values[i]);
         MultipleChoiceValue::ValueType new_value = { new_values[i]->toString(), _("") };
-        shared_ptr<Action> action = make_shared<SimpleValueAction<MultipleChoiceValue, false>>(value, new_value);
+        shared_ptr<SimpleValueAction<MultipleChoiceValue, false>> action = make_shared<SimpleValueAction<MultipleChoiceValue, false>>(value, new_value);
+        action->setCard(cards[i]);
         actions.push_back(action);
       }
     }
@@ -252,7 +235,8 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
       for (int i = 0; i < count; ++i) {
         ChoiceValue* value = dynamic_cast<ChoiceValue*>(values[i]);
         ChoiceValue::ValueType new_value = new_values[i]->toString();
-        shared_ptr<Action> action = make_shared<SimpleValueAction<ChoiceValue, false>>(value, new_value);
+        shared_ptr<SimpleValueAction<ChoiceValue, false>> action = make_shared<SimpleValueAction<ChoiceValue, false>>(value, new_value);
+        action->setCard(cards[i]);
         actions.push_back(action);
       }
     }
@@ -260,7 +244,8 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
       for (int i = 0; i < count; ++i) {
         PackageChoiceValue* value = dynamic_cast<PackageChoiceValue*>(values[i]);
         PackageChoiceValue::ValueType new_value = new_values[i]->toString();
-        shared_ptr<Action> action = make_shared<SimpleValueAction<PackageChoiceValue, false>>(value, new_value);
+        shared_ptr<SimpleValueAction<PackageChoiceValue, false>> action = make_shared<SimpleValueAction<PackageChoiceValue, false>>(value, new_value);
+        action->setCard(cards[i]);
         actions.push_back(action);
       }
     }
@@ -268,7 +253,8 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
       for (int i = 0; i < count; ++i) {
         ColorValue* value = dynamic_cast<ColorValue*>(values[i]);
         ColorValue::ValueType new_value = new_values[i]->toColor();
-        shared_ptr<Action> action = make_shared<SimpleValueAction<ColorValue, false>>(value, new_value);
+        shared_ptr<SimpleValueAction<ColorValue, false>> action = make_shared<SimpleValueAction<ColorValue, false>>(value, new_value);
+        action->setCard(cards[i]);
         actions.push_back(action);
       }
     }
@@ -277,7 +263,8 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
         ImageValue* value = dynamic_cast<ImageValue*>(values[i]);
         wxFileName fname(static_cast<ExternalImage*>(new_values[i].get())->toString());
         ImageValue::ValueType new_value = LocalFileName::fromReadString(fname.GetName(), "");
-        shared_ptr<Action> action = make_shared<SimpleValueAction<ImageValue, false>>(value, new_value);
+        shared_ptr<SimpleValueAction<ImageValue, false>> action = make_shared<SimpleValueAction<ImageValue, false>>(value, new_value);
+        action->setCard(cards[i]);
         actions.push_back(action);
       }
     }
@@ -286,23 +273,16 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
         SymbolValue* value = dynamic_cast<SymbolValue*>(values[i]);
         wxFileName fname(static_cast<ExternalImage*>(new_values[i].get())->toString());
         SymbolValue::ValueType new_value = LocalFileName::fromReadString(fname.GetName(), "");
-        shared_ptr<Action> action = make_shared<SimpleValueAction<SymbolValue, false>>(value, new_value);
+        shared_ptr<SimpleValueAction<SymbolValue, false>> action = make_shared<SimpleValueAction<SymbolValue, false>>(value, new_value);
+        action->setCard(cards[i]);
         actions.push_back(action);
       }
     }
     else {
       queue_message(MESSAGE_ERROR, _ERROR_("bulk modify script type unknown"));
     }
-    set->actions.addAction(make_unique<BulkAction>(actions, set), false);
+    set->actions.addAction(make_unique<BulkAction>(actions, set, card_list_window), false);
   }
-  // restore context variables
-  if (ctx_stylesheet)       ctx.setVariable(SCRIPT_VAR_stylesheet,       ctx_stylesheet);
-  if (ctx_card_style)       ctx.setVariable(SCRIPT_VAR_card_style,       ctx_card_style);
-  if (ctx_card)             ctx.setVariable(SCRIPT_VAR_card,             ctx_card);
-  if (ctx_styling)          ctx.setVariable(SCRIPT_VAR_styling,          ctx_styling);
-  if (ctx_extra_card_style) ctx.setVariable(SCRIPT_VAR_extra_card_style, ctx_extra_card_style);
-  if (ctx_extra_card)       ctx.setVariable(SCRIPT_VAR_extra_card,       ctx_extra_card);
-  // Done
   EndModal(wxID_OK);
 }
 

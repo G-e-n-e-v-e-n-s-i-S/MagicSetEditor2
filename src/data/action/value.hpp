@@ -23,6 +23,7 @@
 #include <data/field/image.hpp>
 #include <data/field/symbol.hpp>
 #include <data/field/package_choice.hpp>
+#include <gui/control/card_list.hpp>
 
 class StyleSheet;
 class LocalFileName;
@@ -204,7 +205,7 @@ public:
 // An action that's just a list of other actions
 class BulkAction : public Action {
 public:
-  BulkAction(const vector<shared_ptr<Action>>& actions, const SetP& set);
+  BulkAction(const vector<shared_ptr<Action>>& actions, const SetP& set, CardListBase* card_list_window);
   ~BulkAction() override;
 
   String getName(bool to_undo) const override;
@@ -216,6 +217,7 @@ private:
   String name_undo;
   vector<shared_ptr<Action>> actions;
   SetP set;
+  CardListBase* card_list_window;
 };
 
 

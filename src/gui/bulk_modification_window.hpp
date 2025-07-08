@@ -43,8 +43,6 @@ protected:
 
   void updateOkButton();
 
-  void setContextVariables(CardP& card, Context& ctx);
-
   void onOk(wxCommandEvent&);
   
 };
