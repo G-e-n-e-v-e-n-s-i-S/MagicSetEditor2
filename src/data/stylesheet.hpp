@@ -73,6 +73,8 @@ public:
   /// Validate the stylesheet
   void validate(Version = app_version) override;
   
+  /// Alternatives for missing stylesheets
+  static map<String, String> stylesheet_alternatives;
 protected:
   
   DECLARE_REFLECTION();

@@ -31,6 +31,21 @@ void PackageManager::init() {
     throw Error(_("The MSE data files can not be found, there should be a directory called 'data' with these files. ")
                 _("The expected place to find it in was either ") + wxStandardPaths::Get().GetDataDir() + _(" or ") +
                 wxStandardPaths::Get().GetUserDataDir());
+
+  vector<PackagedP> stylesheets;
+  findMatching(_("*.mse-style"), stylesheets);
+  for (int i = 0; i < stylesheets.size(); ++i) {
+    const String& short_name = unified_form(stylesheets[i]->short_name);
+    if (short_name == _("")) continue;
+    const String& folder_name = stylesheets[i]->relativeFilename();
+    if (short_name == folder_name) continue;
+    map<String, String>::const_iterator it = StyleSheet::stylesheet_alternatives.find(short_name);
+    if (it != StyleSheet::stylesheet_alternatives.end()) {
+      //queue_message(MESSAGE_WARNING, _("Stylesheets '") + folder_name + _("' and '") + StyleSheet::stylesheet_alternatives[short_name] + _("' have the same short name: '" + stylesheets[i]->short_name + _("'")));
+    } else {
+      StyleSheet::stylesheet_alternatives[short_name] = folder_name;
+    }
+  }
 }
 void PackageManager::destroy() {
   loaded_packages.clear();

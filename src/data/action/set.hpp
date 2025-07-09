@@ -104,7 +104,7 @@ public:
   void perform(bool to_undo) override;
 };
 
-/// Changing the style of a a card
+/// Changing the style of a card
 class ChangeCardStyleAction : public DisplayChangeAction {
 public:
   ChangeCardStyleAction(const CardP& card, const StyleSheetP& stylesheet);
@@ -147,6 +147,36 @@ public:
   Set&                    set;          ///< The set to copy styling from
   CardP                   card;         ///< The affected card
   IndexMap<FieldP,ValueP> styling_data; ///< The old styling of the card
+};
+
+// ----------------------------------------------------------------------------- : Change notes
+
+/// Changing the notes of a card
+class ChangeCardNotesAction : public Action {
+public:
+  ChangeCardNotesAction(const CardP& card, const String& notes);
+
+  String getName(bool to_undo) const override;
+  void perform(bool to_undo) override;
+
+  //private:
+  CardP  card;  ///< The affected card
+  String notes; ///< Its old notes
+};
+
+// ----------------------------------------------------------------------------- : Change uid
+
+/// Changing the uid of a card
+class ChangeCardUIDAction : public CardListAction {
+public:
+  ChangeCardUIDAction(Set& set, const CardP& card, const String& id);
+
+  String getName(bool to_undo) const override;
+  void perform(bool to_undo) override;
+
+  //private:
+  CardP  card; ///< The affected card
+  String uid;  ///< Its old uid
 };
 
 // ----------------------------------------------------------------------------- : Pack types

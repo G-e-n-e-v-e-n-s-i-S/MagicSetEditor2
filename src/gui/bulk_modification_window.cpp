@@ -54,8 +54,9 @@ BulkModificationWindow::BulkModificationWindow(Window* parent, const SetP& set, 
   field_type = new wxChoice(this, ID_CARD_BULK_FIELD, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxCB_SORT);
   field_type->Clear();
   String default_selection = "";
-  field_type->Append("stylesheet");
-  field_type->Append("notes");
+  field_type->Append(_("id"));
+  field_type->Append(_("stylesheet"));
+  field_type->Append(_("notes"));
   FOR_EACH(field, set->game->card_fields) {
     field_type->Append(field->name);
     if (field->identifying) default_selection = field->name;
@@ -196,10 +197,46 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
       }
     }
   }
+  int count = cards.size();
+  if (count == 0) {
+    queue_message(MESSAGE_ERROR, _ERROR_("bulk modify no cards"));
+    EndModal(wxID_ABORT);
+    return;
+  }
   // get the new script values
-  if (!cards.empty()) {
-    vector<shared_ptr<Action>> actions;
-    const String& field_name = field_type->GetString(field_type->GetSelection());
+  vector<shared_ptr<Action>> actions;
+  const String& field_name = field_type->GetString(field_type->GetSelection());
+  // stylesheet, notes or id change
+  if (field_name == _("stylesheet") || field_name == _("notes") || field_name == _("id")) {
+    vector<String> new_values;
+    FOR_EACH(card, cards) {
+      Context& ctx = set->getContext(card);
+      ScriptValueP new_value = modification_script->eval(ctx, false);
+      if (new_value->type() != SCRIPT_STRING) {
+        queue_message(MESSAGE_ERROR, _ERROR_("bulk modify mod is not string"));
+        EndModal(wxID_ABORT);
+        return;
+      }
+      new_values.push_back(new_value->toString());
+    }
+    assert(count == new_values.size());
+    if (field_name == _("stylesheet")) {
+      for (int i = 0; i < count; ++i) {
+        StyleSheetP stylesheet = StyleSheet::byGameAndName(*set->game, new_values[i]);
+        actions.push_back(make_shared<ChangeCardStyleAction>(cards[i], stylesheet));
+      }
+    } else if (field_name == _("notes")) {
+      for (int i = 0; i < count; ++i) {
+        actions.push_back(make_shared<ChangeCardNotesAction>(cards[i], new_values[i]));
+      }
+    } else if (field_name == _("id")) {
+      for (int i = 0; i < count; ++i) {
+        actions.push_back(make_shared<ChangeCardUIDAction>(*set, cards[i], new_values[i]));
+      }
+    }
+  }
+  // card field value change
+  else {
     vector<Value*> values;
     vector<ScriptValueP> new_values;
     FOR_EACH(card, cards) {
@@ -209,7 +246,6 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
       ScriptValueP new_value = modification_script->eval(ctx, false);
       new_values.push_back(new_value);
     }
-    int count = cards.size();
     assert(count == values.size());
     assert(count == new_values.size());
     // make the modifications (I have lost my battle with c++ templates)
@@ -281,8 +317,8 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
     else {
       queue_message(MESSAGE_ERROR, _ERROR_("bulk modify script type unknown"));
     }
-    set->actions.addAction(make_unique<BulkAction>(actions, set, card_list_window), false);
   }
+  set->actions.addAction(make_unique<BulkAction>(actions, set, card_list_window), false);
   EndModal(wxID_OK);
 }
 

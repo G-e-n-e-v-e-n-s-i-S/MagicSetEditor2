@@ -13,6 +13,8 @@
 #include <util/io/package_manager.hpp>
 #include <gui/new_window.hpp> // for selecting stylesheets on load error
 
+map<String, String> StyleSheet::stylesheet_alternatives;
+
 // ----------------------------------------------------------------------------- : StyleSheet
 
 IMPLEMENT_DYNAMIC_ARG(StyleSheet*, stylesheet_for_reading, nullptr);
@@ -24,9 +26,9 @@ StyleSheet::StyleSheet()
 {}
 
 StyleSheetP StyleSheet::byGameAndName(const Game& game, const String& name) {
-  /// Alternative stylesheets for game
-  static map<String, String> stylesheet_alternatives;
+  /// look for already defined alternative stylesheets
   String full_name = name;
+  String unified_name = unified_form(full_name);
   if (!full_name.EndsWith(_(".mse-style"))) full_name = full_name + _(".mse-style");
   if (!full_name.StartsWith(game.name() + _("-"))) full_name = game.name() + _("-") + full_name;
   try {
@@ -34,7 +36,14 @@ StyleSheetP StyleSheet::byGameAndName(const Game& game, const String& name) {
     if (it != stylesheet_alternatives.end()) {
       return package_manager.open<StyleSheet>(it->second);
     } else {
-      return package_manager.open<StyleSheet>(full_name);
+      it = stylesheet_alternatives.find(unified_name);
+      if (it != stylesheet_alternatives.end()) {
+        return package_manager.open<StyleSheet>(it->second);
+      }
+      else {
+        /// try to load as is
+        return package_manager.open<StyleSheet>(full_name);
+      }
     }
   } catch (PackageNotFoundError& e) {
     queue_message(MESSAGE_ERROR, _("Missing stylesheet: ") + full_name);
@@ -46,10 +55,11 @@ StyleSheetP StyleSheet::byGameAndName(const Game& game, const String& name) {
     //  return StyleSheetP();
     //}
     
-    // load an alternative stylesheet
+    // ask user to select an alternative stylesheet
     StyleSheetP ss = select_stylesheet(game, name);
     if (ss) {
       stylesheet_alternatives[full_name] = ss->relativeFilename();
+      if (unified_name != full_name) stylesheet_alternatives[unified_name] = ss->relativeFilename();
       return ss;
     } else {
       throw e;

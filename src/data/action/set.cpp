@@ -214,6 +214,33 @@ void ChangeCardHasStylingAction::perform(bool to_undo) {
   swap(card->styling_data, styling_data);
 }
 
+// ----------------------------------------------------------------------------- : Change notes
+
+ChangeCardNotesAction::ChangeCardNotesAction(const CardP& card, const String& notes)
+  : card(card), notes(notes)
+{}
+String ChangeCardNotesAction::getName(bool to_undo) const {
+  return _("Change notes");
+}
+void ChangeCardNotesAction::perform(bool to_undo) {
+  swap(card->notes, notes);
+}
+
+// ----------------------------------------------------------------------------- : Change uid
+
+ChangeCardUIDAction::ChangeCardUIDAction(Set& set, const CardP& card, const String& uid)
+  : CardListAction(set), card(card), uid(uid)
+{}
+String ChangeCardUIDAction::getName(bool to_undo) const {
+  return _("Change ID");
+}
+void ChangeCardUIDAction::perform(bool to_undo) {
+  FOR_EACH(c, set.cards) {
+    c->updateLink(card->uid, uid);
+  }
+  swap(card->uid, uid);
+}
+
 // ----------------------------------------------------------------------------- : Pack types
 
 AddPackAction::AddPackAction(AddingOrRemoving ar, Set& set, const PackTypeP& pack)
