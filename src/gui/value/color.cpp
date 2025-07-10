@@ -138,7 +138,7 @@ bool ColorValueEditor::onChar(wxKeyEvent& ev) {
   return drop_down->onCharInParent(ev);
 }
 void ColorValueEditor::onLoseFocus() {
-  drop_down->hide(false);
+  //drop_down->hide(false);
 }
 
 void ColorValueEditor::draw(RotatedDC& dc) {

@@ -95,7 +95,7 @@ bool PackageChoiceValueEditor::onChar(wxKeyEvent& ev) {
   return drop_down->onCharInParent(ev);
 }
 void PackageChoiceValueEditor::onLoseFocus() {
-  if (drop_down) drop_down->hide(false);
+  //if (drop_down) drop_down->hide(false);
 }
 
 void PackageChoiceValueEditor::draw(RotatedDC& dc) {

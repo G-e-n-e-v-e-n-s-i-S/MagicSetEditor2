@@ -293,7 +293,7 @@ bool ChoiceValueEditor::onChar(wxKeyEvent& ev) {
   return drop_down->onCharInParent(ev);
 }
 void ChoiceValueEditor::onLoseFocus() {
-  drop_down->hide(false);
+  //drop_down->hide(false);
 }
 
 void ChoiceValueEditor::draw(RotatedDC& dc) {
