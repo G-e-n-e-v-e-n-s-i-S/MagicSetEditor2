@@ -27,25 +27,33 @@ Font::Font()
   , flags(FONT_NORMAL)
 {}
 
-bool Font::PreloadResourceFonts(String fontsDirectoryPath, bool recursive) {
+bool Font::PreloadResourceFonts(bool recursive) {
 #if wxUSE_PRIVATE_FONTS
   String pathSeparator(wxFileName::GetPathSeparator());
-  String appPath( wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetPath() );
-  fontsDirectoryPath = appPath + pathSeparator + fontsDirectoryPath + (fontsDirectoryPath.EndsWith(pathSeparator) ? wxString() : pathSeparator);
+  String appPath(wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetPath());
+  wxDir appDir(appPath);
+  if (!appDir.IsOpened()) return true;
 
-  if (!wxDirExists(fontsDirectoryPath)) return false;
-  
-  // tally fonts
-  vector<String> fontFilePaths;
-  TallyResourceFonts(fontsDirectoryPath, fontFilePaths, recursive);
-  if (fontFilePaths.size() == 0) return false;
-
-  // load fonts
   bool preloadHadErrors = false;
-  for (String fontFilePath : fontFilePaths) {
-    if (!wxFont::AddPrivateFont(fontFilePath)) {
-      preloadHadErrors = true;
+  wxString folder;
+  bool cont = appDir.GetFirst(&folder, wxEmptyString, wxDIR_DIRS);
+  while (cont)
+  {
+    if (folder.Lower().Contains("fonts")) {
+      String folderPath = appPath + pathSeparator + folder + pathSeparator;
+      
+      // tally fonts
+      vector<String> fontFilePaths;
+      TallyResourceFonts(folderPath, fontFilePaths, recursive);
+
+      // load fonts
+      for (const String& fontFilePath : fontFilePaths) {
+        if (!wxFont::AddPrivateFont(fontFilePath)) {
+          preloadHadErrors = true;
+        }
+      }
     }
+    cont = appDir.GetNext(&folder);
   }
 
   return preloadHadErrors;

@@ -87,7 +87,7 @@ int MSE::OnRun() {
       // Platform friendly appname
       SetAppName(_("magicseteditor"));
     #endif
-    Font::PreloadResourceFonts(_("Magic - Fonts"), true);
+    Font::PreloadResourceFonts(true);
     wxInitAllImageHandlers();
     wxFileSystem::AddHandler(new wxInternetFSHandler); // needed for update checker
     wxSocketBase::Initialize();
