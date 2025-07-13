@@ -112,13 +112,6 @@ public:
   DECLARE_REFLECTION();
 };
 
-// ----------------------------------------------------------------------------- : Printing settings
-
-enum PageLayoutType
-{  LAYOUT_NO_SPACE
-,  LAYOUT_EQUAL_SPACE
-//,  LAYOUT_CUSTOM
-};
 
 // ----------------------------------------------------------------------------- : Settings
 
@@ -188,7 +181,7 @@ public:
   
   // --------------------------------------------------- : Printing
   
-  PageLayoutType print_layout;
+  double print_spacing;
   
   // --------------------------------------------------- : Special game stuff
   String apprentice_location;
