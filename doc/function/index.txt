@@ -89,6 +89,7 @@ These functions are built into the program, other [[type:function]]s can be defi
 | [[fun:recolor_image]]		Change the colors of an image to match the font color.
 | [[fun:resize_image]]		Stretch or squeeze an image to a given height and width.
 | [[fun:enlarge]]		Enlarge an image by putting a border around it.
+| [[fun:add_bleed_edge]]		Add a crude print bleed edge around an image.
 | [[fun:crop]]			Crop an image, giving only a small subset of it.
 | [[fun:flip_horizontal]]	Flip an image horizontally.
 | [[fun:flip_vertical]]		Flip an image vertically.

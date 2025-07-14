@@ -163,6 +163,14 @@ SCRIPT_FUNCTION(enlarge) {
   return make_intrusive<EnlargeImage>(input, border_size);
 }
 
+SCRIPT_FUNCTION(add_bleed_edge) {
+  SCRIPT_PARAM_C(GeneratedImageP, input);
+  SCRIPT_PARAM_DEFAULT(double, horizontal_size, -1.0);
+  SCRIPT_PARAM_DEFAULT(double, vertical_size, -1.0);
+  SCRIPT_OPTIONAL_PARAM_(Color, background_color);
+  return make_intrusive<BleedEdgedImage>(input, horizontal_size, vertical_size, background_color);
+}
+
 SCRIPT_FUNCTION(resize_image) {
   SCRIPT_PARAM_C(GeneratedImageP, input);
   SCRIPT_PARAM(int, width);
@@ -291,6 +299,7 @@ void init_script_image_functions(Context& ctx) {
   ctx.setVariable(_("invert_image"),     script_invert_image);
   ctx.setVariable(_("recolor_image"),    script_recolor_image);
   ctx.setVariable(_("enlarge"),          script_enlarge);
+  ctx.setVariable(_("add_bleed_edge"),   script_add_bleed_edge);
   ctx.setVariable(_("resize_image"),     script_resize_image);
   ctx.setVariable(_("crop"),             script_crop);
   ctx.setVariable(_("flip_horizontal"),  script_flip_horizontal);

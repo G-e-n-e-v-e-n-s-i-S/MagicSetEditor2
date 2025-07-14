@@ -85,6 +85,7 @@ $built_in_functions = array(
 	'recolor_image'		=>'',
 	'resize_image'		=>'',
 	'enlarge'		=>'',
+	'add_bleed_edge'		=>'',
 	'crop'			=>'',
 	'flip_horizontal'	=>'',
 	'flip_vertical'		=>'',

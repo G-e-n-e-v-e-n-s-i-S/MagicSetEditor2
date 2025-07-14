@@ -1,0 +1,15 @@
+Function: add_bleed_edge
+
+--Usage--
+> add_bleed_edge(input: image, horizontal_size: number, vertical_size: number, background_color: color)
+
+Add a crude print bleed edge around an image.
+The sizes are given in percentages of the image size, so @horizontal_size: 1@ makes the image three times as large by putting a bleed edge of 100% on both sides.
+
+--Parameters--
+! Parameter				Type				Description
+| @input@				[[type:image]]		Image that needs a print bleed edge
+| @horizontal_size@		[[type:double]]		Size of the bleed edge on the sides, in percentage of the image width. Optional, defaults to 0.048
+| @vertical_size@		[[type:double]]		Size of the bleed edge on the top and bottom, in percentage of the image height. Optional, defaults to 0.037
+| @background_color@	[[type:color]]		Background color, optional, defaults to transparent
+
