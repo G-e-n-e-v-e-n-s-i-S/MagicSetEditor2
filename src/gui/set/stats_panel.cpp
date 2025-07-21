@@ -473,12 +473,28 @@ void StatsPanel::showCategory(const GraphType* prefer_layout) {
       )
     );
   }
-  // find values for each card
+  // find global_script values
+  vector<ScriptValueP> global_values;
+  Context& global_ctx = set->getContext();
+  ScriptValueP global_ctx_value = global_ctx.getVariableOpt("global_value");
+  for (size_t d = 0 ; d < dims.size() ; ++d) {
+    auto& dim = dims[d];
+    try {
+      ScriptValueP global_value = dim->global_script.invoke(global_ctx);
+      global_values.push_back(global_value);
+    } catch (ScriptError const& e) {
+      handle_error(ScriptError(e.what() + _("\n  in global script for statistics dimension '") + dim->name + _("'")));
+      global_values.push_back(script_nil);
+    }
+  }
+  // find script values for each card
   for (size_t i = 0 ; i < set->cards.size() ; ++i) {
     Context& ctx = set->getContext(set->cards[i]);
     GraphElementP e = make_intrusive<GraphElement>(i);
     bool show = true;
-    FOR_EACH(dim, dims) {
+    for (size_t d = 0 ; d < dims.size() ; ++d) {
+      auto& dim = dims[d];
+      ctx.setVariable("global_value", global_values[d]);
       try {
         String value = untag(dim->script.invoke(ctx)->toString());
         e->values.push_back(value);
@@ -498,6 +514,8 @@ void StatsPanel::showCategory(const GraphType* prefer_layout) {
       d.elements.push_back(e);
     }
   }
+  // restore old global value if any
+  if (global_ctx_value) global_ctx.setVariable("global_value", global_ctx_value);
   // split lists
   size_t dim_id = 0;
   FOR_EACH(dim, dims) {

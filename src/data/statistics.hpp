@@ -27,19 +27,20 @@ public:
   StatsDimension();
   StatsDimension(const Field&);
   
-  const bool        automatic;    ///< Based on a card field?
-  String            name;        ///< Name of this dimension
-  LocalizedString   description;    ///< Description, used in status bar
-  int               position_hint;  ///< Hint for the ordering
-  String            icon_filename;  ///< Icon for lists
-  Bitmap            icon;        ///< The loaded icon (optional of course)
-  OptionalScript    script;      ///< Script that determines the value(s)
-  bool              numeric;      ///< Are the values numeric? If so, they require special sorting
+  const bool        automatic;     ///< Based on a card field?
+  String            name;          ///< Name of this dimension
+  LocalizedString   description;   ///< Description, used in status bar
+  int               position_hint; ///< Hint for the ordering
+  String            icon_filename; ///< Icon for lists
+  Bitmap            icon;          ///< The loaded icon (optional of course)
+  OptionalScript    script;        ///< Script that determines the value(s), ran on each card
+  OptionalScript    global_script; ///< Script that determines the value(s), ran only once at the start
+  bool              numeric;       ///< Are the values numeric? If so, they require special sorting
   double            bin_size;      ///< Bin adjecent numbers?
   bool              show_empty;    ///< Should "" be shown?
   bool              split_list;    ///< Split values into multiple ones separated by commas
-  map<String,Color> colors;      ///< Colors for the categories
-  vector<String>    groups;      ///< Order of the items
+  map<String,Color> colors;        ///< Colors for the categories
+  vector<String>    groups;        ///< Order of the items
   
   DECLARE_REFLECTION();
 };

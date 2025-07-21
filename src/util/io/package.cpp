@@ -12,6 +12,7 @@
 #include <util/error.hpp>
 #include <script/to_value.hpp> // for reflection
 #include <script/profiler.hpp> // for PROFILER
+#include <data/set.hpp>
 #include <wx/wfstream.h>
 #include <wx/zipstrm.h>
 #include <wx/dir.h>
@@ -98,6 +99,7 @@ void Package::save(bool remove_unused) {
 }
 
 void Package::saveAs(const String& name, bool remove_unused, bool as_directory) {
+  if (Set* s = dynamic_cast<Set*>(this)) s->referenceActionStackFiles();
   // type of package
   if (wxDirExists(name) || as_directory) {
     saveToDirectory(name, remove_unused, false);
@@ -110,6 +112,7 @@ void Package::saveAs(const String& name, bool remove_unused, bool as_directory) 
 }
 
 void Package::saveCopy(const String& name) {
+  if (Set* s = dynamic_cast<Set*>(this)) s->referenceActionStackFiles();
   saveToZipfile(name, true, true);
   clearKeepFlag();
 }
@@ -298,7 +301,7 @@ LocalFileName Package::newFileName(const String& prefix, const String& suffix) {
 void Package::referenceFile(const String& file) {
   if (file.empty()) return;
   FileInfos::iterator it = files.find(file);
-  if (it == files.end()) throw InternalError(_("referencing a nonexistant file"));
+  if (it == files.end()) throw InternalError(_("Referencing an inexistant file!"));
   it->second.keep = true;
 }
 

@@ -484,13 +484,25 @@ wxMenu* InsertSymbolMenu::makeMenu(int id, SymbolFont& font) const {
 
 wxMenuItem* InsertSymbolMenu::makeMenuItem(wxMenu* parent, int first_id, SymbolFont& font) const {
   String label = this->label.get();
-  // ensure that there is not actually an accelerator string,
-  label.Replace(_("\t "), _("\t"));
-  #ifdef __WXMSW__
-    label.Replace(_("\t"), _("\t ")); // by prepending " "
-  #else
-    label.Replace(_("\t"), _("   ")); // by simply dropping the \t
-  #endif
+  // ensure that we are not defining an accelerator...
+  // everything after a tab is considered to be an accelerator by wxMenuItem
+  int accel_pos = label.find_last_of('\t');
+  if (accel_pos != label.npos && accel_pos > 0) {
+    String accel = label.substr(accel_pos+1);
+#ifdef __WXMSW__
+    // if there is a + or - in the accelerator, replace the tab with spaces (simply adding a space does not work)
+    if (accel.Contains("+") || accel.Contains("-")) {
+      label = label.substr(0, accel_pos) + _("      ") + accel;
+    }
+    // otherwise simply add a space after the tab if there isn't one
+    else {
+      label.Replace(_("\t "), _("\t"));
+      label.Replace(_("\t"), _("\t "));
+    }
+#else
+    label = label.substr(0, accel_pos) + _("      ") + accel; // replace the tab with spaces
+#endif
+  }
   if (type == Type::SUBMENU) {
     wxMenuItem* item = new wxMenuItem(parent, wxID_ANY, label,
                                       wxEmptyString, wxITEM_NORMAL,

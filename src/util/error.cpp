@@ -110,10 +110,12 @@ String Error::what() const {
 
 InternalError::InternalError(const String& str)
   : Error(
-    _("An internal error occured:\n\n") +
-    str + _("\n")
-    _("Please save your work (use 'save as' to so you don't overwrite things)\n")
-    _("and restart Magic Set Editor.\n\n")
+    _("An internal error occurred:\n\n") +
+    str + _("\n\n")
+    _("Please save your work (use 'save as' so you don't overwrite things)\n")
+    _("and restart Magic Set Editor.\n")
+    _("You can also find a backup of your set in the same folder as your set file\n")
+    _("called 'SETNAME.mse-set.bak'. Rename it to 'SETNAME-backup.mse-set' to open it.\n")
     _("You should leave a bug report on https://github.com/twanvl/MagicSetEditor2/issues/\n")
     _("Press Ctrl+C to copy this message to the clipboard.")
   )

@@ -16,6 +16,9 @@
 #include <data/field.hpp>
 #include <data/field/text.hpp>    // for 0.2.7 fix
 #include <data/field/information.hpp>
+#include <data/field/image.hpp>
+#include <data/field/symbol.hpp>
+#include <data/action/value.hpp>
 #include <util/tagged_string.hpp> // for 0.2.7 fix
 #include <util/order_cache.hpp>
 #include <util/delayed_index_maps.hpp>
@@ -102,6 +105,28 @@ IndexMap<FieldP, ValueP>& Set::stylingDataFor(const StyleSheet& stylesheet) {
 IndexMap<FieldP, ValueP>& Set::stylingDataFor(const CardP& card) {
   if (card && card->has_styling) return card->styling_data;
   else                           return stylingDataFor(stylesheetFor(card));
+}
+
+void Set::referenceActionStackFiles() {
+  referenceActionStackFiles(true);
+  referenceActionStackFiles(false);
+}
+void Set::referenceActionStackFiles(bool undo) {
+  for (auto&& action : undo ? actions.undo_actions : actions.redo_actions) {
+    try {
+      SimpleValueAction<ImageValue, false>& v = dynamic_cast<SimpleValueAction<ImageValue, false>&>(*action);
+      if (ImageValue* v2 = dynamic_cast<ImageValue*>(v.valueP.get())) {
+        referenceFile(v.new_value.toStringForWriting());
+        referenceFile(v2->filename.toStringForWriting());
+      }
+    } catch (...) { try {
+      SimpleValueAction<SymbolValue, false>& v = dynamic_cast<SimpleValueAction<SymbolValue, false>&>(*action);
+      if (SymbolValue* v2 = dynamic_cast<SymbolValue*>(v.valueP.get())) {
+        referenceFile(v.new_value.toStringForWriting());
+        referenceFile(v2->filename.toStringForWriting());
+      }
+    } catch (...) {} }
+  }
 }
 
 String Set::identification() const {

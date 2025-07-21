@@ -90,7 +90,12 @@ public:
   IndexMap<FieldP, ValueP>& stylingDataFor(const StyleSheet&);
   /// Styling information for a particular card
   IndexMap<FieldP, ValueP>& stylingDataFor(const CardP& card);
-  
+
+  /// Make sure the image and symbol files from
+  /// the ActionStack are saved so we can undo
+  void referenceActionStackFiles();
+  void referenceActionStackFiles(bool undo);
+
   /// Get the identification of this set, an identification is something like a name, title, etc.
   /** May return "" */
   String identification() const;

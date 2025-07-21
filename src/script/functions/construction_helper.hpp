@@ -61,24 +61,80 @@ static void set_container(Value* container, ScriptValueP& value, String key_name
   }
 }
 
-static bool set_builtin_container(GameP& game, CardP& card, ScriptValueP& value, String key_name) {
+static bool set_builtin_container(GameP& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
   // check if the given value is for a built-in field, if found set it and return true
   key_name = unified_form(key_name);
   if (key_name == _("notes") || key_name == _("note")) {
     card->notes = value->toString();
     return true;
   } else if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
-    if (trim(value->toString()) != wxEmptyString) card->stylesheet = StyleSheet::byGameAndName(*game, value->toString());
+    if (trim(value->toString()) != wxEmptyString) {
+      card->stylesheet = StyleSheet::byGameAndName(*game, value->toString());
+      if (card->stylesheet) card->styling_data.init(card->stylesheet->styling_fields);
+    }
     return true;
   }
-  // else if (key_name == _("id") || key_name == _("multiverse_id")) {
-  //  card->id = value->toString();
+  //else if (key_name == _("id") || key_name == _("uid")) {
+  //  card->uid = value->toString();
   //  return true;
   //}
-  
-  //styling_data;
-  //linked_card;
-  //linked_relation_1;
+  //else if (key_name == _("linked_card") || key_name == _("linked_card_1")) {
+  //  card->linked_card_1 = value->toString();
+  //  return true;
+  //}
+  //else if (key_name == _("linked_card_2")) {
+  //  card->linked_card_2 = value->toString();
+  //  return true;
+  //}
+  //else if (key_name == _("linked_card_3")) {
+  //  card->linked_card_3 = value->toString();
+  //  return true;
+  //}
+  //else if (key_name == _("linked_card_4")) {
+  //  card->linked_card_4 = value->toString();
+  //  return true;
+  //}
+  //else if (key_name == _("linked_relation") || key_name == _("linked_relation_1")) {
+  //  card->linked_relation_1 = value->toString();
+  //  return true;
+  //}
+  //else if (key_name == _("linked_relation_2")) {
+  //  card->linked_relation_2 = value->toString();
+  //  return true;
+  //}
+  //else if (key_name == _("linked_relation_3")) {
+  //  card->linked_relation_3 = value->toString();
+  //  return true;
+  //}
+  //else if (key_name == _("linked_relation_4")) {
+  //  card->linked_relation_4 = value->toString();
+  //  return true;
+  //}
+  else if (key_name == _("styling_data")   || key_name == _("style_data")   || key_name == _("stylesheet_data")   || key_name == _("template_data") || key_name == _("styling")
+        || key_name == _("styling_fields") || key_name == _("style_fields") || key_name == _("stylesheet_fields") || key_name == _("template_fields")) {
+    if (value->type() != SCRIPT_COLLECTION) {
+      throw ScriptError(_ERROR_("styling data not map"));
+    }
+    ScriptValueP value_it = value->makeIterator();
+    ScriptValueP value_key;
+    while (ScriptValueP value_value = value_it->next(&value_key)) {
+      assert(value_key);
+      if (value_key == script_nil) continue;
+      String value_key_name = value_key->toString();
+      IndexMap<FieldP, ValueP>::const_iterator style_it = card->styling_data.find(value_key_name);
+      if (style_it == card->styling_data.end()) {
+        style_it = card->styling_data.find(value_key_name.Lower());
+        if (style_it == card->styling_data.end()) {
+          if (!ignore_field_not_found) throw ScriptError(_ERROR_1_("no style field with name", value_key_name));
+          continue;
+        }
+      }
+      Value* value_container = style_it->get();
+      set_container(value_container, value_value, value_key_name);
+      card->has_styling = true;
+    }
+    return true;
+  }
   return false;
 }
 

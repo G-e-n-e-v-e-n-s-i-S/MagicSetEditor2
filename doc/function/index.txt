@@ -103,8 +103,9 @@ These functions are built into the program, other [[type:function]]s can be defi
 	
 ! Cards				<<<
 | [[fun:new_card]]		Construct a new [[type:card]] object.
+| [[fun:add_card_to_set]]		Add a [[type:card]] to a [[type:set]].
 | [[fun:get_card_styling]]		Get the styling data of a [[type:card]].
-| [[fun:get_card_styesheet]]	Get the stylesheet of a [[type:card]].
+| [[fun:get_card_stylesheet]]	Get the stylesheet of a [[type:card]].
 | [[fun:get_card_from_uid]]		Find the [[type:card]] with the given uid.
 | [[fun:get_card_from_link]]		Find a [[type:card]] that has the given link type to the given [[type:card]].
 | [[fun:has_link]]		Determine if the given the given [[type:card]] has a link of the given type.
