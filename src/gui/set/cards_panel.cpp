@@ -102,36 +102,32 @@ CardsPanel::CardsPanel(Window* parent, int id)
 }
 
 void CardsPanel::updateCardCounts() {
-  if (counts) {
-    if (card_list && set) {
-      int selected = card_list->GetSelectedItemCount();
-      int filtered = card_list->GetItemCount();
-      int total = set->cards.size();
+  if (counts && card_list && set) {
+    int selected = card_list->GetSelectedItemCount();
+    int filtered = card_list->GetItemCount();
+    int total = set->cards.size();
 
-      if (
-            selected_cards_count == selected
-        &&  filtered_cards_count == filtered
-        &&  total_cards_count == total
-      ) return;
+    if (
+          selected_cards_count == selected
+      &&  filtered_cards_count == filtered
+      &&  total_cards_count == total
+      &&  !counts->GetLabel().empty()
+    ) return;
 
-      selected_cards_count = selected;
-      filtered_cards_count = filtered;
-      total_cards_count = total;
+    selected_cards_count = selected;
+    filtered_cards_count = filtered;
+    total_cards_count = total;
 
-      if (filtered == total) {
-        counts->SetLabel(_TOOL_2_("card counts 2",
-          wxString::Format(wxT("%i"), selected),
-          wxString::Format(wxT("%i"), total)));
-      }
-      else {
-        counts->SetLabel(_TOOL_3_("card counts 3",
-          wxString::Format(wxT("%i"), selected),
-          wxString::Format(wxT("%i"), filtered),
-          wxString::Format(wxT("%i"), total)));
-      }
-      
-    } else {
-      counts->SetLabel(_(""));
+    if (filtered == total) {
+      counts->SetLabel(_TOOL_2_("card counts 2",
+        wxString::Format(wxT("%i"), selected),
+        wxString::Format(wxT("%i"), total)));
+    }
+    else {
+      counts->SetLabel(_TOOL_3_("card counts 3",
+        wxString::Format(wxT("%i"), selected),
+        wxString::Format(wxT("%i"), filtered),
+        wxString::Format(wxT("%i"), total)));
     }
   }
 }

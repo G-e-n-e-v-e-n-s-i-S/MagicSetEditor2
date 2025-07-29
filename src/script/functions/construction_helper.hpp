@@ -4,6 +4,8 @@
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
 
+#pragma once
+
 // ----------------------------------------------------------------------------- : Includes
 
 #include <util/prec.hpp>
@@ -17,17 +19,16 @@
 #include <data/set.hpp>
 #include <data/stylesheet.hpp>
 #include <data/card.hpp>
-#include <util/error.hpp>
 
 // ----------------------------------------------------------------------------- : Helper functions
 
-static Value* get_container(GameP& game, CardP& card, String key_name, bool ignore_field_not_found) {
+inline static Value* get_container(Game& game, CardP& card, String key_name, bool ignore_field_not_found) {
   // find value container to update
   IndexMap<FieldP, ValueP>::const_iterator value_it = card->data.find(key_name);
   if (value_it == card->data.end()) {
     // look among alternate names
-    map<String, String>::iterator alt_name_it = game->card_fields_alt_names.find(unified_form(key_name));
-    if (alt_name_it != game->card_fields_alt_names.end()) {
+    map<String, String>::iterator alt_name_it = game.card_fields_alt_names.find(unified_form(key_name));
+    if (alt_name_it != game.card_fields_alt_names.end()) {
       value_it = card->data.find(alt_name_it->second);
     }
   }
@@ -38,7 +39,7 @@ static Value* get_container(GameP& game, CardP& card, String key_name, bool igno
   return value_it->get();
 }
 
-static void set_container(Value* container, ScriptValueP& value, String key_name) {
+inline static void set_container(Value* container, ScriptValueP& value, String key_name) {
   // set the given value into the container
   if (TextValue* tvalue = dynamic_cast<TextValue*>(container)) {
     tvalue->value = value->toString();
@@ -61,14 +62,14 @@ static void set_container(Value* container, ScriptValueP& value, String key_name
   }
 }
 
-static bool set_builtin_container(GameP& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
+inline static bool set_builtin_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
   // check if the given value is for a built-in field, if found set it and return true
   key_name = unified_form(key_name);
   if (key_name == _("notes") || key_name == _("note")) {
     card->notes = value->toString();
     return true;
   } else if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
-    if (trim(value->toString()) != wxEmptyString) {
+    if (!trim(value->toString()).empty()) {
       card->stylesheet = StyleSheet::byGameAndName(*game, value->toString());
       if (card->stylesheet) card->styling_data.init(card->stylesheet->styling_fields);
     }
@@ -138,7 +139,7 @@ static bool set_builtin_container(GameP& game, CardP& card, ScriptValueP& value,
   return false;
 }
 
-static bool check_table_headers(GameP& game, std::vector<String>& headers, const String& file_extension, String& missing_fields_out) {
+inline static bool check_table_headers(GameP& game, std::vector<String>& headers, const String& file_extension, String& missing_fields_out) {
   if (headers.empty()) {
     queue_message(MESSAGE_ERROR, _("Empty headers given"));
     return false;
@@ -176,7 +177,7 @@ static bool check_table_headers(GameP& game, std::vector<String>& headers, const
   return true;
 }
 
-static bool cards_from_table(SetP& set, vector<String>& headers, std::vector<std::vector<ScriptValueP>>& table, bool ignore_field_not_found, const String& file_extension, vector<CardP>& cards_out) {
+inline static bool cards_from_table(SetP& set, vector<String>& headers, std::vector<std::vector<ScriptValueP>>& table, bool ignore_field_not_found, const String& file_extension, vector<CardP>& cards_out) {
   // ensure table is square
   int count = headers.size();
   for (int y = 0; y < table.size(); ++y) {
@@ -212,5 +213,3 @@ static bool cards_from_table(SetP& set, vector<String>& headers, std::vector<std
   if (ctx_ignore) ctx.setVariable("ignore_field_not_found", ctx_ignore);
   return true;
 }
-
-

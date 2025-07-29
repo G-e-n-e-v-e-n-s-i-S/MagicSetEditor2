@@ -149,8 +149,8 @@ public:
   IndexMap<Key,Value>& get(const String& name, const vector<Key>& init_with);
   /// Clear the delayed index map
   void clear();
-private:
   map<String, intrusive_ptr<DelayedIndexMapsData<Key,Value>>> data;
+private:
   friend class Reader;
   friend class Writer;
   friend class GetDefaultMember;
