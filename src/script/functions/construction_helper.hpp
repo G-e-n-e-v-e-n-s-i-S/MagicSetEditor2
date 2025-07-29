@@ -22,21 +22,44 @@
 
 // ----------------------------------------------------------------------------- : Helper functions
 
-inline static Value* get_container(Game& game, CardP& card, String key_name, bool ignore_field_not_found) {
+inline static Value* get_field_container(Game& game, IndexMap<FieldP, ValueP>& map, String& key_name, bool ignore_field_not_found) {
   // find value container to update
-  IndexMap<FieldP, ValueP>::const_iterator value_it = card->data.find(key_name);
-  if (value_it == card->data.end()) {
+  IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
+  if (it == map.end()) {
     // look among alternate names
-    map<String, String>::iterator alt_name_it = game.card_fields_alt_names.find(unified_form(key_name));
+    std::map<String, String>::iterator alt_name_it = game.card_fields_alt_names.find(unified_form(key_name));
     if (alt_name_it != game.card_fields_alt_names.end()) {
-      value_it = card->data.find(alt_name_it->second);
+      it = map.find(alt_name_it->second);
     }
   }
-  if (value_it == card->data.end()) {
+  if (it == map.end()) {
     if (ignore_field_not_found) return nullptr;
     throw ScriptError(_ERROR_1_("no field with name", key_name));
   }
-  return value_it->get();
+  return it->get();
+}
+
+inline static Value* get_style_container(IndexMap<FieldP, ValueP>& map, String& key_name, bool ignore_field_not_found) {
+  // find value container to update
+  IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
+  if (it == map.end()) {
+    it = map.find(key_name.Lower());
+    if (it == map.end()) {
+      if (ignore_field_not_found) return nullptr;
+      throw ScriptError(_ERROR_1_("no style field with name",key_name));
+    }
+  }
+  return it->get();
+}
+
+inline static Value* get_extra_container(IndexMap<FieldP, ValueP>& map, String& key_name, bool ignore_field_not_found) {
+  // find value container to update
+  IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
+  if (it == map.end()) {
+    if (ignore_field_not_found) return nullptr;
+    throw ScriptError(_ERROR_1_("no extra field with name",key_name));
+  }
+  return it->get();
 }
 
 inline static void set_container(Value* container, ScriptValueP& value, String key_name) {
@@ -111,28 +134,26 @@ inline static bool set_builtin_container(const Game& game, CardP& card, ScriptVa
   //  card->linked_relation_4 = value->toString();
   //  return true;
   //}
-  else if (key_name == _("styling_data")   || key_name == _("style_data")   || key_name == _("stylesheet_data")   || key_name == _("template_data") || key_name == _("styling")
-        || key_name == _("styling_fields") || key_name == _("style_fields") || key_name == _("stylesheet_fields") || key_name == _("template_fields")) {
+  else if          (key_name == _("styling_data")   || key_name == _("style_data")   || key_name == _("stylesheet_data")   || key_name == _("template_data") || key_name == _("styling")
+                 || key_name == _("styling_fields") || key_name == _("style_fields") || key_name == _("stylesheet_fields") || key_name == _("template_fields")
+                 || key_name == _("extra_data")     || key_name == _("extra_fields") || key_name == _("extra_card_data")   || key_name == _("extra_card_fields")) {
+    bool is_extra = key_name == _("extra_data")     || key_name == _("extra_fields") || key_name == _("extra_card_data")   || key_name == _("extra_card_fields");
     if (value->type() != SCRIPT_COLLECTION) {
-      throw ScriptError(_ERROR_("styling data not map"));
+      throw ScriptError(_ERROR_1_("styling data not map", is_extra ? "extra" : "styling"));
     }
-    ScriptValueP value_it = value->makeIterator();
-    ScriptValueP value_key;
-    while (ScriptValueP value_value = value_it->next(&value_key)) {
-      assert(value_key);
-      if (value_key == script_nil) continue;
-      String value_key_name = value_key->toString();
-      IndexMap<FieldP, ValueP>::const_iterator style_it = card->styling_data.find(value_key_name);
-      if (style_it == card->styling_data.end()) {
-        style_it = card->styling_data.find(value_key_name.Lower());
-        if (style_it == card->styling_data.end()) {
-          if (!ignore_field_not_found) throw ScriptError(_ERROR_1_("no style field with name", value_key_name));
-          continue;
-        }
-      }
-      Value* value_container = style_it->get();
-      set_container(value_container, value_value, value_key_name);
-      card->has_styling = true;
+    if (!card->stylesheet) {
+      throw ScriptError(_ERROR_1_("styling data without stylesheet", is_extra ? "extra" : "styling"));
+    }
+    IndexMap<FieldP, ValueP>& data = is_extra ? card->extraDataFor(*card->stylesheet) : card->styling_data;
+    ScriptValueP it = value->makeIterator();
+    ScriptValueP key;
+    while (ScriptValueP value = it->next(&key)) {
+      assert(key);
+      if (key == script_nil) continue;
+      String key_name = key->toString();
+      Value* container = is_extra ? get_extra_container(data, key_name, ignore_field_not_found) : get_style_container(data, key_name, ignore_field_not_found);
+      set_container(container, value, key_name);
+      if (!is_extra) card->has_styling = true;
     }
     return true;
   }

@@ -74,10 +74,10 @@ public:
   void handle(const GameP&);
   void handle(const StyleSheetP&);
   
-private:
-  // --------------------------------------------------- : Data
   /// Indentation of the current block
   int indentation;
+private:
+  // --------------------------------------------------- : Data
   /// Blocks opened to which nothing has been written
   vector<const Char*> pending_opened;
   

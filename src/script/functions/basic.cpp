@@ -265,6 +265,7 @@ SCRIPT_FUNCTION(to_json) {
   SCRIPT_PARAM_C(Set*, set);
   SCRIPT_PARAM_DEFAULT(bool, pretty_print, true);
   boost::json::value jv = mse_to_json(input, set);
+  queue_message(MESSAGE_ERROR, json_pretty_print(jv));
   if (pretty_print) return to_script(json_pretty_print(jv));
   else              return to_script(json_ugly_print(jv));
 }

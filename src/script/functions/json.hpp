@@ -230,9 +230,7 @@ inline static SetP json_to_mse_set(boost::json::object& jv) {
 }
 inline static CardP json_to_mse_card(boost::json::object& jv, SetP set) {
   CardP card = make_intrusive<Card>(*set->game);
-  queue_message(MESSAGE_ERROR, _("YOOOOOOOOOOOOOOOOOO2"));
   read(card->time_created,                     jv, "time_created");
-  queue_message(MESSAGE_ERROR, _("YOOOOOOOOOOOOOOOOOO3"));
   read(card->time_modified,                    jv, "time_modified");
   read(card->notes,                            jv, "notes");
   //read(card->uid,                              jv, "uid");
@@ -244,13 +242,46 @@ inline static CardP json_to_mse_card(boost::json::object& jv, SetP set) {
   //read(card->linked_relation_2,                jv, "linked_relation_2");
   //read(card->linked_relation_3,                jv, "linked_relation_3");
   //read(card->linked_relation_4,                jv, "linked_relation_4");
+  // card fields
   if (jv.contains("data") && jv["data"].is_object()) {
     boost::json::object datav = jv["data"].as_object();
     for (auto it = datav.begin(); it != datav.end(); ++it) {
-      queue_message(MESSAGE_ERROR, it->key_c_str());
-      Value* container = get_container(*set->game, card, it->key_c_str(), false);
+      String key_name = wxString(it->key_c_str());
+      Value* container = get_field_container(*set->game, card->data, key_name, false);
       ScriptValueP value = json_to_mse(it->value(), set);
-      set_container(container, value, it->key_c_str());
+      set_container(container, value, key_name);
+    }
+  }
+  // stylesheet
+  if (jv.contains("stylesheet")) card->stylesheet = StyleSheet::byGameAndName(*set->game, wxString(jv["stylesheet"].as_string().c_str()));
+  if (card->stylesheet) {
+    // styling fields
+    card->styling_data.init(card->stylesheet->styling_fields);
+    if (jv.contains("styling_data") && jv["styling_data"].is_object()) {
+      boost::json::object datav = jv["styling_data"].as_object();
+      for (auto it = datav.begin(); it != datav.end(); ++it) {
+        String key_name = wxString(it->key_c_str());
+        Value* container = get_style_container(card->styling_data, key_name, false);
+        ScriptValueP value = json_to_mse(it->value(), set);
+        set_container(container, value, key_name);
+        card->has_styling = true;
+      }
+    }
+    // extra card fields
+    if (jv.contains("extra_data") && jv["extra_data"].is_object()) {
+      boost::json::object datav = jv["extra_data"].as_object();
+      for (auto it = datav.begin(); it != datav.end(); ++it) {
+        StyleSheetP& stylesheet = StyleSheet::byGameAndName(*set->game, it->key_c_str());
+        if (!stylesheet) continue;
+        IndexMap<FieldP, ValueP>& stylesheet_data = card->extraDataFor(*stylesheet);
+        boost::json::object stylesheet_datav = it->value().as_object();
+        for (auto stylesheet_it = stylesheet_datav.begin(); stylesheet_it != stylesheet_datav.end(); ++stylesheet_it) {
+          String key_name = wxString(stylesheet_it->key_c_str());
+          Value* container = get_extra_container(stylesheet_data, key_name, false);
+          ScriptValueP value = json_to_mse(stylesheet_it->value(), set);
+          set_container(container, value, key_name);
+        }
+      }
     }
   }
   return card;
@@ -371,6 +402,7 @@ template <typename T>
 static void write(boost::json::object& out, const String& name, T& value) {
   wxStringOutputStream stream;
   Writer writer(stream);
+  writer.indentation = -1000;
   writer.handle(name, value);
   String string = stream.GetString();
   if (!string.empty()) {

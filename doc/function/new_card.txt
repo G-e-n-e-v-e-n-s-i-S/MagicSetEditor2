@@ -7,7 +7,7 @@ Creates a new [[type:card]] object. The card is not automatically added to a set
 
 The argument is a map from card field names to values, for example @new_card([name: "My Card"])@ creates a card with the name @"My Card"@, and all other fields at their default value.
 
-The map can also contain the following built-in keys: notes, id, linked_card_1 to linked_card_4, linked_relation_1 to linked_relation_4, stylesheet, and styling_data. For styling_data, the value must itself be a map from styling field names to values. Be sure to define a stylesheet before styling_data.
+The map can also contain the following built-in keys: notes, id, linked_card_1 to linked_card_4, linked_relation_1 to linked_relation_4, stylesheet, styling_data, and extra_data. For styling_data and extra_data, the value must itself be a map from field names to values. Be sure to define a stylesheet before these.
 
 NOTE: you should use underscores instead of spaces in field names.
 
