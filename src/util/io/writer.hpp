@@ -25,8 +25,9 @@ DECLARE_POINTER_TYPE(StyleSheet);
 class Writer {
 public:
   /// Construct a writer that writes to the given output stream
+  Writer(OutputStream& output);
   Writer(OutputStream& output, Version file_app_version);
-  
+
   /// Tell the reflection code we are not reading
   static constexpr bool isReading = false;
   static constexpr bool isWriting = true;

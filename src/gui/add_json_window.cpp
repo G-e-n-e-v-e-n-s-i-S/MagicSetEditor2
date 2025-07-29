@@ -19,10 +19,11 @@
 #include <data/stylesheet.hpp>
 #include <data/action/set.hpp>
 #include <gui/add_json_window.hpp>
+#include <script/functions/json.hpp>
 #include <script/functions/construction_helper.hpp>
 #include <wx/statline.h>
-#include <boost/json/src.hpp>
 #include <boost/json.hpp>
+#include <boost/json/src.hpp>
 
 // ----------------------------------------------------------------------------- : AddJSON
 
@@ -60,54 +61,6 @@ AddJSONWindow::AddJSONWindow(Window* parent, const SetP& set, bool sizer)
     s->SetSizeHints(this);
     SetSizer(s);
     SetSize(500, 110);
-  }
-}
-
-static ScriptValueP json_to_script(boost::json::value& jv) {
-  if (jv == nullptr) return script_nil;
-  else if (jv.is_null()) return script_nil;
-  else if (jv.is_bool()) return to_script(jv.get_bool());
-  else if (jv.is_double()) return to_script(jv.get_double());
-  else if (jv.is_int64()) {
-    int integer = jv.get_int64();
-    return to_script(integer);
-  }
-  else if (jv.is_uint64()) {
-    int integer = jv.get_uint64();
-    return to_script(integer);
-  }
-  else if (jv.is_string()) {
-    std::string stdstring = boost::json::value_to<std::string>(jv);
-    String wxstring(stdstring.c_str(), wxConvUTF8);
-    return to_script(wxstring);
-  }
-  else if (jv.is_array()) {
-    boost::json::array array = jv.get_array();
-    ScriptCustomCollectionP result = make_intrusive<ScriptCustomCollection>();
-    for (int i = 0; i < array.size(); ++i) {
-      boost::json::value jvalue = array[i];
-      ScriptValueP value = json_to_script(jvalue);
-      result->value.push_back(value);
-    }
-    return result;
-  }
-  else if (jv.is_object()) {
-    boost::json::object object = jv.get_object();
-    ScriptCustomCollectionP result = make_intrusive<ScriptCustomCollection>();
-    for (auto it = object.begin(); it != object.end(); ++it) {
-      boost::json::string_view jview = it->key();
-      std::string_view stdview = std::string_view(jview.data(), jview.size());
-      std::string stdstring = { stdview.begin(), stdview.end() };
-      String key(stdstring.c_str(), wxConvUTF8);
-      boost::json::value jvalue = it->value();
-      ScriptValueP value = json_to_script(jvalue);
-      result->key_value[key] = value;
-    }
-    return result;
-  }
-  else {
-    queue_message(MESSAGE_ERROR, _ERROR_("add card json unknown type"));
-    return script_nil;
   }
 }
 
@@ -210,7 +163,7 @@ void AddJSONWindow::onBrowseFiles(wxCommandEvent&) {
     auto& card = card_array[i].as_object();
     for (int h = 0; h < headers_out.size(); ++h) {
       auto& value = card[headers_out[h].ToStdString()];
-      row.push_back(json_to_script(value));
+      row.push_back(json_to_mse(value, set));
     }
     table_out.push_back(row);
   }

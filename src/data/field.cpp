@@ -40,7 +40,6 @@ Field::~Field() {}
 
 void Field::initDependencies(Context& ctx, const Dependency& dep) const {
   sort_script.initDependencies(ctx, dep);
-  import_script.initDependencies(ctx, dep);
 }
 
 IMPLEMENT_REFLECTION(Field) {
