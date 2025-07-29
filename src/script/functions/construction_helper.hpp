@@ -70,7 +70,7 @@ inline static bool set_builtin_container(const Game& game, CardP& card, ScriptVa
     return true;
   } else if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
     if (!trim(value->toString()).empty()) {
-      card->stylesheet = StyleSheet::byGameAndName(*game, value->toString());
+      card->stylesheet = StyleSheet::byGameAndName(game, value->toString());
       if (card->stylesheet) card->styling_data.init(card->stylesheet->styling_fields);
     }
     return true;
