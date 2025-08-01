@@ -153,6 +153,14 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(StyleSheetSettings) {
   REFLECT(card_spellcheck_enabled);
 }
 
+// ----------------------------------------------------------------------------- : Printing settings
+
+IMPLEMENT_REFLECTION_ENUM(CutterLinesType) {
+  VALUE_N("all",          CUTTER_ALL);
+  VALUE_N("no intersect", CUTTER_NO_INTERSECTION);
+  VALUE_N("none",         CUTTER_NONE);
+}
+
 // ----------------------------------------------------------------------------- : Settings
 
 Settings settings;
@@ -168,6 +176,7 @@ Settings::Settings()
   , symbol_grid          (true)
   , symbol_grid_snap     (false)
   , print_spacing        (0.33)
+  , print_cutter_lines   (CUTTER_ALL)
   , internal_scale       (1.0)
   , internal_image_extension(true)
   #if USE_OLD_STYLE_UPDATE_CHECKER
@@ -257,6 +266,7 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(Settings) {
   REFLECT(symbol_grid_snap);
   REFLECT(default_game);
   REFLECT(print_spacing);
+  REFLECT(print_cutter_lines);
   REFLECT(apprentice_location);
   REFLECT(internal_scale);
   REFLECT(internal_image_extension);
