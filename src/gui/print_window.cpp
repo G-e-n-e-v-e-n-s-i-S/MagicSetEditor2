@@ -375,7 +375,6 @@ PrintJobP make_print_job(Window* parent, const SetP& set, const ExportCardSelect
     String spacing = space->GetValue();
     if (spacing.empty()) spacing = _("0");
     spacing.ToDouble(&settings.print_spacing);
-    queue_message(MESSAGE_WARNING, wxString::Format(_("%f"),settings.print_spacing));
     settings.print_cutter_lines = (CutterLinesType)cutter->GetSelection();
     PrintJobP job = make_intrusive<PrintJob>(set, wnd.getSelection());
     return job;
