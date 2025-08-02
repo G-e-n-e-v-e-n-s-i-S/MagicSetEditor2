@@ -163,7 +163,7 @@ void AddJSONWindow::onBrowseFiles(wxCommandEvent&) {
     auto& card = card_array[i].as_object();
     for (int h = 0; h < headers_out.size(); ++h) {
       auto& value = card[headers_out[h].ToStdString()];
-      row.push_back(json_to_mse(value, set));
+      row.push_back(json_to_mse(value, set.get()));
     }
     table_out.push_back(row);
   }

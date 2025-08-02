@@ -14,6 +14,7 @@
 #include <data/field/package_choice.hpp>
 #include <data/field/color.hpp>
 #include <data/field/image.hpp>
+#include <data/field/symbol.hpp>
 #include <data/action/set.hpp>
 #include <data/game.hpp>
 #include <data/set.hpp>
@@ -22,7 +23,7 @@
 
 // ----------------------------------------------------------------------------- : Helper functions
 
-inline static Value* get_field_container(Game& game, IndexMap<FieldP, ValueP>& map, String& key_name, bool ignore_field_not_found) {
+inline static Value* get_card_field_container(Game& game, IndexMap<FieldP, ValueP>& map, String& key_name, bool ignore_field_not_found) {
   // find value container to update
   IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
   if (it == map.end()) {
@@ -34,30 +35,20 @@ inline static Value* get_field_container(Game& game, IndexMap<FieldP, ValueP>& m
   }
   if (it == map.end()) {
     if (ignore_field_not_found) return nullptr;
-    throw ScriptError(_ERROR_1_("no field with name", key_name));
+    throw ScriptError(_ERROR_2_("no field with name", _TYPE_("card"), key_name));
   }
   return it->get();
 }
 
-inline static Value* get_style_container(IndexMap<FieldP, ValueP>& map, String& key_name, bool ignore_field_not_found) {
+inline static Value* get_container(IndexMap<FieldP, ValueP>& map, String& type, String& key_name, bool ignore_field_not_found) {
   // find value container to update
   IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
   if (it == map.end()) {
     it = map.find(key_name.Lower());
     if (it == map.end()) {
       if (ignore_field_not_found) return nullptr;
-      throw ScriptError(_ERROR_1_("no style field with name",key_name));
+      throw ScriptError(_ERROR_2_("no field with name", _TYPE_V_(type), key_name));
     }
-  }
-  return it->get();
-}
-
-inline static Value* get_extra_container(IndexMap<FieldP, ValueP>& map, String& key_name, bool ignore_field_not_found) {
-  // find value container to update
-  IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
-  if (it == map.end()) {
-    if (ignore_field_not_found) return nullptr;
-    throw ScriptError(_ERROR_1_("no extra field with name",key_name));
   }
   return it->get();
 }
@@ -77,11 +68,24 @@ inline static void set_container(Value* container, ScriptValueP& value, String k
     cvalue->value = value->toColor();
   }
   else if (ImageValue* ivalue = dynamic_cast<ImageValue*>(container)) {
-    wxFileName fname(static_cast<ExternalImage*>(value.get())->toString());
-    ivalue->filename = LocalFileName::fromReadString(fname.GetName(), "");
+    if (ExternalImage* image = dynamic_cast<ExternalImage*>(value.get())) {
+      wxFileName fname(image->toString());
+      ivalue->filename = LocalFileName::fromReadString(fname.GetName(), "");
+    } else if (value->type() == SCRIPT_STRING) {
+      ivalue->filename = LocalFileName::fromReadString(value->toString(), "");
+    } else {
+      throw ScriptError(_ERROR_1_("cant set image value", key_name));
+    }
+  }
+  else if (SymbolValue* svalue = dynamic_cast<SymbolValue*>(container)) {
+    if (value->type() == SCRIPT_STRING) {
+      svalue->filename = LocalFileName::fromReadString(value->toString(), "");
+    } else {
+      throw ScriptError(_ERROR_1_("cant set symbol value", key_name));
+    }
   }
   else {
-    throw ScriptError(_ERROR_1_("can't set value", key_name));
+    throw ScriptError(_ERROR_1_("cant set value", key_name));
   }
 }
 
@@ -138,11 +142,12 @@ inline static bool set_builtin_container(const Game& game, CardP& card, ScriptVa
                  || key_name == _("styling_fields") || key_name == _("style_fields") || key_name == _("stylesheet_fields") || key_name == _("template_fields")
                  || key_name == _("extra_data")     || key_name == _("extra_fields") || key_name == _("extra_card_data")   || key_name == _("extra_card_fields")) {
     bool is_extra = key_name == _("extra_data")     || key_name == _("extra_fields") || key_name == _("extra_card_data")   || key_name == _("extra_card_fields");
+    String type = is_extra ? _("extra") : _("styling");
     if (value->type() != SCRIPT_COLLECTION) {
-      throw ScriptError(_ERROR_1_("styling data not map", is_extra ? "extra" : "styling"));
+      throw ScriptError(_ERROR_1_("styling data not map", type));
     }
     if (!card->stylesheet) {
-      throw ScriptError(_ERROR_1_("styling data without stylesheet", is_extra ? "extra" : "styling"));
+      throw ScriptError(_ERROR_1_("styling data without stylesheet", type));
     }
     IndexMap<FieldP, ValueP>& data = is_extra ? card->extraDataFor(*card->stylesheet) : card->styling_data;
     ScriptValueP it = value->makeIterator();
@@ -151,7 +156,7 @@ inline static bool set_builtin_container(const Game& game, CardP& card, ScriptVa
       assert(key);
       if (key == script_nil) continue;
       String key_name = key->toString();
-      Value* container = is_extra ? get_extra_container(data, key_name, ignore_field_not_found) : get_style_container(data, key_name, ignore_field_not_found);
+      Value* container = get_container(data, type, key_name, ignore_field_not_found);
       set_container(container, value, key_name);
       if (!is_extra) card->has_styling = true;
     }
