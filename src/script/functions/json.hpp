@@ -298,14 +298,6 @@ inline static SetP json_to_mse_set(boost::json::object& jv) {
       set->pack_types.emplace_back(json_to_mse_pack_type(pack_typev));
     }
   }
-
-
-
-
-
-
-
-
   return set;
 }
 
