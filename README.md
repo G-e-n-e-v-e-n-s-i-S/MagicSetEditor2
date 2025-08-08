@@ -104,7 +104,7 @@ cmake --build .
 On old versions it's possible that cmake can't find wx-config, to solve this add the tool to the cmake command manually like this: `-DwxWidgets_CONFIG_EXECUTABLE=/usr/bin/wx-config-gtk3`
 
 ### Installing resources
-Install the resource folder to the .magicseteditor dir: `mkdir -p $HOME/.magicseteditor && cp -r ./resources $HOME/.magicseteditor/resources`
+Install the resource folder to the .magicseteditor dir: `mkdir -p $HOME/.magicseteditor && cp -rT ./resource $HOME/.magicseteditor/resource`
 Templates are installed to `~/.magicseteditor/data`. Fonts are installed to `~/.local/share/fonts`.
 
 ## Building on Mac OS
