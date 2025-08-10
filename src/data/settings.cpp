@@ -161,6 +161,14 @@ IMPLEMENT_REFLECTION_ENUM(CutterLinesType) {
   VALUE_N("none",         CUTTER_NONE);
 }
 
+// ----------------------------------------------------------------------------- : Dark mode settings
+
+IMPLEMENT_REFLECTION_ENUM(DarkModeType) {
+  VALUE_N("yes",    DARKMODE_YES);
+  VALUE_N("system", DARKMODE_SYSTEM);
+  VALUE_N("no",     DARKMODE_NO);
+}
+
 // ----------------------------------------------------------------------------- : Settings
 
 Settings settings;
@@ -177,6 +185,7 @@ Settings::Settings()
   , symbol_grid_snap     (false)
   , print_spacing        (0.33)
   , print_cutter_lines   (CUTTER_ALL)
+  , dark_mode_type       (DARKMODE_SYSTEM)
   , internal_scale       (1.0)
   , internal_image_extension(true)
   #if USE_OLD_STYLE_UPDATE_CHECKER
@@ -249,6 +258,20 @@ String Settings::settingsFile() {
   return user_settings_dir() + _("mse.config");
 }
 
+bool Settings::darkMode() {
+  return wxSystemSettings::GetAppearance().IsDark();
+}
+
+String Settings::darkModePrefix() {
+  if (darkMode()) return _("dark_");
+  return _("");
+}
+
+Color Settings::darkModeColor() {
+  if (darkMode()) return wxColor(15,8,0);
+  return wxColor(240,247,255);
+}
+
 IMPLEMENT_REFLECTION_NO_SCRIPT(Settings) {
   REFLECT(locale);
   REFLECT(recent_sets);
@@ -267,6 +290,7 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(Settings) {
   REFLECT(default_game);
   REFLECT(print_spacing);
   REFLECT(print_cutter_lines);
+  REFLECT(dark_mode_type);
   REFLECT(apprentice_location);
   REFLECT(internal_scale);
   REFLECT(internal_image_extension);

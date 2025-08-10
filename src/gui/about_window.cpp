@@ -16,7 +16,7 @@
 
 AboutWindow::AboutWindow(Window* parent)
   : wxDialog(parent, wxID_ANY, _TITLE_("about"), wxDefaultPosition, wxSize(510,340), wxCLIP_CHILDREN | wxDEFAULT_DIALOG_STYLE | wxTAB_TRAVERSAL)
-  , logo(load_resource_image(_("about")))
+  , logo(load_resource_image(settings.darkModePrefix() + _("about")))
 {
   // init controls
   wxControl* ok_button = new HoverButton(this, wxID_OK, _("btn_ok"));
@@ -47,7 +47,7 @@ void AboutWindow::draw(DC& dc) {
   wxSize ws = GetClientSize();
   // draw background
   dc.SetPen  (*wxTRANSPARENT_PEN);
-  dc.SetBrush(wxColor(240,247,255));
+  dc.SetBrush(settings.darkModeColor());
   dc.DrawRectangle(0, 0, ws.GetWidth(), ws.GetHeight());
   // draw logo
   dc.DrawBitmap(logo,  (ws.GetWidth() -  logo.GetWidth()) / 2, 5);

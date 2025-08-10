@@ -58,7 +58,7 @@ public:
   /// Draw a subsection section of the text in the given rectangle
   /** xs give the x coordinates for each character
    *  this->start <= start < end <= this->end <= text.size() */
-  virtual void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end) const = 0;
+  virtual void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end, bool native_look) const = 0;
   /// Get information on all characters in the range [start...end) and store them in out
   virtual void getCharInfo(RotatedDC& dc, double scale, vector<CharInfo>& out) const = 0;
   /// Return the minimum scale factor allowed (starts at 1)
@@ -77,7 +77,7 @@ public:
     , font(font), draw_as(draw_as), break_style(break_style)
   {}
   
-  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end) const override;
+  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end, bool native_look) const override;
   void getCharInfo(RotatedDC& dc, double scale, vector<CharInfo>& out) const override;
   double minScale() const override;
   double scaleStep() const override;
@@ -96,7 +96,7 @@ public:
     , font(font), ctx(*ctx)
   {}
   
-  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end) const override;
+  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end, bool native_look) const override;
   void getCharInfo(RotatedDC& dc, double scale, vector<CharInfo>& out) const override;
   double minScale() const override;
   double scaleStep() const override;
@@ -113,7 +113,7 @@ class CompoundTextElement : public TextElement {
 public:
   CompoundTextElement(size_t start, size_t end) : TextElement(start, end) {}
   
-  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end) const override;
+  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end, bool native_look) const override;
   void getCharInfo(RotatedDC& dc, double scale, vector<CharInfo>& out) const override;
   double minScale() const override;
   double scaleStep() const override;
@@ -130,7 +130,7 @@ class AtomTextElement : public CompoundTextElement {
 public:
   AtomTextElement(size_t start, size_t end, Color background_color) : CompoundTextElement(start, end), background_color(background_color) {}
   
-  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end) const override;
+  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end, bool native_look) const override;
 private:
   Color background_color;
 };
@@ -140,7 +140,7 @@ class ErrorTextElement : public CompoundTextElement {
 public:
   ErrorTextElement(size_t start, size_t end) : CompoundTextElement(start, end) {}
   
-  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end) const override;
+  void draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end, bool native_look) const override;
 };
 
 // ----------------------------------------------------------------------------- : TextElements

@@ -96,6 +96,7 @@ int MSE::OnRun() {
     cli.init();
     package_manager.init();
     settings.read();
+    SetAppearance((Appearance)settings.dark_mode_type);
     the_locale = Locale::byName(settings.locale);
     nag_about_ascii_version();
     

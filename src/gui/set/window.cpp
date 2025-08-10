@@ -79,17 +79,17 @@ SetWindow::SetWindow(Window* parent, const SetP& set)
   menuBar->Append(menuFile, _MENU_("file"));
   
   auto menuEdit = new wxMenu();
-    add_menu_item(menuEdit, ID_EDIT_UNDO, "undo", _MENU_1_("undo",wxEmptyString),  _HELP_("undo"));
-    add_menu_item(menuEdit, ID_EDIT_REDO, "redo", _MENU_1_("redo",wxEmptyString),  _HELP_("redo"));
+    add_menu_item(menuEdit, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", _MENU_1_("undo",wxEmptyString),  _HELP_("undo"));
+    add_menu_item(menuEdit, ID_EDIT_REDO, settings.darkModePrefix() + "redo", _MENU_1_("redo",wxEmptyString),  _HELP_("redo"));
     menuEdit->AppendSeparator();
-    add_menu_item_tr(menuEdit, ID_EDIT_CUT, "cut", "cut");
+    add_menu_item_tr(menuEdit, ID_EDIT_CUT, settings.darkModePrefix() + "cut", "cut");
     add_menu_item_tr(menuEdit, ID_EDIT_COPY, "copy", "copy");
     add_menu_item_tr(menuEdit, ID_EDIT_PASTE, "paste", "paste");
     menuEdit->AppendSeparator();
     add_menu_item_tr(menuEdit, ID_EDIT_SELECT_ALL, nullptr, "select_all");
     menuEdit->AppendSeparator();
-    add_menu_item_tr(menuEdit, ID_EDIT_FIND, "find", "find");
-    add_menu_item_tr(menuEdit, ID_EDIT_FIND_NEXT, nullptr, "find_next");
+    add_menu_item_tr(menuEdit, ID_EDIT_FIND, settings.darkModePrefix() + "find", "find");
+    add_menu_item_tr(menuEdit, ID_EDIT_FIND_NEXT, settings.darkModePrefix() + "find", "find_next");
     add_menu_item_tr(menuEdit, ID_EDIT_REPLACE, nullptr, "replace");
     add_menu_item_tr(menuEdit, ID_EDIT_AUTO_REPLACE, nullptr, "auto_replace");
     menuEdit->AppendSeparator();
@@ -122,12 +122,12 @@ SetWindow::SetWindow(Window* parent, const SetP& set)
   tb->AddSeparator();
   add_tool_tr(tb, ID_FILE_EXPORT, "export", "export");
   tb->AddSeparator();
-  add_tool_tr(tb, ID_EDIT_CUT, "cut", "cut");
+  add_tool_tr(tb, ID_EDIT_CUT, settings.darkModePrefix() + "cut", "cut");
   add_tool_tr(tb, ID_EDIT_COPY, "copy", "copy");
   add_tool_tr(tb, ID_EDIT_PASTE, "paste", "paste");
   tb->AddSeparator();
-  add_tool(tb, ID_EDIT_UNDO, "undo", {}, _TOOLTIP_1_("undo", {}), _HELP_("undo"));
-  add_tool(tb, ID_EDIT_REDO, "redo", {}, _TOOLTIP_1_("redo", {}), _HELP_("redo"));
+  add_tool(tb, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", {}, _TOOLTIP_1_("undo", {}), _HELP_("undo"));
+  add_tool(tb, ID_EDIT_REDO, settings.darkModePrefix() + "redo", {}, _TOOLTIP_1_("redo", {}), _HELP_("redo"));
   tb->AddSeparator();
   tb->Realize();
   
@@ -145,13 +145,13 @@ SetWindow::SetWindow(Window* parent, const SetP& set)
   #endif
   
   // panels
-  addPanel(menuWindow, tabBar, new CardsPanel     (this, wxID_ANY), 0, _("window_cards"),      _("cards tab"));
-  addPanel(menuWindow, tabBar, new StylePanel     (this, wxID_ANY), 1, _("window_style"),      _("style tab"));
-  addPanel(menuWindow, tabBar, new SetInfoPanel   (this, wxID_ANY), 2, _("window_set_info"),   _("set info tab"));
-  addPanel(menuWindow, tabBar, new KeywordsPanel  (this, wxID_ANY), 3, _("window_keywords"),   _("keywords tab"));
-  addPanel(menuWindow, tabBar, new StatsPanel     (this, wxID_ANY), 4, _("window_statistics"), _("stats tab"));
-  addPanel(menuWindow, tabBar, new RandomPackPanel(this, wxID_ANY), 5, _("window_random_pack"),_("random pack tab"));
-  addPanel(menuWindow, tabBar, new ConsolePanel   (this, wxID_ANY), 6, _("window_console"),    _("console tab"));
+  addPanel(menuWindow, tabBar, new CardsPanel     (this, wxID_ANY), 0,                             _("window_cards"),      _("cards tab"));
+  addPanel(menuWindow, tabBar, new StylePanel     (this, wxID_ANY), 1,                             _("window_style"),      _("style tab"));
+  addPanel(menuWindow, tabBar, new SetInfoPanel   (this, wxID_ANY), 2, settings.darkModePrefix() + _("window_set_info"),   _("set info tab"));
+  addPanel(menuWindow, tabBar, new KeywordsPanel  (this, wxID_ANY), 3, settings.darkModePrefix() + _("window_keywords"),   _("keywords tab"));
+  addPanel(menuWindow, tabBar, new StatsPanel     (this, wxID_ANY), 4,                             _("window_statistics"), _("stats tab"));
+  addPanel(menuWindow, tabBar, new RandomPackPanel(this, wxID_ANY), 5,                             _("window_random_pack"),_("random pack tab"));
+  addPanel(menuWindow, tabBar, new ConsolePanel   (this, wxID_ANY), 6,                             _("window_console"),    _("console tab"));
   selectPanel(ID_WINDOW_CARDS); // select cards panel
   
   // loose ends

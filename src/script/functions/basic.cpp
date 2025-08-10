@@ -40,6 +40,10 @@ SCRIPT_FUNCTION(get_mse_path) {
   SCRIPT_RETURN(app_folder);
 }
 
+SCRIPT_FUNCTION(get_mse_dark_mode) {
+  SCRIPT_RETURN(settings.darkMode());
+}
+
 SCRIPT_FUNCTION(trace) {
   SCRIPT_PARAM_C(String, input);
   #if defined(_DEBUG) && 0
@@ -824,9 +828,11 @@ SCRIPT_FUNCTION(rule) {
 // ----------------------------------------------------------------------------- : Init
 
 void init_script_basic_functions(Context& ctx) {
-  // debugging
+  // app info
   ctx.setVariable(_("get_mse_version"),      script_get_mse_version);
   ctx.setVariable(_("get_mse_path"),         script_get_mse_path);
+  ctx.setVariable(_("get_mse_dark_mode"),    script_get_mse_dark_mode);
+  // debugging
   ctx.setVariable(_("trace"),                script_trace);
   ctx.setVariable(_("warning"),              script_warning);
   ctx.setVariable(_("error"),                script_error);

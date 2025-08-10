@@ -242,7 +242,7 @@ wxListItemAttr* KeywordList::OnGetItemAttr(long pos) const {
 
 void KeywordList::onContextMenu(wxContextMenuEvent&) {
   wxMenu m;
-  add_menu_item_tr(&m, ID_EDIT_CUT, "cut", "cut_keyword");
+  add_menu_item_tr(&m, ID_EDIT_CUT, settings.darkModePrefix() + "cut", "cut_keyword");
   add_menu_item_tr(&m, ID_EDIT_COPY, "copy", "copy_keyword");
   add_menu_item_tr(&m, ID_EDIT_PASTE, "paste", "paste_keyword");
   m.AppendSeparator();

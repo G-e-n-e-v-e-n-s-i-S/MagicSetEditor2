@@ -72,7 +72,7 @@ TextViewer::~TextViewer() {}
 
 // ----------------------------------------------------------------------------- : Drawing
 
-void TextViewer::draw(RotatedDC& dc, const TextStyle& style, DrawWhat what) {
+void TextViewer::draw(RotatedDC& dc, const TextStyle& style, DrawWhat what, bool native_look) {
   assert(!lines.empty());
   // draw anything?
   if (what == DRAW_NOTHING) return;
@@ -88,11 +88,11 @@ void TextViewer::draw(RotatedDC& dc, const TextStyle& style, DrawWhat what) {
         // Draw characters separatly
         for (size_t i = 0 ; i < l.positions.size() - 1 ; ++i) {
           RealRect rect(l.positions[i], l.top, l.positions[i+1] - l.positions[i] , l.line_height);
-          elements.draw(dc, scale, rect, &l.positions[i], what, l.start + i, l.start + i + 1);
+          elements.draw(dc, scale, rect, &l.positions[i], what, l.start + i, l.start + i + 1, native_look);
         }
       } else {
         RealRect rect(l.positions.front(), l.top, l.width(), l.line_height);
-        elements.draw(dc, scale, rect, &*l.positions.begin(), what, l.start, l.end());
+        elements.draw(dc, scale, rect, &*l.positions.begin(), what, l.start, l.end(), native_look);
       }
     }
   }

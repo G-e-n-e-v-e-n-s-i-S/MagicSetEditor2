@@ -46,7 +46,7 @@ public:
   /** The drawing information is cached,
    *  before calling draw again with different text/style reset() should be called
    */
-  void draw(RotatedDC& dc, const TextStyle& style, DrawWhat what);
+  void draw(RotatedDC& dc, const TextStyle& style, DrawWhat what, bool native_look);
   /// Draw an indicator for selected text
   void drawSelection(RotatedDC& dc, const TextStyle& style, size_t sel_start, size_t sel_end);
   /// Draw separators for <line> tags

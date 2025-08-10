@@ -45,6 +45,7 @@ void SymbolValueEditor::drawButton(RotatedDC& dc, int button, const String& text
   // draw button
   draw_button(&editor(), dc.getDC(), dc.trRectToBB(RealRect(x,y,width,height)), false, down, true);
   // draw text
+  dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
   RealSize text_size = dc.GetTextExtent(text);
   dc.DrawText(text, align_in_rect((Alignment)(ALIGN_BOTTOM | ALIGN_CENTER), text_size, RealRect(x, y, width,height*0.9)));
   // draw image

@@ -120,7 +120,13 @@ enum CutterLinesType
 ,  CUTTER_NONE
 };
 
+// ----------------------------------------------------------------------------- : Dark mode settings
 
+enum DarkModeType
+{  DARKMODE_SYSTEM
+,  DARKMODE_NO
+,  DARKMODE_YES
+};
 
 // ----------------------------------------------------------------------------- : Settings
 
@@ -192,7 +198,17 @@ public:
 
   double print_spacing;
   CutterLinesType print_cutter_lines;
-  
+
+  // --------------------------------------------------- : Dark Mode
+
+  DarkModeType dark_mode_type;
+  /// Is the app currently displayed in dark mode?
+  bool darkMode();
+  /// Prefix for resource files depending on dark mode
+  String darkModePrefix();
+  /// Background color for windows depending on dark mode
+  Color darkModeColor();
+
   // --------------------------------------------------- : Special game stuff
   String apprentice_location;
   

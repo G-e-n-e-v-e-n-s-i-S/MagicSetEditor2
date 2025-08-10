@@ -34,19 +34,19 @@ void SetInfoPanel::onChangeSet() {
 
 void SetInfoPanel::initUI(wxToolBar* tb, wxMenuBar* mb) {
   // Toolbar
-  add_tool_tr(tb, ID_FORMAT_BOLD, "bold", "bold", false, wxITEM_CHECK);
-  add_tool_tr(tb, ID_FORMAT_ITALIC, "italic", "italic", false, wxITEM_CHECK);
-  add_tool_tr(tb, ID_FORMAT_UNDERLINE, "underline", "underline", false, wxITEM_CHECK);
-  add_tool_tr(tb, ID_FORMAT_SYMBOL, "symbol", "symbols", false, wxITEM_CHECK);
-  add_tool_tr(tb, ID_FORMAT_REMINDER, "reminder", "reminder_text", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_BOLD, settings.darkModePrefix() + "bold", "bold", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_ITALIC, settings.darkModePrefix() + "italic", "italic", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_UNDERLINE, settings.darkModePrefix() + "underline", "underline", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_SYMBOL, settings.darkModePrefix() + "symbol", "symbols", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_REMINDER, settings.darkModePrefix() + "reminder", "reminder_text", false, wxITEM_CHECK);
   tb->Realize();
   // Menus
   auto menuFormat = new wxMenu();
-    add_menu_item_tr(menuFormat, ID_FORMAT_BOLD, "bold", "bold", wxITEM_CHECK);
-    add_menu_item_tr(menuFormat, ID_FORMAT_ITALIC, "italic", "italic", wxITEM_CHECK);
-    add_menu_item_tr(menuFormat, ID_FORMAT_UNDERLINE, "underline", "underline", wxITEM_CHECK);
-    add_menu_item_tr(menuFormat, ID_FORMAT_SYMBOL, "symbol", "symbols", wxITEM_CHECK);
-    add_menu_item_tr(menuFormat, ID_FORMAT_REMINDER, "reminder", "reminder_text", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_BOLD, settings.darkModePrefix() + "bold", "bold", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_ITALIC, settings.darkModePrefix() + "italic", "italic", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_UNDERLINE, settings.darkModePrefix() + "underline", "underline", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_SYMBOL, settings.darkModePrefix() + "symbol", "symbols", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_REMINDER, settings.darkModePrefix() + "reminder", "reminder_text", wxITEM_CHECK);
   mb->Insert(2, menuFormat, _MENU_("format"));
   // focus on editor
   editor->SetFocus();

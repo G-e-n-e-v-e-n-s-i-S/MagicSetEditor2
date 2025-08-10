@@ -39,7 +39,7 @@ public:
   void store() override;  
   
 private:
-  wxComboBox* language;
+  wxComboBox* language, *dark_mode;
   wxCheckBox* open_sets_in_new_window;
 };
 
@@ -166,6 +166,7 @@ GlobalPreferencesPage::GlobalPreferencesPage(Window* parent)
   // init controls
   language = new wxComboBox(this, wxID_ANY, _(""), wxDefaultPosition, wxDefaultSize, 0, nullptr, wxCB_READONLY);
   open_sets_in_new_window = new wxCheckBox(this, wxID_ANY, _BUTTON_("open sets in new window"));
+  dark_mode = new wxComboBox(this, wxID_ANY, _(""), wxDefaultPosition, wxDefaultSize, 0, nullptr, wxCB_READONLY);
   // set values
   vector<PackagedP> locales;
   package_manager.findMatching(_("*.mse-locale"), locales);
@@ -179,17 +180,25 @@ GlobalPreferencesPage::GlobalPreferencesPage(Window* parent)
     n++;
   }
   open_sets_in_new_window->SetValue(settings.open_sets_in_new_window);
+  dark_mode->Append(_LABEL_("dark mode system"));
+  dark_mode->Append(_LABEL_("dark mode no"));
+  dark_mode->Append(_LABEL_("dark mode yes"));
+  dark_mode->SetSelection((int)settings.dark_mode_type);
   // init sizer
   wxSizer* s = new wxBoxSizer(wxVERTICAL);
   s->SetSizeHints(this);
     wxSizer* s2 = new wxStaticBoxSizer(wxVERTICAL, this, _LABEL_("language"));
-      s2->Add(new wxStaticText(this, wxID_ANY, _LABEL_("app language")), 0,             wxALL,          4);
+      s2->Add(new wxStaticText(this, wxID_ANY, _LABEL_("app language")), 0,             wxALL,           4);
       s2->Add(language,                                                  0, wxEXPAND | (wxALL & ~wxTOP), 4);
-      s2->Add(new wxStaticText(this, wxID_ANY, _HELP_( "app language")), 0,             wxALL,          4);
+      s2->Add(new wxStaticText(this, wxID_ANY, _HELP_( "app language")), 0,             wxALL,           4);
     s->Add(s2, 0, wxEXPAND | wxALL, 8);
     wxSizer* s3 = new wxStaticBoxSizer(wxVERTICAL, this, _LABEL_("windows"));
       s3->Add(open_sets_in_new_window, 0, wxALL, 4);
     s->Add(s3, 0, wxEXPAND | (wxALL & ~wxTOP), 8);
+    wxSizer* s4 = new wxStaticBoxSizer(wxVERTICAL, this, _LABEL_("dark mode"));
+      s4->Add(dark_mode,                                                 0, wxEXPAND | (wxALL & ~wxTOP), 4);
+      s4->Add(new wxStaticText(this, wxID_ANY, _HELP_( "app language")), 0,             wxALL,           4);
+    s->Add(s4, 0, wxEXPAND | wxALL, 8);
   SetSizer(s);
 }
 
@@ -202,6 +211,8 @@ void GlobalPreferencesPage::store() {
   // set the_locale?
   // open_sets_in_new_window
   settings.open_sets_in_new_window = open_sets_in_new_window->GetValue();
+  // dark mode
+  settings.dark_mode_type = (DarkModeType)dark_mode->GetSelection();
 }
 
 // ----------------------------------------------------------------------------- : Preferences page : display

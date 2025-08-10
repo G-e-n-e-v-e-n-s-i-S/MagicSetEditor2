@@ -44,6 +44,12 @@ void PackageChoiceValueViewer::initItems() {
 
 void PackageChoiceValueViewer::draw(RotatedDC& dc) {
   drawFieldBorder(dc);
+  // draw background
+  if (nativeLook()) {
+    dc.SetBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+    dc.SetPen(*wxTRANSPARENT_PEN);
+    dc.DrawRectangle(RealRect(0, 0, dc.getWidth(), dc.getHeight()));
+  }
   // find item
   String text = value().package_name;
   Bitmap image;
@@ -62,7 +68,15 @@ void PackageChoiceValueViewer::draw(RotatedDC& dc) {
     dc.DrawBitmap(image, RealPoint(0,0));
   }
   // draw text
-  dc.SetFont(style().font, 1.0);
-  RealPoint pos = align_in_rect(ALIGN_MIDDLE_LEFT, RealSize(0, dc.GetCharHeight()), dc.getInternalRect()) + RealSize(17., 0);
-  dc.DrawTextWithShadow(text, style().font, pos);
+  Font& font = style().font;
+  Color font_color = font.color;
+  RealSize margin(0, 0);
+  if (nativeLook()) {
+    font.color = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+    margin = RealSize(1., 0);
+  }
+  dc.SetFont(font, 1.0);
+  RealPoint pos = align_in_rect(ALIGN_MIDDLE_LEFT, RealSize(0, dc.GetCharHeight()), dc.getInternalRect()) + RealSize(17., 0) + margin;
+  dc.DrawTextWithShadow(text, font, pos);
+  if (nativeLook()) font.color = font_color;
 }

@@ -42,10 +42,10 @@ void SymbolBasicShapeEditor::initUI(wxToolBar* tb, wxMenuBar* mb) {
   sides->SetHelpText(_HELP_("sides"));
   sides->SetSize(50, -1);
   tb->AddSeparator();
-  add_tool_tr(tb, ID_SHAPE_CIRCLE, "circle", "ellipse", true, wxITEM_CHECK);
-  add_tool_tr(tb, ID_SHAPE_RECTANGLE, "rectangle", "rectangle",true, wxITEM_CHECK);
-  add_tool_tr(tb, ID_SHAPE_POLYGON, "triangle", "polygon", true, wxITEM_CHECK);
-  add_tool_tr(tb, ID_SHAPE_STAR, "star", "star", true, wxITEM_CHECK);
+  add_tool_tr(tb, ID_SHAPE_CIRCLE,    settings.darkModePrefix() + "circle",    "ellipse",  true, wxITEM_CHECK);
+  add_tool_tr(tb, ID_SHAPE_RECTANGLE, settings.darkModePrefix() + "rectangle", "rectangle",true, wxITEM_CHECK);
+  add_tool_tr(tb, ID_SHAPE_POLYGON,   settings.darkModePrefix() + "triangle",  "polygon",  true, wxITEM_CHECK);
+  add_tool_tr(tb, ID_SHAPE_STAR,      settings.darkModePrefix() + "star",      "star",     true, wxITEM_CHECK);
 //   tb->AddControl(sidesL);
   tb->AddControl(sides);
   tb->Realize();

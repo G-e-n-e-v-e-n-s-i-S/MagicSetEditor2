@@ -21,8 +21,8 @@ SelectCardList::SelectCardList(Window* parent, int id, long additional_style)
   wxImageList* il = new wxImageList(15,15);
   il->Add(load_resource_image(_("sort_asc")),  Color(255,0,255));
   il->Add(load_resource_image(_("sort_desc")), Color(255,0,255));
-  il->Add(load_resource_image(_("deselected")));
-  il->Add(load_resource_image(_("selected")));
+  il->Add(load_resource_image(settings.darkModePrefix() + _("deselected")));
+  il->Add(load_resource_image(settings.darkModePrefix() + _("selected")));
   AssignImageList(il, wxIMAGE_LIST_SMALL);
 }
 SelectCardList::~SelectCardList() {}
