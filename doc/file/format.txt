@@ -36,10 +36,13 @@ That file is included literally into the current one; except for indentation, th
 
 If the file to be included can vary depending on the locale that is selected, use:
 >>>include localized file: <em>filename</em>
-
 MSE will take the filename and add "_" followed by the name of the currently selected locale at the end of it.
 So for example, if the locale used is the folder "en.mse-locale", the file that will be included is "filename_en"
 You must provide a version of the file for each locale found in the data folder, even if it is simply a copy of the english one.
+
+If the file to be included can vary depending on if dark mode is selected, use:
+>>>include dark file: <em>filename</em>
+MSE will take the filename and add "_dark" if the app is currently in dark mode. If not, then nothing is added to the filename.
 
 --Example--
 For example, a [[type:set]] might look like this:
