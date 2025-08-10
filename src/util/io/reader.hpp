@@ -116,8 +116,9 @@ public:
   
   /// The package being read from
   inline Packaged* getPackage() const { return package; }
-  
+
   String addLocale(String);
+  String addDark(String);
 
   /// Set the value that will be returned by the next getValue() call (may mess up the state of the reader)
   inline void setValue(const String& value) { state = UNHANDLED; previous_value = value; };
@@ -180,8 +181,8 @@ private:
   /** Maybe the key is "include file" */
   template <typename T>
   void unknownKey(T& v) {
-    if (key == _("include_file") || key == _("include_localized_file")) {
-      value = key == _("include_localized_file") ? addLocale(value) : value;
+    if (key == _("include_file") || key == _("include_localized_file") || key == _("include_dark_file")) {
+      value = key == _("include_localized_file") ? addLocale(value) : key == _("include_dark_file") ? addDark(value) : value;
       auto [stream, include_package] = openFileFromPackage(package, value);
       Reader sub_reader(*stream, include_package, value, ignore_invalid);
       if (sub_reader.file_app_version == 0) {

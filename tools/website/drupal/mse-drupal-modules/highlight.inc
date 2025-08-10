@@ -194,6 +194,8 @@ function highlight_script($code) {
 			$ret .= "<span class='hl-kw'>" . $matches[0] . "</span>";
 		} else if (preg_match("@^(include localized file:)(.*)@",$code, $matches)) {
 			$ret .= "<span class='hl-key'>" . $matches[1] . "</span>" . $matches[2];
+		} else if (preg_match("@^(include dark file:)(.*)@",$code, $matches)) {
+			$ret .= "<span class='hl-key'>" . $matches[1] . "</span>" . $matches[2];
 		} else if (preg_match("@^(include file:)(.*)@",$code, $matches)) {
 			$ret .= "<span class='hl-key'>" . $matches[1] . "</span>" . $matches[2];
 		} else if (preg_match("@^([0-9][0-9.]*|true|false)@",$code, $matches)) {

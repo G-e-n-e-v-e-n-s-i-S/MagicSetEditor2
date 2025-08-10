@@ -362,6 +362,10 @@ String Reader::addLocale(String filename) {
   return filename + _("_") + settings.locale;
 }
 
+String Reader::addDark(String filename) {
+  return filename + (settings.darkMode() ? _("_dark") : _(""));
+}
+
 // ----------------------------------------------------------------------------- : EnumReader
 
 String EnumReader::notDoneErrorMessage() const {

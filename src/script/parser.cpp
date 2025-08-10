@@ -193,6 +193,17 @@ void TokenIterator::readToken() {
     addToken(TOK_STRING, include_file, pos);
     addToken(TOK_RPAREN, ")", eol);
     pos = eol;
+  } else if (is_substr(pos, end, "include dark file:")) {
+    pos += 18; // "include dark file:"
+    const char* newlines = "\r\n";
+    auto eol = find_first_of(pos, end, newlines, newlines + 2);
+    String include_file = trim(StringView(pos, eol)) + (settings.darkMode() ? _("_dark") : _(""));
+    // include_file("filename_dark")
+    addToken(TOK_NAME, "include_file", pos - 18);
+    addToken(TOK_LPAREN, "(", pos);
+    addToken(TOK_STRING, include_file, pos);
+    addToken(TOK_RPAREN, ")", eol);
+    pos = eol;
   } else if (is_substr(pos, end, "include file:")) {
     pos += 13; // "include file:"
     const char* newlines = "\r\n";
