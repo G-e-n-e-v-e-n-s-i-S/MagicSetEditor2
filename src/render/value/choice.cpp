@@ -22,6 +22,12 @@ bool ChoiceValueViewer::prepare(RotatedDC& dc) {
 void ChoiceValueViewer::draw(RotatedDC& dc) {
   drawFieldBorder(dc);
   if (style().render_style & RENDER_HIDDEN) return;
+  // render background
+  if (nativeLook()) {
+    dc.SetBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+    dc.SetPen(*wxTRANSPARENT_PEN);
+    dc.DrawRectangle(RealRect(0, 0, dc.getWidth(), dc.getHeight()));
+  }
   draw_choice_viewer(dc, *this, style(), value().value());
 }
 
@@ -102,10 +108,17 @@ void draw_choice_viewer(RotatedDC& dc, ValueViewer& viewer, ChoiceStyle& style, 
     if (style.render_style & RENDER_IMAGE) {
       text_align = ALIGN_MIDDLE_LEFT; // can't align both text and image in the same way
     }
-    dc.SetFont(style.font, 1.0);
+    Font& font = style.font;
+    Color font_color = font.color;
+    if (viewer.nativeLook()) {
+      font.color = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+      margin += 1.;
+    }
+    dc.SetFont(font, 1.0);
     RealSize size = dc.GetTextExtent(text);
-    RealPoint pos = align_in_rect(text_align, size, dc.getInternalRect()) + RealSize(margin, 0);
-    dc.DrawTextWithShadow(text, style.font, pos);
+    RealPoint text_pos = align_in_rect(text_align, size, dc.getInternalRect()) + RealSize(margin, 0);
+    dc.DrawTextWithShadow(text, font, text_pos);
+    if (viewer.nativeLook()) font.color = font_color;
   }
 }
 

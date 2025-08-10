@@ -11,7 +11,7 @@
 
 // ----------------------------------------------------------------------------- : CompoundTextElement
 
-void CompoundTextElement::draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end) const {
+void CompoundTextElement::draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end, bool native_look) const {
   for (auto const& e : children) {
     size_t start_ = max(start, e->start);
     size_t end_ = min(end, e->end);
@@ -19,7 +19,7 @@ void CompoundTextElement::draw(RotatedDC& dc, double scale, const RealRect& rect
       e->draw(dc, scale,
         RealRect(rect.x + xs[start_ - start] - xs[0], rect.y,
           xs[end_ - start] - xs[start_ - start], rect.height),
-        xs + start_ - start, what, start_, end_);
+        xs + start_ - start, what, start_, end_, native_look);
     }
     if (end <= e->end) return; // nothing can be after this
   }
@@ -54,18 +54,18 @@ double CompoundTextElement::scaleStep() const {
 
 // ----------------------------------------------------------------------------- : AtomTextElement
 
-void AtomTextElement::draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end) const {
+void AtomTextElement::draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end, bool native_look) const {
   if (what & DRAW_ACTIVE) {
     dc.SetPen(*wxTRANSPARENT_PEN);
     dc.SetBrush(background_color);
     dc.DrawRectangle(rect);
   }
-  CompoundTextElement::draw(dc, scale, rect, xs, what, start, end);
+  CompoundTextElement::draw(dc, scale, rect, xs, what, start, end, native_look);
 }
 
 // ----------------------------------------------------------------------------- : ErrorTextElement
 
-void ErrorTextElement::draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end) const {
+void ErrorTextElement::draw(RotatedDC& dc, double scale, const RealRect& rect, const double* xs, DrawWhat what, size_t start, size_t end, bool native_look) const {
   // Draw wavy underline
   if (what & DRAW_ERRORS) {
     dc.SetPen(*wxRED_PEN);
@@ -82,5 +82,5 @@ void ErrorTextElement::draw(RotatedDC& dc, double scale, const RealRect& rect, c
     }
   }
   // Draw the contents
-  CompoundTextElement::draw(dc, scale, rect, xs, what, start, end);
+  CompoundTextElement::draw(dc, scale, rect, xs, what, start, end, native_look);
 }

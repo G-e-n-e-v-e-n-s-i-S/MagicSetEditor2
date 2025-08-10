@@ -487,7 +487,7 @@ void DataEditor::onChar(wxKeyEvent& ev) {
 void DataEditor::onContextMenu(wxContextMenuEvent& ev) {
   if (current_editor) {
     wxMenu m;
-    add_menu_item_tr(&m, ID_EDIT_CUT, "cut", "cut");
+    add_menu_item_tr(&m, ID_EDIT_CUT, settings.darkModePrefix() + "cut", "cut");
     add_menu_item_tr(&m, ID_EDIT_COPY, "copy", "copy");
     add_menu_item_tr(&m, ID_EDIT_PASTE, "paste", "paste");
     m.Enable(ID_EDIT_CUT,   canCut());

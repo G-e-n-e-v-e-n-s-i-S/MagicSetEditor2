@@ -16,8 +16,6 @@ IMPLEMENT_VALUE_VIEWER(Color);
 
 void ColorValueViewer::draw(RotatedDC& dc) {
   // draw in the value color
-  dc.SetPen(*wxTRANSPARENT_PEN);
-  dc.SetBrush(value().value());
   if (nativeLook()) {
     // native look
     // find name of color
@@ -32,14 +30,19 @@ void ColorValueViewer::draw(RotatedDC& dc) {
         }
       }
     }
-    // draw name and color
-    dc.SetPen(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
-    dc.DrawRectangle(RealRect(0, 0, 40, dc.getHeight()));
-    dc.SetBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+    // draw background
     dc.SetPen(*wxTRANSPARENT_PEN);
+    dc.SetBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
     dc.DrawRectangle(RealRect(40, 0, dc.getWidth()-40, dc.getHeight()));
-    dc.DrawText(color_name, RealPoint(43, 3));
+    // draw color
+    dc.SetPen(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
+    dc.SetBrush(value().value());
+    dc.DrawRectangle(RealRect(0, 0, 40, dc.getHeight()));
+    // draw name
+    dc.DrawText(color_name, RealPoint(45, 3));
   } else {
+    dc.SetPen(*wxTRANSPARENT_PEN);
+    dc.SetBrush(value().value());
     // is there a mask?
     const AlphaMask& alpha_mask = getMask(dc);
     if (alpha_mask.isLoaded()) {

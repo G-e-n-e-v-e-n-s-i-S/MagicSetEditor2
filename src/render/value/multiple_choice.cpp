@@ -25,6 +25,12 @@ void MultipleChoiceValueViewer::draw(RotatedDC& dc) {
   drawFieldBorder(dc);
   if (style().render_style & RENDER_HIDDEN) return;
   RealPoint pos = align_in_rect(style().alignment, RealSize(0,0), dc.getInternalRect());
+  // render background
+  if (nativeLook()) {
+    dc.SetBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+    dc.SetPen(*wxTRANSPARENT_PEN);
+    dc.DrawRectangle(RealRect(0, 0, dc.getWidth(), dc.getHeight()));
+  }
   // selected choices
   vector<String> selected;
   value().get(selected);
@@ -71,12 +77,20 @@ void MultipleChoiceValueViewer::drawChoice(RotatedDC& dc, RealPoint& pos, const 
   }
   if (style().render_style & RENDER_TEXT) {
     // draw text
+    Font& font = style().font;
+    Color font_color = font.color;
+    RealSize margin(0, 0);
+    if (nativeLook()) {
+      font.color = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+      margin = RealSize(1., 0);
+    }
     String text = tr(getStylePackage(), choice, capitalize_sentence);
-    dc.SetFont(style().font,1);
+    dc.SetFont(font,1);
     RealSize text_size = dc.GetTextExtent(text);
-    RealPoint text_pos = align_in_rect(ALIGN_MIDDLE_LEFT, text_size, RealRect(pos.x + size.width + 1, pos.y, 0,size.height));
-    dc.DrawTextWithShadow(text, style().font, text_pos);
+    RealPoint text_pos = align_in_rect(ALIGN_MIDDLE_LEFT, text_size, RealRect(pos.x + size.width + 1, pos.y, 0,size.height)) + margin;
+    dc.DrawTextWithShadow(text, font, text_pos);
     size = add_horizontal(size, text_size);
+    if (nativeLook()) font.color = font_color;
   }
   // next position
   pos = move_in_direction(style().direction, pos, size, style().spacing);

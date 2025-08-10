@@ -83,8 +83,8 @@ void SymbolWindow::init(Window* parent, SymbolP symbol) {
   menuBar->Append(menuFile, _MENU_("file"));
   
   auto menuEdit = new wxMenu();
-    add_menu_item(menuEdit, ID_EDIT_UNDO, "undo", _MENU_1_("undo",wxEmptyString), _HELP_("undo"));
-    add_menu_item(menuEdit, ID_EDIT_REDO, "redo", _MENU_1_("redo",wxEmptyString), _HELP_("redo"));
+    add_menu_item(menuEdit, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", _MENU_1_("undo",wxEmptyString), _HELP_("undo"));
+    add_menu_item(menuEdit, ID_EDIT_REDO, settings.darkModePrefix() + "redo", _MENU_1_("redo",wxEmptyString), _HELP_("redo"));
     menuEdit->AppendSeparator();
     add_menu_item_tr(menuEdit, ID_EDIT_GROUP, "group", "group");
     add_menu_item_tr(menuEdit, ID_EDIT_UNGROUP, "ungroup", "ungroup");
@@ -94,11 +94,11 @@ void SymbolWindow::init(Window* parent, SymbolP symbol) {
   
   auto menuTool = new wxMenu();
     add_menu_item_tr(menuTool, ID_MODE_SELECT, "mode_select", "select", wxITEM_CHECK);
-    add_menu_item_tr(menuTool, ID_MODE_ROTATE, "mode_rotate", "rotate", wxITEM_CHECK);
+    add_menu_item_tr(menuTool, ID_MODE_ROTATE, settings.darkModePrefix() + "mode_rotate", "rotate", wxITEM_CHECK);
     add_menu_item_tr(menuTool, ID_MODE_POINTS, "mode_curve", "points", wxITEM_CHECK);
-    add_menu_item_tr(menuTool, ID_MODE_SHAPES, "circle", "basic_shapes", wxITEM_CHECK);
+    add_menu_item_tr(menuTool, ID_MODE_SHAPES, settings.darkModePrefix() + "circle", "basic_shapes", wxITEM_CHECK);
     add_menu_item_tr(menuTool, ID_MODE_SYMMETRY, "mode_symmetry", "symmetry", wxITEM_CHECK);
-    add_menu_item_tr(menuTool, ID_MODE_PAINT, "mode_paint", "paint", wxITEM_CHECK);
+    add_menu_item_tr(menuTool, ID_MODE_PAINT,  settings.darkModePrefix() + "mode_paint", "paint", wxITEM_CHECK);
   menuBar->Append(menuTool, _MENU_("tool"));
   
   SetMenuBar(menuBar);
@@ -111,8 +111,8 @@ void SymbolWindow::init(Window* parent, SymbolP symbol) {
   wxToolBar* tb = CreateToolBar(wxTB_FLAT | wxNO_BORDER | wxTB_HORIZONTAL | wxTB_TEXT);
   add_tool_tr(tb, ID_FILE_STORE, "apply", "store_symbol", true);
   tb->AddSeparator();
-  add_tool(tb, ID_EDIT_UNDO, "undo", _TOOL_("undo"), _TOOLTIP_1_("undo",wxEmptyString), _HELP_("undo"));
-  add_tool(tb, ID_EDIT_REDO, "redo", _TOOL_("redo"), _TOOLTIP_1_("redo",wxEmptyString), _HELP_("redo"));
+  add_tool(tb, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", _TOOL_("undo"), _TOOLTIP_1_("undo",wxEmptyString), _HELP_("undo"));
+  add_tool(tb, ID_EDIT_REDO, settings.darkModePrefix() + "redo", _TOOL_("redo"), _TOOLTIP_1_("redo",wxEmptyString), _HELP_("redo"));
   tb->AddSeparator();
   add_tool_tr(tb, ID_VIEW_GRID, "grid", "grid", true, wxITEM_CHECK);
   add_tool_tr(tb, ID_VIEW_GRID_SNAP, "grid_snap", "snap", true, wxITEM_CHECK);
@@ -123,13 +123,13 @@ void SymbolWindow::init(Window* parent, SymbolP symbol) {
   wxToolBar* em = new wxToolBar(emp, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT | wxTB_VERTICAL | wxTB_HORZ_TEXT);
   em->SetToolBitmapSize(wxSize(17,17));
   add_tool_tr(em, ID_MODE_SELECT, "mode_select", "select", true, wxITEM_CHECK);
-  add_tool_tr(em, ID_MODE_ROTATE, "mode_rotate", "rotate", true, wxITEM_CHECK);
+  add_tool_tr(em, ID_MODE_ROTATE, settings.darkModePrefix() + "mode_rotate", "rotate", true, wxITEM_CHECK);
   em->AddSeparator();
   add_tool_tr(em, ID_MODE_POINTS, "mode_curve", "points", true, wxITEM_CHECK);
   em->AddSeparator();
-  add_tool_tr(em, ID_MODE_SHAPES, "circle", "basic shapes", true, wxITEM_CHECK);
+  add_tool_tr(em, ID_MODE_SHAPES, settings.darkModePrefix() + "circle", "basic shapes", true, wxITEM_CHECK);
   add_tool_tr(em, ID_MODE_SYMMETRY, "mode_symmetry", "symmetry", true, wxITEM_CHECK);
-  //add_tool_tr(em, ID_MODE_PAINT, "mode_paint", "paint", true, wxITEM_CHECK);
+  //add_tool_tr(em, ID_MODE_PAINT, settings.darkModePrefix() + "mode_paint", "paint", true, wxITEM_CHECK);
   em->Realize();
   
   // Lay out
@@ -176,13 +176,13 @@ void SymbolWindow::init(Window* parent, SymbolP symbol) {
     em = new wxToolBar(emp, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT | wxTB_VERTICAL | wxTB_HORZ_TEXT);
     em->SetToolBitmapSize(wxSize(17,17));
     String spaces(max(0,n-1), _(' '));
-    add_tool(em, ID_MODE_SELECT,   "mode_select",  _TOOL_("select")       + spaces, _TOOLTIP_("select"),    _HELP_("select"), wxITEM_CHECK);
-    add_tool(em, ID_MODE_ROTATE,   "mode_rotate",  _TOOL_("rotate")       + spaces, _TOOLTIP_("rotate"),    _HELP_("rotate"), wxITEM_CHECK);
+    add_tool(em, ID_MODE_SELECT,   "mode_select",                             _TOOL_("select")       + spaces, _TOOLTIP_("select"),       _HELP_("select"), wxITEM_CHECK);
+    add_tool(em, ID_MODE_ROTATE,   settings.darkModePrefix() + "mode_rotate", _TOOL_("rotate")       + spaces, _TOOLTIP_("rotate"),       _HELP_("rotate"), wxITEM_CHECK);
     em->AddSeparator();
-    add_tool(em, ID_MODE_POINTS,   "mode_curve",   _TOOL_("points")       + spaces, _TOOLTIP_("points"),    _HELP_("points"), wxITEM_CHECK);
+    add_tool(em, ID_MODE_POINTS,   "mode_curve",                              _TOOL_("points")       + spaces, _TOOLTIP_("points"),       _HELP_("points"), wxITEM_CHECK);
     em->AddSeparator();
-    add_tool(em, ID_MODE_SHAPES,   "circle",        _TOOL_("basic shapes") + spaces, _TOOLTIP_("basic shapes"),_HELP_("basic shapes"), wxITEM_CHECK);
-    add_tool(em, ID_MODE_SYMMETRY, "mode_symmetry", _TOOL_("symmetry")     + spaces, _TOOLTIP_("symmetry"),  _HELP_("symmetry"), wxITEM_CHECK);
+    add_tool(em, ID_MODE_SHAPES,   settings.darkModePrefix() + "circle",      _TOOL_("basic shapes") + spaces, _TOOLTIP_("basic shapes"), _HELP_("basic shapes"), wxITEM_CHECK);
+    add_tool(em, ID_MODE_SYMMETRY, "mode_symmetry",                           _TOOL_("symmetry")     + spaces, _TOOLTIP_("symmetry"),     _HELP_("symmetry"), wxITEM_CHECK);
     em->Realize();
     
     es = new wxBoxSizer(wxVERTICAL);

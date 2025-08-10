@@ -31,7 +31,7 @@ bool __compare_package_name(const PackagedP& a, const PackagedP& b) {
 }
 WelcomeWindow::WelcomeWindow()
   : wxFrame(nullptr, wxID_ANY, _TITLE_("magic set editor"), wxDefaultPosition, wxSize(520,380), wxDEFAULT_DIALOG_STYLE | wxTAB_TRAVERSAL | wxCLIP_CHILDREN )
-  , logo (load_resource_image(_("about")))
+  , logo (load_resource_image(settings.darkModePrefix() + _("about")))
 {
   SetIcon(load_resource_icon(_("app")));
 
@@ -96,7 +96,7 @@ void WelcomeWindow::draw(DC& dc) {
   wxSize ws = GetClientSize();
   // draw background
   dc.SetPen  (*wxTRANSPARENT_PEN);
-  dc.SetBrush(Color(240,247,255));
+  dc.SetBrush(settings.darkModeColor());
   dc.DrawRectangle(0, 0, ws.GetWidth(), ws.GetHeight());
   // draw logo
   dc.DrawBitmap(logo,  (ws.GetWidth() -  logo.GetWidth()) / 2, 5);

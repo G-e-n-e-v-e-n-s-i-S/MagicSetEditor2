@@ -456,7 +456,7 @@ void CardListBase::onDrag(wxMouseEvent& ev) {
 void CardListBase::onContextMenu(wxContextMenuEvent&) {
   if (allowModify()) {
     wxMenu m;
-    add_menu_item_tr(&m, wxID_CUT, "cut", "cut_card");
+    add_menu_item_tr(&m, wxID_CUT, settings.darkModePrefix() + "cut", "cut_card");
     add_menu_item_tr(&m, wxID_COPY, "copy", "copy_card");
     add_menu_item_tr(&m, ID_CARD_AND_LINK_COPY, "card_copy", "copy card and links");
     add_menu_item_tr(&m, wxID_PASTE, "paste", "paste_card");

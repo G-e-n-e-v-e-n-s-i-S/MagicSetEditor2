@@ -149,11 +149,11 @@ CardsPanel::CardsPanel(Window* parent, int id)
     add_menu_item_tr(menuCard, ID_SELECT_COLUMNS, nullptr, "card_list_columns");
   
   menuFormat = new wxMenu();
-    add_menu_item_tr(menuFormat, ID_FORMAT_BOLD, "bold", "bold", wxITEM_CHECK);
-    add_menu_item_tr(menuFormat, ID_FORMAT_ITALIC, "italic", "italic", wxITEM_CHECK);
-    add_menu_item_tr(menuFormat, ID_FORMAT_UNDERLINE, "underline", "underline", wxITEM_CHECK);
-    add_menu_item_tr(menuFormat, ID_FORMAT_SYMBOL, "symbol", "symbols", wxITEM_CHECK);
-    add_menu_item_tr(menuFormat, ID_FORMAT_REMINDER, "reminder", "reminder_text", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_BOLD, settings.darkModePrefix() + "bold", "bold", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_ITALIC, settings.darkModePrefix() + "italic", "italic", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_UNDERLINE, settings.darkModePrefix() + "underline", "underline", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_SYMBOL, settings.darkModePrefix() + "symbol", "symbols", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_REMINDER, settings.darkModePrefix() + "reminder", "reminder_text", wxITEM_CHECK);
     menuFormat->AppendSeparator();
     insertSymbolMenu = new wxMenuItem(menuFormat, ID_INSERT_SYMBOL, _MENU_("insert symbol"));
     menuFormat->Append(insertSymbolMenu);
@@ -282,11 +282,11 @@ wxMenu* CardsPanel::makeAddCardsSubmenu(bool add_single_card_option) {
 
 void CardsPanel::initUI(wxToolBar* tb, wxMenuBar* mb) {
   // Toolbar
-  add_tool_tr(tb, ID_FORMAT_BOLD, "bold", "bold", false, wxITEM_CHECK);
-  add_tool_tr(tb, ID_FORMAT_ITALIC, "italic", "italic", false, wxITEM_CHECK);
-  add_tool_tr(tb, ID_FORMAT_UNDERLINE, "underline", "underline", false, wxITEM_CHECK);
-  add_tool_tr(tb, ID_FORMAT_SYMBOL, "symbol", "symbols", false, wxITEM_CHECK);
-  add_tool_tr(tb, ID_FORMAT_REMINDER, "reminder", "reminder_text", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_BOLD, settings.darkModePrefix() + "bold", "bold", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_ITALIC, settings.darkModePrefix() + "italic", "italic", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_UNDERLINE, settings.darkModePrefix() + "underline", "underline", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_SYMBOL, settings.darkModePrefix() + "symbol", "symbols", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_REMINDER, settings.darkModePrefix() + "reminder", "reminder_text", false, wxITEM_CHECK);
   tb->AddSeparator();
   toolAddCard = add_tool_tr(tb, ID_CARD_ADD, "card_add", "add_card", false, wxITEM_DROPDOWN);
   tb->SetDropdownMenu(ID_CARD_ADD, makeAddCardsSubmenu(true));
@@ -377,7 +377,7 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
     }
     case ID_COLLAPSE_NOTES: {
       bool collapse = notes->GetSize().y > 0;
-      collapse_notes->loadBitmaps(collapse ? _("btn_collapse") : _("btn_expand"));
+      collapse_notes->loadBitmaps(settings.darkModePrefix() + (collapse ? _("btn_collapse") : _("btn_expand")));
       collapse_notes->SetHelpText(collapse ? _HELP_("collapse notes") : _HELP_("expand notes"));
       break;
     }
