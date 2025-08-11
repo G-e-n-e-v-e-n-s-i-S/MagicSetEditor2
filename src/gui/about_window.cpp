@@ -15,7 +15,7 @@
 // ----------------------------------------------------------------------------- : About window
 
 AboutWindow::AboutWindow(Window* parent)
-  : wxDialog(parent, wxID_ANY, _TITLE_("about"), wxDefaultPosition, wxSize(510,340), wxCLIP_CHILDREN | wxDEFAULT_DIALOG_STYLE | wxTAB_TRAVERSAL)
+  : wxDialog(parent, wxID_ANY, _TITLE_("about"), wxDefaultPosition, wxSize(510,460), wxCLIP_CHILDREN | wxDEFAULT_DIALOG_STYLE | wxTAB_TRAVERSAL)
   , logo(load_resource_image(_("about")))
 {
   // init controls
@@ -33,7 +33,15 @@ void AboutWindow::onPaint(wxPaintEvent& ev) {
   draw(dc);
 }
 
-const char* MSE_AUTHORS[] = {"Twan van Laarhoven (twanvl)", "Sean Hunt (coppro)", "Alissa Rao (Lymia)", "haganbmj", "CaiCai (247321453)", "Olivier Bocksberger (GenevensiS)" };
+const char* MSE_AUTHORS[] = {
+  "Twan van Laarhoven (twanvl)",
+  "Sean Hunt (coppro)",
+  "Alissa Rao (Lymia)",
+  "Olivier Bocksberger (G-e-n-e-v-e-n-s-i-S)",
+  "Brendan Hagan (haganbmj)",
+  "Thomas Tkacz (TomTkacz)",
+  "CaiCai (247321453)"
+};
 
 void AboutWindow::draw(DC& dc) {
   wxSize ws = GetClientSize();

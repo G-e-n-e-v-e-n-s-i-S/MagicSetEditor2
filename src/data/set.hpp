@@ -50,7 +50,7 @@ public:
   /// The values on the fields of the set
   /** The indices should correspond to the set_fields in the Game */
   IndexMap<FieldP, ValueP> data;
-  /// Extra values for specitic stylesheets, indexed by stylesheet name
+  /// Extra values for specific stylesheets, indexed by stylesheet name
   DelayedIndexMaps<FieldP,ValueP> styling_data;
   vector<CardP>            cards;             ///< The cards in the set
   vector<KeywordP>         keywords;          ///< Additional keywords used in this set

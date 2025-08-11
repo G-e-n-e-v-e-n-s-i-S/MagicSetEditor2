@@ -119,6 +119,9 @@ public:
   
   String addLocale(String);
 
+  /// Set the value that will be returned by the next getValue() call (may mess up the state of the reader)
+  inline void setValue(const String& value) { state = UNHANDLED; previous_value = value; };
+
 private:
   // --------------------------------------------------- : Data
   /// App version this file was made with

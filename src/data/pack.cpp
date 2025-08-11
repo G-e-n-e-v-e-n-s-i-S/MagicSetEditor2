@@ -94,7 +94,7 @@ bool PackType::update(Context& ctx) {
 
 bool PackItem::update(Context& ctx) {
   return amount.update(ctx)
-       | weight.update(ctx);
+      || weight.update(ctx);
 }
 
 

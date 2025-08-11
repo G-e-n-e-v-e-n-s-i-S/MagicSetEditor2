@@ -11,6 +11,8 @@
 #include <util/version.hpp>
 #include <script/functions/functions.hpp>
 #include <script/functions/util.hpp>
+#include <script/functions/construction_helper.hpp>
+#include <script/functions/json.hpp>
 #include <util/tagged_string.hpp>
 #include <util/spec_sort.hpp>
 #include <util/error.hpp>
@@ -21,7 +23,8 @@
 #include <random>
 #include <wx/filename.h>
 #include <wx/stdpaths.h>
-
+#include <wx/wfstream.h>
+#include <boost/json.hpp>
 
 // ----------------------------------------------------------------------------- : Debugging
 
@@ -259,6 +262,24 @@ SCRIPT_FUNCTION(to_date) {
 SCRIPT_FUNCTION(to_code) {
   SCRIPT_PARAM_C(ScriptValueP, input);
   SCRIPT_RETURN(input->toCode());
+}
+
+SCRIPT_FUNCTION(to_json) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM_C(Set*, set);
+  SCRIPT_PARAM_DEFAULT(bool, pretty_print, true);
+  boost::json::value jv = mse_to_json(input, set);
+
+  queue_message(MESSAGE_ERROR, json_pretty_print(jv));
+
+  if (pretty_print) return to_script(json_pretty_print(jv));
+  else              return to_script(json_ugly_print(jv));
+}
+
+SCRIPT_FUNCTION(from_json) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM_C(Set*, set);
+  return json_to_mse(input, set);
 }
 
 SCRIPT_FUNCTION(type_name) {
@@ -862,6 +883,8 @@ void init_script_basic_functions(Context& ctx) {
   ctx.setVariable(_("to_color"),             script_to_color);
   ctx.setVariable(_("to_date"),              script_to_date);
   ctx.setVariable(_("to_code"),              script_to_code);
+  ctx.setVariable(_("to_json"),              script_to_json);
+  ctx.setVariable(_("from_json"),            script_from_json);
   ctx.setVariable(_("type_name"),            script_type_name);
   ctx.setVariable(_("make_map"),             script_make_map);
   ctx.setVariable(_("get_card_styling"),     script_get_card_styling);

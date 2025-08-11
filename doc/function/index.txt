@@ -11,6 +11,8 @@ These functions are built into the program, other [[type:function]]s can be defi
 | [[fun:to_color]]		Convert any value to a [[type:color]]
 | [[fun:to_image]]		Convert any value to an [[type:image]]
 | [[fun:to_date]]		Convert any value to a [[type:date]]
+| [[fun:to_json]]		Convert any value to JSON text.
+| [[fun:from_json]]		Convert JSON text to an MSE script value.
 | [[fun:make_map]]		Create a [[type:map]] from two [[type:list]]s
 | [[fun:type_name]]		Get the type of a value
 	

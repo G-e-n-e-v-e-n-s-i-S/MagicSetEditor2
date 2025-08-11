@@ -76,6 +76,7 @@ String tr(const String&, const String& subcat, const String& key, DefaultLocaleF
 #define _TITLE_(s)   tr(LOCALE_CAT_TITLE,     _(s))
 /// A localized string for type names in scripts
 #define _TYPE_(s)    tr(LOCALE_CAT_TYPE,      _(s))
+#define _TYPE_V_(s)  tr(LOCALE_CAT_TYPE,        s )
 /// A localized string for action names
 #define _ACTION_(s)  tr(LOCALE_CAT_ACTION,    _(s))
 /// A localized string for error messages

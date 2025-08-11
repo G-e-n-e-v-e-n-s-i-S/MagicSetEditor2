@@ -37,9 +37,9 @@ SCRIPT_FUNCTION(new_card) {
     if (key == script_nil) continue;
     String key_name = key->toString();
     // check if the given value is for a built-in field
-    if (set_builtin_container(game, new_card, value, key_name, ignore_field_not_found)) continue;
+    if (set_builtin_container(*game, new_card, value, key_name, ignore_field_not_found)) continue;
     // find the field value (container) that corresponds to the given value
-    Value* container = get_container(game, new_card, key_name, ignore_field_not_found);
+    Value* container = get_card_field_container(*game, new_card->data, key_name, ignore_field_not_found);
     if (container == nullptr) continue;
     FieldP field = container->fieldP;
     // if the field has a construction script, set the value and card context variables to be the given value and this card, run script
@@ -59,9 +59,9 @@ SCRIPT_FUNCTION(new_card) {
           if (script_key == script_nil) continue;
           String script_key_name = script_key->toString();
           // check if the script value is for a built-in field
-          if (set_builtin_container(game, new_card, script_value, script_key_name, ignore_field_not_found)) continue;
+          if (set_builtin_container(*game, new_card, script_value, script_key_name, ignore_field_not_found)) continue;
           // find the field value that corresponds to the script value
-          Value* script_container = get_container(game, new_card, script_key_name, ignore_field_not_found);
+          Value* script_container = get_card_field_container(*game, new_card->data, script_key_name, ignore_field_not_found);
           if (script_container == nullptr) continue;
           // set the field value to the script value
           set_container(script_container, script_value, script_key_name);
@@ -94,9 +94,9 @@ SCRIPT_FUNCTION(new_card) {
         if (script_key == script_nil) continue;
         String script_key_name = script_key->toString();
         // check if the script value is for a built-in field
-        if (set_builtin_container(game, new_card, script_value, script_key_name, ignore_field_not_found)) continue;
+        if (set_builtin_container(*game, new_card, script_value, script_key_name, ignore_field_not_found)) continue;
         // find the field value that corresponds to the script value
-        Value* script_container = get_container(game, new_card, script_key_name, ignore_field_not_found);
+        Value* script_container = get_card_field_container(*game, new_card->data, script_key_name, ignore_field_not_found);
         if (script_container == nullptr) continue;
         // set the field value to the script value
         set_container(script_container, script_value, script_key_name);

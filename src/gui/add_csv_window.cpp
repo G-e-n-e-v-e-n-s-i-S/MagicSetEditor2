@@ -167,7 +167,7 @@ void AddCSVWindow::onOk(wxCommandEvent&) {
   /// Perform the import
   wxBusyCursor wait;
   // Read the file
-  auto file = std::ifstream(file_path->GetValue().ToStdString());
+  auto& file = std::ifstream(file_path->GetValue().ToStdString());
   if (file.fail()) {
     queue_message(MESSAGE_ERROR, _ERROR_("add card csv file not found"));
     EndModal(wxID_ABORT);

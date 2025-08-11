@@ -13,6 +13,8 @@ $built_in_functions = array(
 	'to_color'		=>'',
 	'to_image'		=>'',
 	'to_date'		=>'',
+	'to_json'		=>'',
+	'from_json'		=>'',
 	'make_map'		=>'',
 	// numbers
 	'abs'			=>'',

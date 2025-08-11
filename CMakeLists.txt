@@ -7,7 +7,7 @@ add_definitions(-DUNOFFICIAL_BUILD)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-find_package(wxWidgets 3 REQUIRED COMPONENTS core base net html)
+find_package(wxWidgets 3.3.1 CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS regex)
 
 find_package(PkgConfig)
@@ -34,16 +34,13 @@ message("-- Does this have a full path? If not, and it's just a file name, it's 
 
 include_directories("${PROJECT_BINARY_DIR}/src")
 include_directories("${PROJECT_SOURCE_DIR}/src")
-include(${wxWidgets_USE_FILE})
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${HUNSPELL_INCLUDE_DIRS})
 
 # Magic Set Editor executable
 
 add_executable(magicseteditor WIN32)
-target_link_libraries(${PROJECT_NAME} ${wxWidgets_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${HUNSPELL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE wxWidgets::wxWidgets ${Boost_LIBRARIES} ${HUNSPELL_LIBRARIES})
 
 file(GLOB_RECURSE sources src/*.cpp)
 list(FILTER sources EXCLUDE REGEX win32_cli_wrapper.cpp)
@@ -132,15 +129,6 @@ if (${VCPKG_TARGET_TRIPLET} MATCHES ".*-static")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /GL")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
-  # Need explicit dependencies on wx's dependencies
-  find_package(png REQUIRED)
-  find_package(tiff REQUIRED)
-  find_package(jpeg REQUIRED)
-  find_package(zlib REQUIRED)
-  target_link_libraries(${PROJECT_NAME} ${PNG_LIBRARIES})
-  target_link_libraries(${PROJECT_NAME} ${JPEG_LIBRARIES})
-  target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
-  target_link_libraries(${PROJECT_NAME} ${TIFF_LIBRARIES})
   # Defines
   add_definitions(-DSTATIC)
   add_definitions(-DHUNSPELL_STATIC)

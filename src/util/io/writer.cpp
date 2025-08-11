@@ -17,6 +17,12 @@ using boost::tribool;
 
 // ----------------------------------------------------------------------------- : Writer
 
+Writer::Writer(OutputStream& output)
+  : indentation(0)
+  , output(output)
+  , stream(output, wxEOL_UNIX, wxMBConvUTF8())
+{}
+
 Writer::Writer(OutputStream& output, Version file_app_version)
   : indentation(0)
   , output(output)

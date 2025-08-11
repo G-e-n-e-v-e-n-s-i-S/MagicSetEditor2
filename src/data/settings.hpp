@@ -112,6 +112,15 @@ public:
   DECLARE_REFLECTION();
 };
 
+// ----------------------------------------------------------------------------- : Printing settings
+
+enum CutterLinesType
+{  CUTTER_ALL
+,  CUTTER_NO_INTERSECTION
+,  CUTTER_NONE
+};
+
+
 
 // ----------------------------------------------------------------------------- : Settings
 
@@ -180,8 +189,9 @@ public:
   IndexMap<FieldP,ValueP>& exportOptionsFor(const ExportTemplate& export_template);
   
   // --------------------------------------------------- : Printing
-  
+
   double print_spacing;
+  CutterLinesType print_cutter_lines;
   
   // --------------------------------------------------- : Special game stuff
   String apprentice_location;

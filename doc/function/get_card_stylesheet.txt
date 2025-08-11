@@ -10,7 +10,7 @@ This is for use in exporter scripts. In card scripts, use the "stylesheet" prede
 --Parameters--
 ! Parameter	Type					Description
 | @input@	[[type:card]]		The card you want to retrieve the stylesheet from.
-| @set@		[[type:set]]		The set the card belongs to. In an exporter script, this can be ommited since "set" is a predefined variable.
+| @set@		[[type:set]]		The set the card belongs to. In an exporter script, this can be omited since "set" is a predefined variable.
 
 --Examples--
 > # Retrieve the card regions from the card's stylesheet

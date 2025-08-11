@@ -4,6 +4,8 @@
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
 
+#pragma once
+
 // ----------------------------------------------------------------------------- : Includes
 
 #include <util/prec.hpp>
@@ -12,33 +14,46 @@
 #include <data/field/package_choice.hpp>
 #include <data/field/color.hpp>
 #include <data/field/image.hpp>
+#include <data/field/symbol.hpp>
 #include <data/action/set.hpp>
 #include <data/game.hpp>
 #include <data/set.hpp>
 #include <data/stylesheet.hpp>
 #include <data/card.hpp>
-#include <util/error.hpp>
 
 // ----------------------------------------------------------------------------- : Helper functions
 
-static Value* get_container(GameP& game, CardP& card, String key_name, bool ignore_field_not_found) {
+inline static Value* get_card_field_container(Game& game, IndexMap<FieldP, ValueP>& map, String& key_name, bool ignore_field_not_found) {
   // find value container to update
-  IndexMap<FieldP, ValueP>::const_iterator value_it = card->data.find(key_name);
-  if (value_it == card->data.end()) {
+  IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
+  if (it == map.end()) {
     // look among alternate names
-    map<String, String>::iterator alt_name_it = game->card_fields_alt_names.find(unified_form(key_name));
-    if (alt_name_it != game->card_fields_alt_names.end()) {
-      value_it = card->data.find(alt_name_it->second);
+    std::map<String, String>::iterator alt_name_it = game.card_fields_alt_names.find(unified_form(key_name));
+    if (alt_name_it != game.card_fields_alt_names.end()) {
+      it = map.find(alt_name_it->second);
     }
   }
-  if (value_it == card->data.end()) {
+  if (it == map.end()) {
     if (ignore_field_not_found) return nullptr;
-    throw ScriptError(_ERROR_1_("no field with name", key_name));
+    throw ScriptError(_ERROR_2_("no field with name", _TYPE_("card"), key_name));
   }
-  return value_it->get();
+  return it->get();
 }
 
-static void set_container(Value* container, ScriptValueP& value, String key_name) {
+inline static Value* get_container(IndexMap<FieldP, ValueP>& map, String& type, String& key_name, bool ignore_field_not_found) {
+  // find value container to update
+  IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
+  if (it == map.end()) {
+    it = map.find(key_name.Lower());
+    if (it == map.end()) {
+      if (ignore_field_not_found) return nullptr;
+      throw ScriptError(_ERROR_2_("no field with name", _TYPE_V_(type), key_name));
+    }
+  }
+  return it->get();
+}
+
+inline static void set_container(Value* container, ScriptValueP& value, String key_name) {
   // set the given value into the container
   if (TextValue* tvalue = dynamic_cast<TextValue*>(container)) {
     tvalue->value = value->toString();
@@ -53,23 +68,36 @@ static void set_container(Value* container, ScriptValueP& value, String key_name
     cvalue->value = value->toColor();
   }
   else if (ImageValue* ivalue = dynamic_cast<ImageValue*>(container)) {
-    wxFileName fname(static_cast<ExternalImage*>(value.get())->toString());
-    ivalue->filename = LocalFileName::fromReadString(fname.GetName(), "");
+    if (ExternalImage* image = dynamic_cast<ExternalImage*>(value.get())) {
+      wxFileName fname(image->toString());
+      ivalue->filename = LocalFileName::fromReadString(fname.GetName(), "");
+    } else if (value->type() == SCRIPT_STRING) {
+      ivalue->filename = LocalFileName::fromReadString(value->toString(), "");
+    } else {
+      throw ScriptError(_ERROR_1_("cant set image value", key_name));
+    }
+  }
+  else if (SymbolValue* svalue = dynamic_cast<SymbolValue*>(container)) {
+    if (value->type() == SCRIPT_STRING) {
+      svalue->filename = LocalFileName::fromReadString(value->toString(), "");
+    } else {
+      throw ScriptError(_ERROR_1_("cant set symbol value", key_name));
+    }
   }
   else {
-    throw ScriptError(_ERROR_1_("can't set value", key_name));
+    throw ScriptError(_ERROR_1_("cant set value", key_name));
   }
 }
 
-static bool set_builtin_container(GameP& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
+inline static bool set_builtin_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
   // check if the given value is for a built-in field, if found set it and return true
   key_name = unified_form(key_name);
   if (key_name == _("notes") || key_name == _("note")) {
     card->notes = value->toString();
     return true;
   } else if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
-    if (trim(value->toString()) != wxEmptyString) {
-      card->stylesheet = StyleSheet::byGameAndName(*game, value->toString());
+    if (!trim(value->toString()).empty()) {
+      card->stylesheet = StyleSheet::byGameAndName(game, value->toString());
       if (card->stylesheet) card->styling_data.init(card->stylesheet->styling_fields);
     }
     return true;
@@ -110,35 +138,34 @@ static bool set_builtin_container(GameP& game, CardP& card, ScriptValueP& value,
   //  card->linked_relation_4 = value->toString();
   //  return true;
   //}
-  else if (key_name == _("styling_data")   || key_name == _("style_data")   || key_name == _("stylesheet_data")   || key_name == _("template_data") || key_name == _("styling")
-        || key_name == _("styling_fields") || key_name == _("style_fields") || key_name == _("stylesheet_fields") || key_name == _("template_fields")) {
+  else if          (key_name == _("styling_data")   || key_name == _("style_data")   || key_name == _("stylesheet_data")   || key_name == _("template_data") || key_name == _("styling")
+                 || key_name == _("styling_fields") || key_name == _("style_fields") || key_name == _("stylesheet_fields") || key_name == _("template_fields")
+                 || key_name == _("extra_data")     || key_name == _("extra_fields") || key_name == _("extra_card_data")   || key_name == _("extra_card_fields")) {
+    bool is_extra = key_name == _("extra_data")     || key_name == _("extra_fields") || key_name == _("extra_card_data")   || key_name == _("extra_card_fields");
+    String type = is_extra ? _("extra") : _("styling");
     if (value->type() != SCRIPT_COLLECTION) {
-      throw ScriptError(_ERROR_("styling data not map"));
+      throw ScriptError(_ERROR_1_("styling data not map", type));
     }
-    ScriptValueP value_it = value->makeIterator();
-    ScriptValueP value_key;
-    while (ScriptValueP value_value = value_it->next(&value_key)) {
-      assert(value_key);
-      if (value_key == script_nil) continue;
-      String value_key_name = value_key->toString();
-      IndexMap<FieldP, ValueP>::const_iterator style_it = card->styling_data.find(value_key_name);
-      if (style_it == card->styling_data.end()) {
-        style_it = card->styling_data.find(value_key_name.Lower());
-        if (style_it == card->styling_data.end()) {
-          if (!ignore_field_not_found) throw ScriptError(_ERROR_1_("no style field with name", value_key_name));
-          continue;
-        }
-      }
-      Value* value_container = style_it->get();
-      set_container(value_container, value_value, value_key_name);
-      card->has_styling = true;
+    if (!card->stylesheet) {
+      throw ScriptError(_ERROR_1_("styling data without stylesheet", type));
+    }
+    IndexMap<FieldP, ValueP>& data = is_extra ? card->extraDataFor(*card->stylesheet) : card->styling_data;
+    ScriptValueP it = value->makeIterator();
+    ScriptValueP key;
+    while (ScriptValueP value = it->next(&key)) {
+      assert(key);
+      if (key == script_nil) continue;
+      String key_name = key->toString();
+      Value* container = get_container(data, type, key_name, ignore_field_not_found);
+      set_container(container, value, key_name);
+      if (!is_extra) card->has_styling = true;
     }
     return true;
   }
   return false;
 }
 
-static bool check_table_headers(GameP& game, std::vector<String>& headers, const String& file_extension, String& missing_fields_out) {
+inline static bool check_table_headers(GameP& game, std::vector<String>& headers, const String& file_extension, String& missing_fields_out) {
   if (headers.empty()) {
     queue_message(MESSAGE_ERROR, _("Empty headers given"));
     return false;
@@ -176,7 +203,7 @@ static bool check_table_headers(GameP& game, std::vector<String>& headers, const
   return true;
 }
 
-static bool cards_from_table(SetP& set, vector<String>& headers, std::vector<std::vector<ScriptValueP>>& table, bool ignore_field_not_found, const String& file_extension, vector<CardP>& cards_out) {
+inline static bool cards_from_table(SetP& set, vector<String>& headers, std::vector<std::vector<ScriptValueP>>& table, bool ignore_field_not_found, const String& file_extension, vector<CardP>& cards_out) {
   // ensure table is square
   int count = headers.size();
   for (int y = 0; y < table.size(); ++y) {
@@ -212,5 +239,3 @@ static bool cards_from_table(SetP& set, vector<String>& headers, std::vector<std
   if (ctx_ignore) ctx.setVariable("ignore_field_not_found", ctx_ignore);
   return true;
 }
-
-

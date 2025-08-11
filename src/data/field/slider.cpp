@@ -37,11 +37,7 @@ void SliderField::after_reading(Version ver) {
 
   int choice_count = choices->choices.size();
 
-  if (maximum < minimum) {
-    int temp = maximum;
-    maximum = minimum;
-    minimum = temp;
-  }
+  if (maximum < minimum) swap(minimum, maximum);
   if (increment < 1) increment = 1;
 
   for (int i = minimum; i < maximum; i += increment) {
@@ -49,16 +45,7 @@ void SliderField::after_reading(Version ver) {
   }
   choices->choices.push_back(make_intrusive<Choice>(wxString::Format(wxT("%i"), maximum)));
 
-  int initial_int;
-  try {
-    initial_int = std::stoi(initial.ToStdString());
-    if (initial_int < minimum || initial_int > maximum) initial = wxString::Format(wxT("%i"), minimum);
-  }
-  catch (...) {
-    initial = wxString::Format(wxT("%i"), minimum);
-  }
-
-  // Move individual choices that are greater than maximum to the end
+  // Move individual choices that are numbers greater than maximum to the end
   for (int i = 0; i < choice_count; ++i) {
     try {
       int choice_int = std::stoi(choices->choices[i].get()->name.ToStdString());
