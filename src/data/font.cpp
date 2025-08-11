@@ -21,31 +21,40 @@ Font::Font()
   , scale_down_to(100000)
   , max_stretch(1.0)
   , color(Color(0,0,0))
-  , shadow_displacement(0,0)
+  , shadow_displacement_x(0)
+  , shadow_displacement_y(0)
   , shadow_blur(0)
   , separator_color(Color(0,0,0,128))
   , flags(FONT_NORMAL)
 {}
 
-bool Font::PreloadResourceFonts(String fontsDirectoryPath, bool recursive) {
+bool Font::PreloadResourceFonts(bool recursive) {
 #if wxUSE_PRIVATE_FONTS
   String pathSeparator(wxFileName::GetPathSeparator());
-  String appPath( wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetPath() );
-  fontsDirectoryPath = appPath + pathSeparator + fontsDirectoryPath + (fontsDirectoryPath.EndsWith(pathSeparator) ? "" : pathSeparator);
+  String appPath(wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetPath());
+  wxDir appDir(appPath);
+  if (!appDir.IsOpened()) return true;
 
-  if (!wxDirExists(fontsDirectoryPath)) return false;
-  
-  // tally fonts
-  vector<String> fontFilePaths;
-  TallyResourceFonts(fontsDirectoryPath, fontFilePaths, recursive);
-  if (fontFilePaths.size() == 0) return false;
-
-  // load fonts
   bool preloadHadErrors = false;
-  for (String fontFilePath : fontFilePaths) {
-    if (!wxFont::AddPrivateFont(fontFilePath)) {
-      preloadHadErrors = true;
+  wxString folder;
+  bool cont = appDir.GetFirst(&folder, wxEmptyString, wxDIR_DIRS);
+  while (cont)
+  {
+    if (folder.Lower().Contains("fonts")) {
+      String folderPath = appPath + pathSeparator + folder + pathSeparator;
+      
+      // tally fonts
+      vector<String> fontFilePaths;
+      TallyResourceFonts(folderPath, fontFilePaths, recursive);
+
+      // load fonts
+      for (const String& fontFilePath : fontFilePaths) {
+        if (!wxFont::AddPrivateFont(fontFilePath)) {
+          preloadHadErrors = true;
+        }
+      }
     }
+    cont = appDir.GetNext(&folder);
   }
 
   return preloadHadErrors;
@@ -81,7 +90,10 @@ bool Font::update(Context& ctx) {
   changes |= style       .update(ctx);
   changes |= underline   .update(ctx);
   changes |= color       .update(ctx);
-  changes |= shadow_color.update(ctx);
+  changes |= shadow_color         .update(ctx);
+  changes |= shadow_displacement_x.update(ctx);
+  changes |= shadow_displacement_y.update(ctx);
+  changes |= shadow_blur          .update(ctx);
   flags = (flags & ~FONT_BOLD & ~FONT_ITALIC)
         | (weight() == _("bold")   ? FONT_BOLD   : FONT_NORMAL)
         | (style()  == _("italic") ? FONT_ITALIC : FONT_NORMAL);
@@ -95,7 +107,10 @@ void Font::initDependencies(Context& ctx, const Dependency& dep) const {
   style       .initDependencies(ctx, dep);
   underline   .initDependencies(ctx, dep);
   color       .initDependencies(ctx, dep);
-  shadow_color.initDependencies(ctx, dep);
+  shadow_color         .initDependencies(ctx, dep);
+  shadow_displacement_x.initDependencies(ctx, dep);
+  shadow_displacement_y.initDependencies(ctx, dep);
+  shadow_blur          .initDependencies(ctx, dep);
 }
 
 FontP Font::make(int add_flags, bool add_underline, String const* other_family, Color const* other_color, double const* other_size) const {
@@ -113,7 +128,8 @@ FontP Font::make(int add_flags, bool add_underline, String const* other_family, 
   }
   if (add_flags & FONT_SOFT) {
     f->color = f->separator_color;
-    f->shadow_displacement = RealSize(0,0); // no shadow
+    f->shadow_displacement_x = 0; // no shadow
+    f->shadow_displacement_y = 0; // no shadow
   }
   if (add_underline) {
     f->underline = true;
@@ -177,8 +193,8 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(Font) {
   REFLECT(color);
   REFLECT(scale_down_to);
   REFLECT(max_stretch);
-  REFLECT_N("shadow_displacement_x", shadow_displacement.width);
-  REFLECT_N("shadow_displacement_y", shadow_displacement.height);
+  REFLECT(shadow_displacement_x);
+  REFLECT(shadow_displacement_y);
   REFLECT(shadow_color);
   REFLECT(shadow_blur);
   REFLECT(separator_color);

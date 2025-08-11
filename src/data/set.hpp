@@ -50,7 +50,7 @@ public:
   /// The values on the fields of the set
   /** The indices should correspond to the set_fields in the Game */
   IndexMap<FieldP, ValueP> data;
-  /// Extra values for specitic stylesheets, indexed by stylesheet name
+  /// Extra values for specific stylesheets, indexed by stylesheet name
   DelayedIndexMaps<FieldP,ValueP> styling_data;
   vector<CardP>            cards;             ///< The cards in the set
   vector<KeywordP>         keywords;          ///< Additional keywords used in this set
@@ -90,7 +90,12 @@ public:
   IndexMap<FieldP, ValueP>& stylingDataFor(const StyleSheet&);
   /// Styling information for a particular card
   IndexMap<FieldP, ValueP>& stylingDataFor(const CardP& card);
-  
+
+  /// Make sure the image and symbol files from
+  /// the ActionStack are saved so we can undo
+  void referenceActionStackFiles();
+  void referenceActionStackFiles(bool undo);
+
   /// Get the identification of this set, an identification is something like a name, title, etc.
   /** May return "" */
   String identification() const;

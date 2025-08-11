@@ -1,0 +1,18 @@
+Function: to_json
+
+--Usage--
+> to_json(some_script_value)
+
+Convert a [[type:list]], a [[type:map]], a [[type:card]], a [[type:keyword]], a [[type:pack_type]] or a [[type:set]] to a JSON string.
+
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	some_script_value		MSE script value to convert to a JSON string.
+| @set@		[[type:set]]		The active set. This can be omited since "set" is a predefined variable.
+
+--Examples--
+> to_json(card)
+
+--See also--
+| [[fun:from_json]]		Convert JSON text to an MSE script value.

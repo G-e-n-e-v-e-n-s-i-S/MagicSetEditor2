@@ -153,11 +153,12 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(StyleSheetSettings) {
   REFLECT(card_spellcheck_enabled);
 }
 
-// ----------------------------------------------------------------------------- : Printing
+// ----------------------------------------------------------------------------- : Printing settings
 
-IMPLEMENT_REFLECTION_ENUM(PageLayoutType) {
-  VALUE_N("no space",    LAYOUT_NO_SPACE);
-  VALUE_N("equal space", LAYOUT_EQUAL_SPACE);
+IMPLEMENT_REFLECTION_ENUM(CutterLinesType) {
+  VALUE_N("all",          CUTTER_ALL);
+  VALUE_N("no intersect", CUTTER_NO_INTERSECTION);
+  VALUE_N("none",         CUTTER_NONE);
 }
 
 // ----------------------------------------------------------------------------- : Settings
@@ -174,7 +175,8 @@ Settings::Settings()
   , symbol_grid_size     (30)
   , symbol_grid          (true)
   , symbol_grid_snap     (false)
-  , print_layout         (LAYOUT_NO_SPACE)
+  , print_spacing        (0.33)
+  , print_cutter_lines   (CUTTER_ALL)
   , internal_scale       (1.0)
   , internal_image_extension(true)
   #if USE_OLD_STYLE_UPDATE_CHECKER
@@ -263,7 +265,8 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(Settings) {
   REFLECT(symbol_grid);
   REFLECT(symbol_grid_snap);
   REFLECT(default_game);
-  REFLECT(print_layout);
+  REFLECT(print_spacing);
+  REFLECT(print_cutter_lines);
   REFLECT(apprentice_location);
   REFLECT(internal_scale);
   REFLECT(internal_image_extension);
@@ -303,6 +306,7 @@ void Settings::read() {
     if (!file.Ok()) return; // failure is not an error
     Reader reader(file, nullptr, filename);
     reader.handle_greedy(*this);
+    if (locale.Trim().empty()) locale = _("en");
   }
 }
 

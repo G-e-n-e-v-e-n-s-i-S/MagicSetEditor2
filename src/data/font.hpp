@@ -42,17 +42,20 @@ public:
   double             max_stretch;          ///< How much should the font be stretched before scaling down?
   Scriptable<Color>  color;                ///< Color to use
   Scriptable<Color>  shadow_color;         ///< Color for shadow
-  RealSize           shadow_displacement;  ///< Position of the shadow
-  double             shadow_blur;          ///< Blur radius of the shadow
+  Scriptable<double> shadow_displacement_x;///< Position of the shadow
+  Scriptable<double> shadow_displacement_y;///< Position of the shadow
+  Scriptable<double> shadow_blur;          ///< Blur radius of the shadow
   Color              separator_color;      ///< Color for <sep> text
   int                flags;                ///< FontFlags for this font
 
   Font();
-
-  /// Load fonts (.ttf or .otf) from the given directory and its subdirectories, returns true if there were errors
-  static bool PreloadResourceFonts(String fontsDirectoryPath, bool recursive);
+ 
+  /// Load fonts (.ttf or .otf) from all directories in the app directory that contain "fonts" in their names,
+  /// and optionaly their subdirectories, returns true if there were errors
+  static bool PreloadResourceFonts(bool recursive);
   /// Adds font file paths from the given directory into fontFilePaths
   static void TallyResourceFonts(String fontsDirectoryPath, vector<String>& fontFilePaths, bool recursive);
+
   /// Update the scritables, returns true if there is a change
   bool update(Context& ctx);
   /// Add the given dependency to the dependent_scripts list for the variables this font depends on
@@ -60,7 +63,7 @@ public:
   
   /// Does this font have a shadow?
   inline bool hasShadow() const {
-    return shadow_displacement.width != 0 || shadow_displacement.height != 0;
+    return shadow_displacement_x != 0.0 || shadow_displacement_y != 0.0;
   }
   
   /// Add style to a font, and optionally change the font family, color and size

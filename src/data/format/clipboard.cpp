@@ -62,9 +62,9 @@ wxDataFormat CardsDataObject::format = _("application/x-mse-cards");
 
 CardsDataObject::CardsDataObject(const SetP& set, const vector<CardP>& cards) {
   // set the stylesheet, so when deserializing we know whos style options we are reading
-  bool* has_styling = new bool[cards.size()];
+  vector<bool> has_styling;
   for (size_t i = 0 ; i < cards.size() ; ++i) {
-    has_styling[i] = cards[i]->has_styling && !cards[i]->stylesheet;
+    has_styling.push_back(cards[i]->has_styling && !cards[i]->stylesheet);
     if (has_styling[i]) {
       cards[i]->stylesheet = set->stylesheet;
     }
@@ -79,7 +79,6 @@ CardsDataObject::CardsDataObject(const SetP& set, const vector<CardP>& cards) {
     }
   }
   SetFormat(format);
-  delete [] has_styling;
 }
 
 CardsDataObject::CardsDataObject() {
@@ -148,6 +147,9 @@ CardsOnClipboard::CardsOnClipboard(const SetP& set, const vector<CardP>& cards) 
     }
     else if (cards.size() < 6) {
       Add(new wxImageDataObject(export_image(set, cards, true, 0, 1.0, 0.0)));
+    }
+    else if (cards.size() < 6) {
+      Add(new wxBitmapDataObject(export_bitmap(set, cards, true, 0, 1.0, 0.0)));
     }
   // Conversion to serialized card format
     Add(new CardsDataObject(set, cards), true);

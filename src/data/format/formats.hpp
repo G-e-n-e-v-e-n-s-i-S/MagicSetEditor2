@@ -101,10 +101,6 @@ Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lo
 /// Export the image of a single card to a given filename
 void export_image(const SetP& set, const CardP& card, const String& filename);
 
-/// Export the image for each card in a list of cards to given filenames
-void export_images(const SetP& set, const vector<CardP>& cards,
-                   const String& path, const String& filename_template, FilenameConflicts conflicts);
-
 /// Export a set to Magic Workstation format
 void export_mws(Window* parent, const SetP& set);
 

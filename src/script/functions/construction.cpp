@@ -37,9 +37,9 @@ SCRIPT_FUNCTION(new_card) {
     if (key == script_nil) continue;
     String key_name = key->toString();
     // check if the given value is for a built-in field
-    if (set_builtin_container(game, new_card, value, key_name)) continue;
+    if (set_builtin_container(*game, new_card, value, key_name, ignore_field_not_found)) continue;
     // find the field value (container) that corresponds to the given value
-    Value* container = get_container(game, new_card, key_name, ignore_field_not_found);
+    Value* container = get_card_field_container(*game, new_card->data, key_name, ignore_field_not_found);
     if (container == nullptr) continue;
     FieldP field = container->fieldP;
     // if the field has a construction script, set the value and card context variables to be the given value and this card, run script
@@ -59,9 +59,9 @@ SCRIPT_FUNCTION(new_card) {
           if (script_key == script_nil) continue;
           String script_key_name = script_key->toString();
           // check if the script value is for a built-in field
-          if (set_builtin_container(game, new_card, script_value, script_key_name)) continue;
+          if (set_builtin_container(*game, new_card, script_value, script_key_name, ignore_field_not_found)) continue;
           // find the field value that corresponds to the script value
-          Value* script_container = get_container(game, new_card, script_key_name, ignore_field_not_found);
+          Value* script_container = get_card_field_container(*game, new_card->data, script_key_name, ignore_field_not_found);
           if (script_container == nullptr) continue;
           // set the field value to the script value
           set_container(script_container, script_value, script_key_name);
@@ -94,9 +94,9 @@ SCRIPT_FUNCTION(new_card) {
         if (script_key == script_nil) continue;
         String script_key_name = script_key->toString();
         // check if the script value is for a built-in field
-        if (set_builtin_container(game, new_card, script_value, script_key_name)) continue;
+        if (set_builtin_container(*game, new_card, script_value, script_key_name, ignore_field_not_found)) continue;
         // find the field value that corresponds to the script value
-        Value* script_container = get_container(game, new_card, script_key_name, ignore_field_not_found);
+        Value* script_container = get_card_field_container(*game, new_card->data, script_key_name, ignore_field_not_found);
         if (script_container == nullptr) continue;
         // set the field value to the script value
         set_container(script_container, script_value, script_key_name);
@@ -111,8 +111,40 @@ SCRIPT_FUNCTION(new_card) {
   SCRIPT_RETURN(new_card);
 }
 
+SCRIPT_FUNCTION(add_card_to_set) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM_C(ScriptValueP, set);
+  ScriptObject<Set*>* s = dynamic_cast<ScriptObject<Set*>*>(set.get());
+  if (s) {
+    Set& _set = *s->getValue();
+    ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(input.get());
+    if (c) {
+      CardP _card = c->getValue();
+      _set.actions.addAction(make_unique<AddCardAction>(ADD, _set, _card));
+      SCRIPT_RETURN(true);
+    }
+    if (input->type() == SCRIPT_COLLECTION) {
+      vector<CardP> _cards;
+      ScriptValueP it = input->makeIterator();
+      ScriptValueP key;
+      while (ScriptValueP value = it->next(&key)) {
+        c = dynamic_cast<ScriptObject<CardP>*>(value.get());
+        if (c) {
+          _cards.push_back(c->getValue());
+        }
+      }
+      if (!_cards.empty()) {
+        _set.actions.addAction(make_unique<AddCardAction>(ADD, _set, _cards));
+        SCRIPT_RETURN(true);
+      }
+    }
+  }
+  SCRIPT_RETURN(false);
+}
+
 // ----------------------------------------------------------------------------- : Init
 
 void init_script_construction_functions(Context& ctx) {
   ctx.setVariable(_("new_card"), script_new_card);
+  ctx.setVariable(_("add_card_to_set"), script_add_card_to_set);
 }

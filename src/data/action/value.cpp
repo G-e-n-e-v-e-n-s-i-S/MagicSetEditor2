@@ -7,17 +7,10 @@
 // ----------------------------------------------------------------------------- : Includes
 
 #include <util/prec.hpp>
+#include <util/tagged_string.hpp>
 #include <data/action/value.hpp>
 #include <data/field.hpp>
-#include <data/field/text.hpp>
-#include <data/field/choice.hpp>
-#include <data/field/multiple_choice.hpp>
-#include <data/field/color.hpp>
-#include <data/field/image.hpp>
-#include <data/field/symbol.hpp>
-#include <data/field/package_choice.hpp>
 #include <data/card.hpp>
-#include <util/tagged_string.hpp>
 #include <data/set.hpp> // for ValueActionPerformer
 #include <wx/imaglist.h>
 
@@ -43,48 +36,6 @@ void ValueAction::setCard(CardP const& card) {
 }
 
 // ----------------------------------------------------------------------------- : Simple
-
-/// Swap the value in a Value object with a new one
-inline void swap_value(ChoiceValue&         a, ChoiceValue        ::ValueType& b) { swap(a.value,    b); }
-inline void swap_value(ColorValue&          a, ColorValue         ::ValueType& b) { swap(a.value,    b); }
-inline void swap_value(ImageValue&          a, ImageValue         ::ValueType& b) { swap(a.filename, b); a.last_update.update(); }
-inline void swap_value(SymbolValue&         a, SymbolValue        ::ValueType& b) { swap(a.filename, b); a.last_update.update(); }
-inline void swap_value(TextValue&           a, TextValue          ::ValueType& b) { swap(a.value,    b); a.last_update.update(); }
-inline void swap_value(PackageChoiceValue&  a, PackageChoiceValue ::ValueType& b) { swap(a.package_name, b); }
-inline void swap_value(MultipleChoiceValue& a, MultipleChoiceValue::ValueType& b) {
-  swap(a.value,       b.value);
-  swap(a.last_change, b.last_change);
-}
-
-/// A ValueAction that swaps between old and new values
-template <typename T, bool ALLOW_MERGE>
-class SimpleValueAction : public ValueAction {
-public:
-  inline SimpleValueAction(const intrusive_ptr<T>& value, const typename T::ValueType& new_value)
-    : ValueAction(value), new_value(new_value)
-  {}
-  
-  void perform(bool to_undo) override {
-    ValueAction::perform(to_undo);
-    swap_value(static_cast<T&>(*valueP), new_value);
-    valueP->onAction(*this, to_undo); // notify value
-  }
-  
-  bool merge(const Action& action) override {
-    if (!ALLOW_MERGE) return false;
-    TYPE_CASE(action, SimpleValueAction) {
-      if (action.valueP == valueP) {
-        // adjacent actions on the same value, discard the other one,
-        // because it only keeps an intermediate value
-        return true;
-      }
-    }
-    return false;
-  }
-  
-private:
-  typename T::ValueType new_value;
-};
 
 unique_ptr<ValueAction> value_action(const ChoiceValueP& value, const Defaultable<String>& new_value) {
   return make_unique<SimpleValueAction<ChoiceValue, true>>(value, new_value);

@@ -1,0 +1,19 @@
+Function: from_json
+
+--Usage--
+> from_json(some_JSON_string)
+
+Convert a JSON string to a [[type:list]], a [[type:map]], a [[type:card]], a [[type:keyword]], a [[type:pack_type]] or a [[type:set]].
+
+To see the required syntax, use an output of the [[fun:to_json]] function.
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	[[type:string]]		JSON string to convert to an MSE script value.
+| @set@		[[type:set]]		The active set. This can be omited since "set" is a predefined variable.
+
+--Examples--
+> add_card_to_set(from_json("\{\"mse_object_type\":\"card\", \"data\":\{\"name\":\"Ajani\", \"rarity\":\"mythic rare\"\}\}"))
+
+--See also--
+| [[fun:to_json]]		Convert an MSE script value to JSON text.

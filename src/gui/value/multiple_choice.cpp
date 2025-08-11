@@ -135,7 +135,7 @@ bool MultipleChoiceValueEditor::onChar(wxKeyEvent& ev) {
   }
 }
 void MultipleChoiceValueEditor::onLoseFocus() {
-  if (drop_down) drop_down->hide(false);
+  //if (drop_down) drop_down->hide(false);
 }
 
 void MultipleChoiceValueEditor::onValueChange() {

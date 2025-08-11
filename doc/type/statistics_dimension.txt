@@ -16,7 +16,8 @@ Categories are also automatically generated from dimensions.
 | @description@		[[type:localized string]]		@""@		A description of the dimension, currently not used.
 | @position hint@	[[type:string]]		@0@		Hint for ordering dimensions.
 | @icon@		[[type:filename]]	 		Filename of an icon for this dimension.
-| @script@		[[type:script]]		''required''	Script that generates a value for each card in the set.
+| @script@		[[type:script]]		''required''	Script that generates a value for each card in the set. Ran once for each card, then all the results are tallied.
+| @global_script@		[[type:script]]		''nil''	Script that is ran once at the start. Its result is stored in the 'global_value' variable, which is accessible to the regular script.
 | @numeric@		[[type:boolean]]	@false@		Is the value always a number?
 | @bin size@		[[type:double]]		''none''	For numeric dimensions: group numbers together into bins this large.<br/>
 			 			 		For example with @bin size: 5@, values @1@ and @3@ both get put under @"1-5"@.

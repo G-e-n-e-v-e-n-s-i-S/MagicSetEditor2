@@ -56,14 +56,16 @@ public:
   ColorStyle(const ColorFieldP& field);
   DECLARE_STYLE_TYPE(Color);
   
-  double       radius;          ///< Radius of round corners
-  double       left_width;      ///< Width of the colored region on the left side
-  double       right_width;     ///< Width of the colored region on the right side
-  double       top_width;       ///< Width of the colored region on the top side
-  double       bottom_width;    ///< Width of the colored region on the bottom side
-  ImageCombine combine;         ///< How to combine image with the background
+  Scriptable<double> radius;       ///< Radius of round corners
+  Scriptable<double> left_width;   ///< Width of the colored region on the left side
+  Scriptable<double> right_width;  ///< Width of the colored region on the right side
+  Scriptable<double> top_width;    ///< Width of the colored region on the top side
+  Scriptable<double> bottom_width; ///< Width of the colored region on the bottom side
+  ImageCombine combine;            ///< How to combine image with the background
   
   int update(Context&) override;
+
+  void checkContentDependencies(Context&, const Dependency&) const override;
 };
 
 // ----------------------------------------------------------------------------- : ColorValue

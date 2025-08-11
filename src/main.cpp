@@ -81,13 +81,13 @@ void nag_about_ascii_version() {
 
 int MSE::OnRun() {
   try {
-    #ifdef __WXMSW__
+  #ifdef __WXMSW__
       SetAppName(_("Magic Set Editor"));
-    #else
+  #else
       // Platform friendly appname
       SetAppName(_("magicseteditor"));
-    #endif
-    Font::PreloadResourceFonts(_("Magic - Fonts"), true);
+  #endif
+    Font::PreloadResourceFonts(true);
     wxInitAllImageHandlers();
     wxFileSystem::AddHandler(new wxInternetFSHandler); // needed for update checker
     wxSocketBase::Initialize();

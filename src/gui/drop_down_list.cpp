@@ -34,10 +34,16 @@ private:
   
   bool ProcessEvent(wxEvent& ev) override {
     int t = ev.GetEventType();
-    if ( t == wxEVT_LEFT_DOWN      || t == wxEVT_RIGHT_DOWN
+    bool is_tab = false;
+    try {
+      is_tab = dynamic_cast<wxKeyEvent&>(ev).GetUnicodeKey() == WXK_TAB;
+    } catch (...) {}
+    if ( is_tab
+      || t == wxEVT_LEFT_DOWN      || t == wxEVT_RIGHT_DOWN
       || t == wxEVT_MOVE
-      || t == wxEVT_MENU_HIGHLIGHT || t == wxEVT_MENU_OPEN    || t == wxEVT_MENU_OPEN
-      || t == wxEVT_ACTIVATE       || t == wxEVT_CLOSE_WINDOW || t == wxEVT_KILL_FOCUS
+      || t == wxEVT_MENU_HIGHLIGHT || t == wxEVT_MENU_OPEN
+      || t == wxEVT_CLOSE_WINDOW   || t == wxEVT_KILL_FOCUS
+      //|| t == wxEVT_ACTIVATE
       || t == wxEVT_COMMAND_TOOL_CLICKED)
     {
       // close the list, and pass on the event

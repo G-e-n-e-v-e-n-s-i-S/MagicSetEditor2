@@ -114,11 +114,13 @@ public:
 
 // ----------------------------------------------------------------------------- : Printing settings
 
-enum PageLayoutType
-{  LAYOUT_NO_SPACE
-,  LAYOUT_EQUAL_SPACE
-//,  LAYOUT_CUSTOM
+enum CutterLinesType
+{  CUTTER_ALL
+,  CUTTER_NO_INTERSECTION
+,  CUTTER_NONE
 };
+
+
 
 // ----------------------------------------------------------------------------- : Settings
 
@@ -187,8 +189,9 @@ public:
   IndexMap<FieldP,ValueP>& exportOptionsFor(const ExportTemplate& export_template);
   
   // --------------------------------------------------- : Printing
-  
-  PageLayoutType print_layout;
+
+  double print_spacing;
+  CutterLinesType print_cutter_lines;
   
   // --------------------------------------------------- : Special game stuff
   String apprentice_location;

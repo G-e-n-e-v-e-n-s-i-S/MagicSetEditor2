@@ -28,7 +28,7 @@ protected:
 	SetP            set;
 	char            separator;
 
-	bool readCSV(std::ifstream& in, std::vector<String> headers_out, std::vector<std::vector<ScriptValueP>>& table_out);
+	bool readCSV(std::ifstream& in, std::vector<String>& headers_out, std::vector<std::vector<ScriptValueP>>& table_out);
 	std::vector<std::string> readCSVRow(const std::string& row);
 	
 	void onSeparatorTypeChange(wxCommandEvent&);

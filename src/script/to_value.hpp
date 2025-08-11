@@ -224,6 +224,9 @@ public:
   ScriptValueP getMember(const String& name) const override;
   ScriptValueP getIndex(int index) const override;
   ScriptValueP makeIterator() const override;
+  ScriptValueP getA() { return a; }
+  ScriptValueP getB() { return b; }
+
   int itemCount() const override { return a->itemCount() + b->itemCount(); }
   /// Collections can be compared by comparing pointers
   CompareWhat compareAs(String&, void const*& compare_ptr) const override {

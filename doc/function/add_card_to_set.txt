@@ -1,0 +1,21 @@
+Function: add_card_to_set
+
+--Usage--
+> add_card_to_set(card, set: set)
+
+Add a [[type:card]] to a [[type:set]].
+
+If the input is a collection, all cards contained inside will be added.
+
+Returns true if a card was actually added to the set.
+
+This is for use in the CLI.
+
+--Parameters--
+! Parameter	Type					Description
+| @input@	[[type:card]]		The card you want to add.
+| @set@		[[type:set]]		The set the card must belong to.
+
+--Examples--
+> # Create a new card and add it to the current set:
+> add_card_to_set(new_card([]))

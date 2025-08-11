@@ -13,6 +13,8 @@ $built_in_functions = array(
 	'to_color'		=>'',
 	'to_image'		=>'',
 	'to_date'		=>'',
+	'to_json'		=>'',
+	'from_json'		=>'',
 	'make_map'		=>'',
 	// numbers
 	'abs'			=>'',
@@ -85,6 +87,7 @@ $built_in_functions = array(
 	'recolor_image'		=>'',
 	'resize_image'		=>'',
 	'enlarge'		=>'',
+	'add_bleed_edge'		=>'',
 	'crop'			=>'',
 	'flip_horizontal'	=>'',
 	'flip_vertical'		=>'',
@@ -100,6 +103,9 @@ $built_in_functions = array(
 	'has_link'		=>'',
 	'get_card_from_link'		=>'',
 	'get_card_from_uid'		=>'',
+	'get_card_styling'		=>'',
+	'get_card_stylesheet'		=>'',
+	'add_card_to_set'		=>'',
 	// html export
 	'to_html'		=>'',
 	'symbols_to_html'	=>'',

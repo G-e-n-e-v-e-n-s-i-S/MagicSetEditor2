@@ -61,14 +61,14 @@ void KeywordsPanel::initControls() {
     sp->Add(fixed, 0, wxEXPAND); sp->Show(fixed,false);
     wxSizer* s1 = new wxBoxSizer(wxVERTICAL);
       s1->Add(new wxStaticText(panel, wxID_ANY, _LABEL_("keyword")+_(":")), 0, wxTOP, 2);
-      s1->Add(keyword, 0, wxEXPAND | wxTOP, 2);
+      s1->Add(keyword, 1, wxEXPAND | wxTOP, 2);
       s1->Add(new wxStaticText(panel, wxID_ANY, _LABEL_("mode")+_(":")), 0, wxTOP, 2);
       s1->Add(mode, 0, wxEXPAND | wxTOP, 2);
     sp->Add(s1, 0, wxEXPAND | wxRIGHT, 4);
     sp->Add(new wxStaticLine(panel), 0, wxEXPAND | wxTOP | wxBOTTOM, 8);
     wxSizer* s2 = new wxBoxSizer(wxVERTICAL);
       s2->Add(new wxStaticText(panel, wxID_ANY, _LABEL_("match")+_(":")), 0);
-      s2->Add(match, 0, wxEXPAND | wxTOP, 2);
+      s2->Add(match, 1, wxEXPAND | wxTOP, 2);
       s2->Add(add_param, 0, wxALIGN_LEFT | wxTOP, 2);
     sp->Add(s2, 0, wxEXPAND | wxRIGHT, 4);
     sp->Add(new wxStaticLine(panel), 0, wxEXPAND | wxTOP | wxBOTTOM, 8);

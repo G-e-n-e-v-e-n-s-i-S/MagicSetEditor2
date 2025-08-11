@@ -68,6 +68,7 @@ IMPLEMENT_REFLECTION_NO_GET_MEMBER(StatsDimension) {
     REFLECT(position_hint);
     REFLECT_N("icon", icon_filename);
     REFLECT(script);
+    REFLECT(global_script);
     REFLECT(numeric);
     REFLECT(bin_size);
     REFLECT(show_empty);

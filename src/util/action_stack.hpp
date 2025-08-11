@@ -103,11 +103,12 @@ public:
   /// Tell all listeners about an action
   void tellListeners(const Action&, bool undone);
   
-private:
   /// Actions to be undone.
   vector<unique_ptr<Action>> undo_actions;
   /// Actions to be redone
   vector<unique_ptr<Action>> redo_actions;
+
+private:
   /// Point at which the file was saved, corresponds to the top of the undo stack at that point
   const Action* save_point;
   /// Was the last thing the user did addAction? (as opposed to undo/redo)

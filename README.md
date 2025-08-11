@@ -4,51 +4,54 @@ Magic Set Editor, or MSE for short, is a program with which you can design your 
 
 More information on https://magicseteditor.boards.net/
 
+Documentation on https://mseverse.miraheze.org/wiki/Category:MSE_Documentation
+
+
 ## Dependencies
 
 The code depends on
- * wxWidgets >= 3.0
+ * wxWidgets >= 3.3.1
  * boost
  * hunspell
+
 
 ## Building on Windows with Visual Studio
 
 On windows, the program can be compiled with Visual Studio (recommended) or with mingw-gcc.
- * VS instructions up-to-date as of April 2024
+ * Visual Studio instructions up-to-date as of April 2024
  * Download and install [Visual Studio Community Edition](https://visualstudio.microsoft.com/vs/community/)
  * Download and install [vcpkg](https://github.com/microsoft/vcpkg)
- * Use vcpkg to install pkgconf, wxwidgets, boost, hunspell
+ * Use vcpkg to install pkgconf, wxwidgets, boost, hunspell:
 
-=======
 ````
 .\vcpkg install pkgconf wxwidgets[fonts] boost-smart-ptr boost-regex boost-logic boost-pool boost-iterator boost-json hunspell --triplet=x64-windows-static
 ````
 and/or
 ````
-.\vcpkg install pkgconf wxwidgets boost-smart-ptr boost-regex boost-logic boost-pool boost-iterator boost-json hunspell --triplet=x86-windows-static
+.\vcpkg install pkgconf wxwidgets[fonts] boost-smart-ptr boost-regex boost-logic boost-pool boost-iterator boost-json hunspell --triplet=x86-windows-static
 ````
+(these two lines differ only by the triplet at the end. Use x64 for 64 bit operating systems, and x86 for 32 bit.)
+
 then, regardless of your choice
 ````
 .\vcpkg integrate install
 ````
 
- * Then just use "Open Folder" from inside visual studio to open the Magic Set Editor source code root folder.
- * Select the configuration that you want to build (probably release x64-windows-static).
+ * Inside Visual Studio go to File menu > Open > Folder... > select the Magic Set Editor source code root folder.
+ * Select the configuration that you want to build (probably release x64-windows-static). Make sure you have installed all the packages with the corresponding triplet.
 
-![configuration](https://github.com/haganbmj/MagicSetEditor2/blob/master/resource/readme/configuration.png)
+![configuration](https://github.com/G-e-n-e-v-e-n-s-i-S/MagicSetEditor2/blob/main/resource/readme/configuration.png)
 
+ * Just to the right of that, select magicseteditor.exe. (These options sometimes get de-selected. If you suddenly can't build anymore, make sure to re-select these.)
  * To build the app go to Build menu > build magicseteditor.exe
 
 Notes:
  * You will most likely get a message about being unable to open hunspell-1.7.lib because pkgconf forgets to add the actual path to HUNSPELL_LIBRARIES. If so, uncomment the noted line in CMakeLists.txt (line 31) and point it to the root vcpkg installation to find the correct hunspell-1.7.lib file.
 
- * You may need to work around [this bug](https://github.com/microsoft/vcpkg/issues/4756) by replacing `$VCPATH\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.16\Modules\FindwxWidgets.cmake` with the file from  https://github.com/CaeruleusAqua/vcpkg-wx-find (`$VCPATH` is usually `C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7`)
- * vcpkg by default installs 32 bit versions of libraries, use `vcpkg install PACKAGENAME --triplet=x64-windows` if you want to enable a 64 bit build.
- * Similarly, to use a static build, use `vcpkg install PACKAGENAME --triplet=x32-windows` or `vcpkg install PACKAGENAME -triplet=x64-windows-static`.
- 
-For running tests you will also need to
- * Download and install perl (For example [Strawberry perl](http://strawberryperl.com/) or using [MSYS2](https://www.msys2.org/))
-The tests can be run from inside visual studio
+![hunspell](https://github.com/G-e-n-e-v-e-n-s-i-S/MagicSetEditor2/blob/main/resource/readme/hunspell.png)
+
+ * For running tests you will also need to download and install perl (For example [Strawberry perl](http://strawberryperl.com/) or using [MSYS2](https://www.msys2.org/)). The tests can be run from inside visual studio
+
 
 ## Building on Windows with GCC (MSYS2)
 
@@ -72,6 +75,7 @@ cmake --build build
 ```
 
  Use `CMAKE_BUILD_TYPE=Debug` for a debug build.
+
 
 ## Building on Linux / FreeBSD
 
@@ -104,8 +108,9 @@ cmake --build .
 On old versions it's possible that cmake can't find wx-config, to solve this add the tool to the cmake command manually like this: `-DwxWidgets_CONFIG_EXECUTABLE=/usr/bin/wx-config-gtk3`
 
 ### Installing resources
-Install the resource folder to the .magicseteditor dir: `mkdir -p $HOME/.magicseteditor && cp -r ./resources $HOME/.magicseteditor/resources`
+Install the resource folder to the .magicseteditor dir: `mkdir -p $HOME/.magicseteditor && cp -rT ./resource $HOME/.magicseteditor/resource`
 Templates are installed to `~/.magicseteditor/data`. Fonts are installed to `~/.local/share/fonts`.
+
 
 ## Building on Mac OS
 

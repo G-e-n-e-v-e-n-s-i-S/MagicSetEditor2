@@ -74,7 +74,23 @@ IMPLEMENT_REFLECTION(ColorStyle) {
 }
 
 int ColorStyle::update(Context& ctx) {
-  return Style::update(ctx);
+  int changed = 0;
+  changed |= radius      .update(ctx) * CHANGE_OTHER;
+  changed |= left_width  .update(ctx) * CHANGE_OTHER;
+  changed |= right_width .update(ctx) * CHANGE_OTHER;
+  changed |= top_width   .update(ctx) * CHANGE_OTHER;
+  changed |= bottom_width.update(ctx) * CHANGE_OTHER;
+  changed |= Style::update(ctx);
+  return changed;
+}
+
+void ColorStyle::checkContentDependencies(Context& ctx, const Dependency& dep) const {
+  radius      .initDependencies(ctx, dep);
+  left_width  .initDependencies(ctx, dep);
+  right_width .initDependencies(ctx, dep);
+  top_width   .initDependencies(ctx, dep);
+  bottom_width.initDependencies(ctx, dep);
+  Style::checkContentDependencies(ctx, dep);
 }
 
 // ----------------------------------------------------------------------------- : ColorValue

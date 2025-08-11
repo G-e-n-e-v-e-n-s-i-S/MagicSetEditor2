@@ -317,6 +317,22 @@ private:
   double offset_x, offset_y;
 };
 
+// ----------------------------------------------------------------------------- : BleedEdgedImage
+
+/// Add a crude bleed edge to an image
+class BleedEdgedImage : public GeneratedImage {
+public:
+  inline BleedEdgedImage(const GeneratedImageP& base_image, double horizontal_size, double vertical_size, Color background_color)
+    : base_image(base_image), horizontal_size(horizontal_size), vertical_size(vertical_size), background_color(background_color)
+  {}
+  Image generate(const Options& opt) const override;
+  bool operator == (const GeneratedImage& that) const override;
+private:
+  GeneratedImageP base_image;
+  double horizontal_size, vertical_size;
+  Color background_color;
+};
+
 // ----------------------------------------------------------------------------- : InsertedImage
 
 /// Insert an image at a certain point inside another image
