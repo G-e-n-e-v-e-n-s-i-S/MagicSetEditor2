@@ -270,8 +270,9 @@ String Package::nameOut(const String& file) {
     // create temp file
     String name = wxFileName::CreateTempFileName(_("mse"));
     String rect = LocalFileName::getRect(file);
-    if (rect != _("")) {
-      name = name.BeforeLast('.') + rect + _(".") + name.AfterLast('.');
+    if (!rect.empty()) {
+      if (name.Contains(".")) name = name.BeforeLast('.') + rect + _(".") + name.AfterLast('.');
+      else name = name + rect;
     }
     it->second.tempName = name;
     return name;
