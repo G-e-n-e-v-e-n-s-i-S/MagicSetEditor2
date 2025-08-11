@@ -68,7 +68,7 @@ static bool set_builtin_container(GameP& game, CardP& card, ScriptValueP& value,
     card->notes = value->toString();
     return true;
   } else if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
-    if (trim(value->toString()) != wxEmptyString) card->stylesheet = StyleSheet::byGameAndName(*game, value->toString());
+    if (!trim(value->toString()).empty()) card->stylesheet = StyleSheet::byGameAndName(*game, value->toString());
     return true;
   }
   // else if (key_name == _("id") || key_name == _("multiverse_id")) {
