@@ -222,7 +222,7 @@ inline static CardP json_to_mse_card(boost::json::object& jv, Set* set) {
     if (jv.contains("extra_data") && jv["extra_data"].is_object()) {
       boost::json::object datav = jv["extra_data"].as_object();
       for (auto it = datav.begin(); it != datav.end(); ++it) {
-        StyleSheetP& stylesheet = StyleSheet::byGameAndName(*set->game, it->key_c_str());
+        StyleSheetP stylesheet = StyleSheet::byGameAndName(*set->game, it->key_c_str());
         if (!stylesheet) continue;
         IndexMap<FieldP, ValueP>& stylesheet_data = card->extraDataFor(*stylesheet);
         boost::json::object stylesheet_datav = it->value().as_object();
@@ -245,9 +245,9 @@ inline static SetP json_to_mse_set(boost::json::object& jv) {
   if (!jv.contains("stylesheet")) {
     throw ScriptError(_ERROR_("json set without stylesheet"));
   }
-  GameP& game = Game::byName(wxString(jv["game"].as_string().c_str()));
-  StyleSheetP& stylesheet = StyleSheet::byGameAndName(*game, wxString(jv["stylesheet"].as_string().c_str()));
-  SetP& set = make_intrusive<Set>(stylesheet);
+  GameP game = Game::byName(wxString(jv["game"].as_string().c_str()));
+  StyleSheetP stylesheet = StyleSheet::byGameAndName(*game, wxString(jv["stylesheet"].as_string().c_str()));
+  SetP set = make_intrusive<Set>(stylesheet);
   // set fields
   if (jv.contains("set_info") && jv["set_info"].is_object()) {
     boost::json::object datav = jv["set_info"].as_object();
@@ -262,7 +262,7 @@ inline static SetP json_to_mse_set(boost::json::object& jv) {
   if (jv.contains("styling") && jv["styling"].is_object()) {
     boost::json::object datav = jv["styling"].as_object();
     for (auto it = datav.begin(); it != datav.end(); ++it) {
-      StyleSheetP& stylesheet = StyleSheet::byGameAndName(*set->game, it->key_c_str());
+      StyleSheetP stylesheet = StyleSheet::byGameAndName(*set->game, it->key_c_str());
       if (!stylesheet) continue;
       IndexMap<FieldP, ValueP>& stylesheet_data = set->stylingDataFor(*stylesheet);
       boost::json::object stylesheet_datav = it->value().as_object();
@@ -415,7 +415,7 @@ static void write(boost::json::object& out, const String& name, DelayedIndexMaps
   if (!delayedindexmapv.empty()) out.emplace(name.ToStdString(), delayedindexmapv);
 }
 
-inline static boost::json::object mse_to_json(PackItemP& item) {
+inline static boost::json::object mse_to_json(const PackItemP& item) {
   boost::json::object itemv;
   itemv.emplace("mse_object_type", "pack_item");
   write(itemv, "name",   item->name);
@@ -424,7 +424,7 @@ inline static boost::json::object mse_to_json(PackItemP& item) {
   return itemv;
 }
 
-inline static boost::json::object mse_to_json(PackTypeP& pack) {
+inline static boost::json::object mse_to_json(const PackTypeP& pack) {
   boost::json::object packv;
   packv.emplace("mse_object_type", "pack_type");
   write(packv, "name",       pack->name);
@@ -441,7 +441,7 @@ inline static boost::json::object mse_to_json(PackTypeP& pack) {
   return packv;
 }
 
-inline static boost::json::object mse_to_json(KeywordP& keyword) {
+inline static boost::json::object mse_to_json(const KeywordP& keyword) {
   boost::json::object keywordv;
   keywordv.emplace("mse_object_type", "keyword");
   write(keywordv, "keyword",  keyword->keyword);
@@ -452,7 +452,7 @@ inline static boost::json::object mse_to_json(KeywordP& keyword) {
   return keywordv;
 }
 
-inline static boost::json::object mse_to_json(CardP& card, Set* set) {
+inline static boost::json::object mse_to_json(const CardP& card, Set* set) {
   boost::json::object cardv;
   cardv.emplace("mse_object_type", "card");
   // built-in values
@@ -529,7 +529,7 @@ inline static boost::json::object mse_to_json(Set* set) {
   return setv;
 }
 
-inline static boost::json::value mse_to_json(ScriptValueP& sv, Set* set) {
+inline static boost::json::value mse_to_json(const ScriptValueP& sv, Set* set) {
   ScriptType type = sv->type();
   // special types
   if (ScriptObject<PackItemP>* i = dynamic_cast<ScriptObject<PackItemP>*>(sv.get())) return mse_to_json(i->getValue());

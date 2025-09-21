@@ -108,7 +108,7 @@ public:
   RealSize defaultSymbolSize(double font_size);
   
   /// The spacing between symbols, accounting for font size
-  RealSize SymbolFont::spacingSize(double font_size);
+  RealSize spacingSize(double font_size);
   
   DECLARE_REFLECTION();
 };

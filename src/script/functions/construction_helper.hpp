@@ -40,7 +40,7 @@ inline static Value* get_card_field_container(Game& game, IndexMap<FieldP, Value
   return it->get();
 }
 
-inline static Value* get_container(IndexMap<FieldP, ValueP>& map, String& type, String& key_name, bool ignore_field_not_found) {
+inline static Value* get_container(IndexMap<FieldP, ValueP>& map, const String& type, const String& key_name, bool ignore_field_not_found) {
   // find value container to update
   IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
   if (it == map.end()) {
