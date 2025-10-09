@@ -70,11 +70,7 @@ typedef shared_ptr<wxMemoryDC> MemoryDCP;
 // Return a temporary DC with the same size as the parameter
 MemoryDCP getTempDC(DC& dc) {
   wxSize s = dc.GetSize();
-  #ifdef __WXMSW__
-    Bitmap buffer(s.GetWidth(), s.GetHeight(), 1);
-  #else
-    Bitmap buffer(s.GetWidth(), s.GetHeight(), 24);
-  #endif
+  Bitmap buffer(s.GetWidth(), s.GetHeight(), 24);
   MemoryDCP newDC(new wxMemoryDC);
   newDC->SelectObject(buffer);
   clearDC(*newDC, *wxBLACK_BRUSH);
