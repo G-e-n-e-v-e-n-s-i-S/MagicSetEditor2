@@ -59,7 +59,7 @@ void ImageValueEditor::sliceImage(const Image& image, const String& filename, co
   if (s.ShowModal() == wxID_OK) {
     // store the image into the set
     StyleP style = field().styleP;
-    String rect = style ? style->getRect() : _("");
+    String rect = style ? style->setRect() : _("");
     String extension = settings.internal_image_extension ? _(".png") : _("");
     LocalFileName new_image_file = getLocalPackage().newFileName(field().name, rect + extension); // a new unique name in the package
 

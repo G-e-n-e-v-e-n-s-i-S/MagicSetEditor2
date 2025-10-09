@@ -268,7 +268,7 @@ void mark_dependency_member(const Style& style, const String& name, const Depend
   style.markDependencyMember(name,dep);
 }
 
-String Style::getRect() {
+String Style::setRect() {
   return _("---") +
          wxString::Format(wxT("%i"), (int)(left)) +
          _("-") +

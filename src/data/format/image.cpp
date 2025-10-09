@@ -15,6 +15,7 @@
 #include <data/card.hpp>
 #include <data/stylesheet.hpp>
 #include <data/settings.hpp>
+#include <script/functions/json.hpp>
 #include <gui/util.hpp>
 #include <render/card/viewer.hpp>
 #include <wx/filename.h>
@@ -157,26 +158,29 @@ Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_
 Image export_image(const SetP& set, const CardP& card) {
   Bitmap bitmap = export_bitmap(set, card);
   Image img = bitmap.ConvertToImage();
-  vector<CardP> cards = { card };
-  CardsDataObject data(set, cards);
-  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, _("<mse-data-start>") + data.GetText() + _("<mse-data-end>"));
+  String data = _("<mse-data-start>[") + json_ugly_print(mse_to_json(card, set.get())) + _("]<mse-data-end>");
+  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, data);
   return img;
 }
 
 Image export_image(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians) {
   Bitmap bitmap = export_bitmap(set, card, zoom, angle_radians);
   Image img = bitmap.ConvertToImage();
-  vector<CardP> cards = { card };
-  CardsDataObject data(set, cards);
-  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, _("<mse-data-start>") + data.GetText() + _("<mse-data-end>"));
+  String data = _("<mse-data-start>[") + json_ugly_print(mse_to_json(card, set.get())) + _("]<mse-data-end>");
+  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, data);
   return img;
 }
 
 Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians) {
   Bitmap bitmap = export_bitmap(set, cards, scale_to_lowest_dpi, padding, zoom, angle_radians);
   Image img = bitmap.ConvertToImage();
-  CardsDataObject data(set, cards);
-  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, _("<mse-data-start>") + data.GetText() + _("<mse-data-end>"));
+  String data = _("<mse-data-start>[");
+  for (int i = 0; i < cards.size(); ++i) {
+    if (i > 0) data += _(",");
+    data += json_ugly_print(mse_to_json(cards[i], set.get()));
+  }
+  data += _("]<mse-data-end>");
+  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, data);
   return img;
 }
 

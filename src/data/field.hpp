@@ -165,7 +165,7 @@ public:
   void tellListeners(int changes);
   
   /// Store where on the card the field goes, to save it in filenames
-  String getRect();
+  String setRect();
 
 private:
   DECLARE_REFLECTION_VIRTUAL();

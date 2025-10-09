@@ -57,6 +57,8 @@ CardsPanel::CardsPanel(Window* parent, int id)
   collapse_notes->SetExtraStyle(wxWS_EX_PROCESS_UI_UPDATES);
   filter          = nullptr;
   editor->next_in_tab_order = card_list;
+  card_list->initDataObject();
+  SetDropTarget(card_list);
   wxFont font = link_relation_1->GetFont();
   font.SetWeight(wxFONTWEIGHT_BOLD);
   link_relation_1->SetFont(font);

@@ -102,42 +102,42 @@ inline static bool set_builtin_container(const Game& game, CardP& card, ScriptVa
     }
     return true;
   }
-  //else if (key_name == _("id") || key_name == _("uid")) {
-  //  card->uid = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card") || key_name == _("linked_card_1")) {
-  //  card->linked_card_1 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card_2")) {
-  //  card->linked_card_2 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card_3")) {
-  //  card->linked_card_3 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card_4")) {
-  //  card->linked_card_4 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation") || key_name == _("linked_relation_1")) {
-  //  card->linked_relation_1 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation_2")) {
-  //  card->linked_relation_2 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation_3")) {
-  //  card->linked_relation_3 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation_4")) {
-  //  card->linked_relation_4 = value->toString();
-  //  return true;
-  //}
+  else if (key_name == _("id") || key_name == _("uid")) {
+    card->uid = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card") || key_name == _("linked_card_1")) {
+    card->linked_card_1 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_2")) {
+    card->linked_card_2 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_3")) {
+    card->linked_card_3 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_4")) {
+    card->linked_card_4 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation") || key_name == _("linked_relation_1")) {
+    card->linked_relation_1 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_2")) {
+    card->linked_relation_2 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_3")) {
+    card->linked_relation_3 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_4")) {
+    card->linked_relation_4 = value->toString();
+    return true;
+  }
   else if          (key_name == _("styling_data")   || key_name == _("style_data")   || key_name == _("stylesheet_data")   || key_name == _("template_data") || key_name == _("styling")
                  || key_name == _("styling_fields") || key_name == _("style_fields") || key_name == _("stylesheet_fields") || key_name == _("template_fields")
                  || key_name == _("extra_data")     || key_name == _("extra_fields") || key_name == _("extra_card_data")   || key_name == _("extra_card_fields")) {

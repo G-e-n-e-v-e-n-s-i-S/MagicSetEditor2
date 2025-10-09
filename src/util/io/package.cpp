@@ -272,7 +272,7 @@ String Package::nameOut(const String& file) {
   } else {
     // create temp file
     String name = wxFileName::CreateTempFileName(_("mse"));
-    String rect = LocalFileName::getRect(file);
+    String rect = LocalFileName::getRectString(file);
     if (!rect.empty()) {
       if (name.Contains(".")) name = name.BeforeLast('.') + rect + _(".") + name.AfterLast('.');
       else name = name + rect;
@@ -366,7 +366,7 @@ LocalFileName LocalFileName::fromReadString(String const& fn, String const& pref
   if (!fn.empty() && clipboard_package()) {
     // copy file into current package
     try {
-      LocalFileName local_name = clipboard_package()->newFileName(_("image"), getRect(fn)); // a new unique name in the package, assume it's an image
+      LocalFileName local_name = clipboard_package()->newFileName(_("image"), getRectString(fn)); // a new unique name in the package, assume it's an image
       auto out_stream = clipboard_package()->openOut(local_name);
       auto in_stream  = Package::openAbsoluteFile(fn);
       out_stream->Write(*in_stream); // copy
