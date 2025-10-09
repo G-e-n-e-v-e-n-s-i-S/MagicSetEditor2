@@ -754,7 +754,7 @@ SCRIPT_FUNCTION(get_card_stylesheet) {
   ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(input.get());
   ScriptObject<Set*>* s = dynamic_cast<ScriptObject<Set*>*>(set.get());
   if (s && c) {
-    return to_script(&s->getValue()->stylesheetFor(c->getValue()));
+    return to_script(s->getValue()->stylesheetForP(c->getValue()));
   }
   throw ScriptError(_("invalid set or card argument"));
 }

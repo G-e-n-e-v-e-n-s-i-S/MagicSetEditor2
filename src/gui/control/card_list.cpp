@@ -24,9 +24,13 @@
 #include <data/format/clipboard.hpp>
 #include <data/action/set.hpp>
 #include <data/action/value.hpp>
+#include <script/functions/json.hpp>
 #include <util/window_id.hpp>
 #include <wx/clipbrd.h>
+#include <wx/webrequest.h>
+#include <wx/wfstream.h>
 #include <unordered_set>
+#include <fstream>
 
 DECLARE_POINTER_TYPE(ChoiceValue);
 
@@ -141,7 +145,7 @@ void CardListBase::getSelection(vector<CardP>& out) const {
 bool CardListBase::canCut()   const { return canDelete(); }
 bool CardListBase::canCopy()  const { return focusCount() > 0; }
 bool CardListBase::canPaste() const {
-  return allowModify() && wxTheClipboard->IsSupported(CardsDataObject::format);
+  return allowModify();// && (wxTheClipboard->IsSupported(CardsDataObject::format) || wxTheClipboard->IsSupported(wxDF_BITMAP));
 }
 bool CardListBase::canDelete() const {
   return allowModify() && focusCount() > 0; // TODO: check for selection?
@@ -184,22 +188,16 @@ bool CardListBase::doCopyCardAndLinkedCards() {
   wxTheClipboard->Close();
   return ok;
 }
+
 bool CardListBase::doPaste() {
-  // get data
   if (!canPaste()) return false;
   if (!wxTheClipboard->Open()) return false;
-  CardsDataObject data;
-  bool ok = wxTheClipboard->GetData(data);
+  bool ok = wxTheClipboard->GetData(*data_object);
   wxTheClipboard->Close();
-  if (!ok) return false;
-  // get cards
-  vector<CardP> new_cards;
-  ok = data.getCards(set, new_cards);
-  if (!ok) return false;
-  // add card to set
-  set->actions.addAction(make_unique<AddCardAction>(ADD, *set, new_cards));
-  return true;
+  if (ok) return parseData();
+  return false;
 }
+
 bool CardListBase::doDelete() {
   // cards to delete
   vector<CardP> cards_to_delete;
@@ -245,6 +243,227 @@ bool CardListBase::doAddJSON() {
     return true;
   }
   return false;
+}
+
+wxDragResult CardListBase::OnData(wxCoord x, wxCoord y, wxDragResult defaultDragResult) {
+  if (!GetData()) return wxDragNone;
+  if (!parseData()) return wxDragError;
+  return wxDragCopy;
+}
+
+bool CardListBase::parseUrl(String& url, vector<CardP>& out) {
+  queue_message(MESSAGE_ERROR, _("parsing url"));
+  size_t j = out.size();
+  size_t pos = url.find("URL=");
+  if (pos != std::string::npos) {
+    url = url.substr(pos+4);
+  }
+  if (!url.StartsWith(_("http"))) return false;
+
+  wxWebRequest request = wxWebSession::GetDefault().CreateRequest(this, url);
+  if (!request.IsOk() ) {
+    queue_message(MESSAGE_ERROR, _ERROR_("cant create web request"));
+    return false;
+  }
+  //request.SetStorage(wxWebRequestBase::Storage::Storage_File);
+  request.Start();
+
+  off_t bytes = 0;
+  off_t last_bytes = 0;
+  off_t expected_bytes = -1;
+  for (size_t i = 0; i < 40; i++)
+  {
+    wxMilliSleep(30);
+    off_t expected_bytes = request.GetBytesExpectedToReceive();
+    off_t bytes = request.GetBytesReceived();
+
+    queue_message(MESSAGE_ERROR, wxString::Format(wxT("%i"), (int)bytes));
+    queue_message(MESSAGE_ERROR, wxString::Format(wxT("%i"), (int)expected_bytes));
+    if (wxGetKeyState(WXK_ESCAPE)) break;
+    if (bytes >= expected_bytes && expected_bytes > 0) break;
+    if (bytes > last_bytes) i = 0;
+    last_bytes = bytes;
+  }
+
+  if (request.GetState() == wxWebRequestBase::State::State_Completed) {
+    wxWebResponse response = request.GetResponse();
+    if (response.GetContentType().StartsWith(_("image"))) {
+      wxImage image(*response.GetStream());
+      if (image.IsOk()) {
+        parseImage(image, out);
+      }
+    } else {
+      queue_message(MESSAGE_ERROR, _ERROR_("web request not image"));
+      //if (wxTextInputStream* text_stream = dynamic_cast<wxTextInputStream*>(stream)) {
+      //  String text;
+      //  text_stream >> text;
+      //  queue_message(MESSAGE_ERROR, text);
+      //  if (!parseUrl(text, out)) parseText(text, out);
+      //}
+    }
+    
+    //wxArrayString filenames;
+    //filenames.push_back(request.GetResponse().GetDataFile());
+    //parseFiles(filenames, out);
+  } else {
+    queue_message(MESSAGE_ERROR, _ERROR_("web request failed"));
+    if (request.GetState() == wxWebRequestBase::State::State_Active) request.Cancel();
+  }
+
+  //url.Replace("https:", "http:");
+  //url.Replace("http://", "");
+  //pos = url.find_first_of("/");
+  //wxString server = url.substr(0, pos);
+  //wxString path = url.substr(pos);
+
+  return j < out.size();
+}
+
+bool CardListBase::parseFiles(wxArrayString& filenames, vector<CardP>& out) {
+  queue_message(MESSAGE_ERROR, _("parsing files"));
+  size_t j = out.size();
+  for (size_t i = 0; i < filenames.size(); i++) {
+    queue_message(MESSAGE_ERROR, filenames[i]);
+    if (wxFileName::IsFileReadable(filenames[i])) queue_message(MESSAGE_ERROR, _("readable"));
+    else {queue_message(MESSAGE_ERROR, _("unreadable"));  continue;}
+    // if it's an image file, try to get meta_data
+    Image image_file;
+    image_file.SetLoadFlags(image_file.GetLoadFlags() & ~wxImage::Load_Verbose);
+    if (image_file.LoadFile(filenames[i])) {
+      parseImage(image_file, out);
+    } else {
+      // if it's an url, request the data
+      std::ifstream ifs(filenames[i].ToStdString());
+      if (ifs.bad() || ifs.fail() || !ifs.good() || !ifs.is_open()) continue;
+      std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+      wxString text(content);
+      queue_message(MESSAGE_ERROR, text);
+      if (!parseUrl(text, out)) parseText(text, out);
+    }
+  }
+  return j < out.size();
+}
+
+bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
+  queue_message(MESSAGE_ERROR, _("parsing image"));
+  size_t j = out.size();
+  if (image.HasOption(wxIMAGE_OPTION_PNG_DESCRIPTION)) {
+    parseText(image.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION), out);
+    // crop image rects to populate image fields
+    for (; j < out.size(); j++) {
+      CardP& card = out[j];
+      IndexMap<FieldP, ValueP>::iterator it;
+      for (it = card->data.begin(); it != card->data.end(); it++) {
+        if (ImageValue* ivalue = dynamic_cast<ImageValue*>((*it).get())) {
+          wxRect rect = ivalue->filename.getRect();
+          if (rect.width > 0 && rect.height > 0) {
+            Image& sub_image = image.GetSubImage(rect);
+            String& temp_name = wxFileName::CreateTempFileName(_("mse"));
+            sub_image.SaveFile(temp_name);
+            wxFileInputStream in_stream(temp_name);
+            auto out_stream = set->openOut(set->newFileName(_("image"), _("")));
+            if (in_stream.IsOk()) out_stream->Write(in_stream);
+            out_stream->Close();
+            wxRemoveFile(temp_name);
+          }
+        }
+      }
+    }
+  }
+  return j < out.size();
+}
+
+bool CardListBase::parseText(String& text, vector<CardP>& out) {
+  queue_message(MESSAGE_ERROR, _("parsing text"));
+  size_t j = out.size();
+  if (size_t pos = text.find("<mse-data-start>") != wxString::npos) {
+    text = text.substr(pos + 15, text.find("<mse-data-end>") - pos - 15);
+    queue_message(MESSAGE_ERROR,text);
+  }
+  try {
+    ScriptValueP& sv = json_to_mse(text, set.get());
+    if (sv->type() == SCRIPT_COLLECTION) {
+      if (ScriptCustomCollection* custom = dynamic_cast<ScriptCustomCollection*>(sv.get())) {
+        for (size_t i = 0; i < custom->value.size(); i++) {
+          if (ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(custom->value[i].get())) {
+            out.push_back(make_intrusive<Card>(*c->getValue()));
+          }
+        }
+      }
+    } else if (ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(sv.get())) {
+      out.push_back(make_intrusive<Card>(*c->getValue()));
+    }
+  } catch (...) {}
+  return j < out.size();
+}
+
+bool CardListBase::parseData() {
+  wxBusyCursor wait;
+  wxDataFormat format = data_object->GetReceivedFormat();
+  wxDataObject *data = data_object->GetObject(format);
+  vector<CardP> new_cards;
+
+  if (CardsDataObject* card_data = dynamic_cast<CardsDataObject*>(data)) {
+    card_data->getCards(set, new_cards);
+  }
+  else switch (format.GetType())
+  {
+    case wxDF_FILENAME:
+    {
+      wxFileDataObject* file_data = static_cast<wxFileDataObject*>(data);
+      wxArrayString filenames = file_data->GetFilenames();
+      parseFiles(filenames, new_cards);
+    }
+    break;
+
+    case wxDF_PNG:
+    {
+      wxImageDataObject* image_data = static_cast<wxImageDataObject*>(data);
+      Image image = image_data->GetImage();
+      parseImage(image, new_cards);
+    }
+    break;
+
+    case wxDF_BITMAP:
+    {
+      wxBitmapDataObject* bitmap_data = static_cast<wxBitmapDataObject*>(data);
+      wxBitmap bitmap = bitmap_data->GetBitmap();
+      Image image = bitmap.ConvertToImage();
+      parseImage(image, new_cards);
+    }
+    break;
+
+    case wxDF_UNICODETEXT:
+    case wxDF_TEXT:
+    case wxDF_HTML:
+    {
+      wxTextDataObject* text_data = static_cast<wxTextDataObject*>(data);
+      String text = text_data->GetText();
+      if (!parseUrl(text, new_cards)) parseText(text, new_cards);
+    }
+    break;
+
+    default:
+    {
+      queue_message(MESSAGE_ERROR, _ERROR_("unknown data format"));
+    }
+  }
+
+  if (new_cards.size() > 0) {
+    set->actions.addAction(make_unique<AddCardAction>(ADD, *set, new_cards));
+    return true;
+  }
+  queue_message(MESSAGE_ERROR, _ERROR_( "no card data found"));
+  return false;
+}
+
+void CardListBase::initDataObject() {
+  data_object = new wxDataObjectComposite();
+  data_object->Add(new CardsDataObject(), true);
+  data_object->Add(new wxFileDataObject());
+  data_object->Add(new wxImageDataObject());
+  data_object->Add(new wxTextDataObject());
+  SetDataObject(data_object);
 }
 
 // ----------------------------------------------------------------------------- : CardListBase : Building the list

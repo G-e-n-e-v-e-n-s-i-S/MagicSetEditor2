@@ -12,6 +12,7 @@
 #include <gui/control/item_list.hpp>
 #include <data/card.hpp>
 #include <data/set.hpp>
+#include <wx/dnd.h>
 
 DECLARE_POINTER_TYPE(ChoiceField);
 DECLARE_POINTER_TYPE(Field);
@@ -57,7 +58,7 @@ private:
  *  Note: (long) pos refers to position in the sorted_list,
  *        (size_t) index refers to the index in the actual card list.
  */
-class CardListBase : public ItemList, public SetView {
+class CardListBase : public ItemList, public SetView, public wxDropTarget {
 public:
   CardListBase(Window* parent, int id, long additional_style = 0);
   ~CardListBase();
@@ -80,6 +81,19 @@ public:
   bool doDelete() override;
   bool doAddCSV();
   bool doAddJSON();
+
+  // --------------------------------------------------- : Drag and Drop
+
+  wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult defaultDragResult) override;
+  
+  // --------------------------------------------------- : Acquiring Data from clipboard or drag and drop
+
+  void initDataObject();
+  bool parseData();
+  bool parseUrl(String& url, vector<CardP>& out);
+  bool parseFiles(wxArrayString& filenames, vector<CardP>& out);
+  bool parseText(String& text, vector<CardP>& out);
+  bool parseImage(Image& image, vector<CardP>& out);
 
   // --------------------------------------------------- : Card linking
   
@@ -135,8 +149,9 @@ private:
   vector<FieldP> column_fields; ///< The field to use for each column (by column index)
   FieldP alternate_sort_field;  ///< Second field to sort by, if the column doesn't suffice
   
-  mutable wxListItemAttr item_attr; // for OnGetItemAttr
+  mutable wxListItemAttr item_attr; ///< for OnGetItemAttr
   
+  wxDataObjectComposite* data_object; ///< for receiving data from the clipboard or a drag and drop
 public:
   /// Open a dialog for selecting columns to be shown
   void selectColumns();
