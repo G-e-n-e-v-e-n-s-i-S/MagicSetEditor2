@@ -21,8 +21,8 @@ CardLinkWindow::CardLinkWindow(Window* parent, const SetP& set, const CardP& sel
   , set(set), selected_card(selected_card)
 {
   // init controls
-  selected_relation = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
-  linked_relation = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  selected_relation = new wxTextCtrl(this, wxID_ANY, _(""));
+  linked_relation = new wxTextCtrl(this, wxID_ANY, _(""));
   relation_type = new wxChoice(this, ID_CARD_LINK_TYPE, wxDefaultPosition, wxDefaultSize, 0, nullptr);
   relation_type->Clear();
   FOR_EACH(link, set->game->card_links) {

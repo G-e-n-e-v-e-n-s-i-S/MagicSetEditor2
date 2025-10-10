@@ -126,7 +126,7 @@ void WelcomeWindow::onSelectLanguage(wxCommandEvent&) {
 }
 
 void WelcomeWindow::onOpenSet(wxCommandEvent&) {
-  wxFileDialog* dlg = new wxFileDialog(this, _TITLE_("open set"), settings.default_set_dir, wxEmptyString, import_formats(), wxFD_OPEN);
+  wxFileDialog* dlg = new wxFileDialog(this, _TITLE_("open set"), settings.default_set_dir, _(""), import_formats(), wxFD_OPEN);
   if (dlg->ShowModal() == wxID_OK) {
     settings.default_set_dir = dlg->GetDirectory();
     wxBusyCursor wait;

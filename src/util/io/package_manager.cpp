@@ -154,7 +154,7 @@ String PackageManager::openFilenameFromPackage(Packaged* package, const String& 
 
 String PackageManager::getDictionaryDir(bool l) const {
   String dir = (l ? local : global).getDirectory();
-  if (dir.empty()) return wxEmptyString;
+  if (dir.empty()) return _("");
   else             return dir + _("/dictionaries/");
 }
 

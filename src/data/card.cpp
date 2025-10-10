@@ -53,7 +53,7 @@ String Card::identification() const {
   if (!data.empty()) {
     return data.at(0)->toString();
   } else {
-    return wxEmptyString;
+    return _("");
   }
 }
 
@@ -78,7 +78,7 @@ void Card::link(const Set& set, const vector<CardP>& linked_cards, const String&
   FOR_EACH(this_linked_pair, this_linked_pairs) {
     String& this_linked_uid = this_linked_pair.first.get();
     if (
-      this_linked_uid == wxEmptyString ||                                // Not a reference
+      this_linked_uid.empty() ||                                // Not a reference
       all_existing_uids.find(this_linked_uid) == all_existing_uids.end() // Reference to nonexistent card
     ) free_link_count++;
   }
@@ -94,7 +94,7 @@ void Card::link(const Set& set, const vector<CardP>& linked_cards, const String&
     FOR_EACH(this_linked_pair, this_linked_pairs) {
       String& this_linked_uid = this_linked_pair.first.get();
       String& this_linked_relation = this_linked_pair.second.get();
-      if (this_linked_uid == wxEmptyString) {
+      if (this_linked_uid.empty()) {
         this_linked_uid = linked_card->uid;
         this_linked_relation = linked_relation;
         written = true;
@@ -124,7 +124,7 @@ void Card::link(const Set& set, const vector<CardP>& linked_cards, const String&
     FOR_EACH(linked_pair, linked_pairs) {
       String& linked_uid = linked_pair.first.get();
       String& linked_relation = linked_pair.second.get();
-      if (linked_uid == wxEmptyString) {
+      if (linked_uid.empty()) {
         linked_uid = uid;
         linked_relation = selected_relation;
         written = true;
@@ -177,26 +177,26 @@ void Card::unlink(const vector<CardP>& unlinked_cards)
 
 pair<String, String> Card::unlink(CardP& unlinked_card)
 {
-  String old_selected_relation = wxEmptyString;
+  String old_selected_relation = _("");
   THIS_LINKED_PAIRS(this_linked_pairs);
   FOR_EACH(this_linked_pair, this_linked_pairs) {
     String& this_linked_uid = this_linked_pair.first.get();
     String& this_linked_relation = this_linked_pair.second.get();
     if (this_linked_uid == unlinked_card->uid) {
       old_selected_relation = this_linked_relation;
-      this_linked_uid = wxEmptyString;
-      this_linked_relation = wxEmptyString;
+      this_linked_uid = _("");
+      this_linked_relation = _("");
     }
   }
-  String old_unlinked_relation = wxEmptyString;
+  String old_unlinked_relation = _("");
   OTHER_LINKED_PAIRS(unlinked_pairs, unlinked_card);
   FOR_EACH(unlinked_pair, unlinked_pairs) {
     String& unlinked_uid = unlinked_pair.first.get();
     String& unlinked_relation = unlinked_pair.second.get();
     if (unlinked_uid == uid) {
       old_unlinked_relation = unlinked_relation;
-      unlinked_uid = wxEmptyString;
-      unlinked_relation = wxEmptyString;
+      unlinked_uid = _("");
+      unlinked_relation = _("");
     }
   }
   return make_pair(old_selected_relation, old_unlinked_relation);
@@ -204,7 +204,7 @@ pair<String, String> Card::unlink(CardP& unlinked_card)
 
 void Card::copyLink(const Set& set, String old_uid, String new_uid) {
   // Find what relation we need to copy
-  String relation_copy = wxEmptyString;
+  String relation_copy = _("");
   THIS_LINKED_PAIRS(this_linked_pairs);
   FOR_EACH(this_linked_pair, this_linked_pairs) {
     String& this_linked_uid = this_linked_pair.first.get();
@@ -215,7 +215,7 @@ void Card::copyLink(const Set& set, String old_uid, String new_uid) {
     }
   }
   // Nothing to copy
-  if (relation_copy == wxEmptyString) {
+  if (relation_copy.empty()) {
     return;
   }
 
@@ -224,7 +224,7 @@ void Card::copyLink(const Set& set, String old_uid, String new_uid) {
   FOR_EACH(this_linked_pair, this_linked_pairs) {
     String& this_linked_uid = this_linked_pair.first.get();
     String& this_linked_relation = this_linked_pair.second.get();
-    if (this_linked_uid == wxEmptyString) {
+    if (this_linked_uid.empty()) {
       this_linked_uid = new_uid;
       this_linked_relation = relation_copy;
       written = true;

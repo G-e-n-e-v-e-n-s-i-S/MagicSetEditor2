@@ -403,7 +403,7 @@ void Package::loadZipStream() {
 }
 
 void Package::openDirectory(bool fast) {
-  if (!fast) openSubdir(wxEmptyString);
+  if (!fast) openSubdir(_(""));
 }
 
 void Package::openSubdir(const String& name) {
@@ -411,7 +411,7 @@ void Package::openSubdir(const String& name) {
   if (!d.IsOpened()) return; // ignore errors here
   // find files
   String f; // filename
-  for(bool ok = d.GetFirst(&f, wxEmptyString, wxDIR_FILES | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
+  for(bool ok = d.GetFirst(&f, _(""), wxDIR_FILES | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
     if (ignore_file(f)) continue;
     // add file to list of known files
     addFile(name + f);
@@ -420,7 +420,7 @@ void Package::openSubdir(const String& name) {
     modified = max(modified,file_time);
   }
   // find subdirs
-  for(bool ok = d.GetFirst(&f, wxEmptyString, wxDIR_DIRS | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
+  for(bool ok = d.GetFirst(&f, _(""), wxDIR_DIRS | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
     if (!f.empty() && f.GetChar(0) != _('.')) {
       // skip directories starting with '.', like ., .. and .svn
       openSubdir(name+f+_("/"));

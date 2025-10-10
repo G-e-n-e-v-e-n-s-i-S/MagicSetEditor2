@@ -257,7 +257,7 @@ String KeywordsPanel::runRefScript(int find_i) {
       }
     }
   }
-  return wxEmptyString;
+  return _("");
 }
 
 // ----------------------------------------------------------------------------- : Clipboard

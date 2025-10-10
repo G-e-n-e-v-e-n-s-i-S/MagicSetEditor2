@@ -96,13 +96,13 @@ String fix_old_tags(const String& str) {
       ret += c;
       if (c==_('<')) {
         intag = true;
-        tags.push(wxEmptyString);
+        tags.push(_(""));
       } else if (c==_('>') && intag) {
         intag = false;
         if (!starts_with(tags.top(), _("kw")) && !starts_with(tags.top(), _("atom"))) {
           // only keep keyword related stuff
           ret.resize(ret.size() - tags.top().size() - 2); // remove from output
-          tags.top() = wxEmptyString;
+          tags.top() = _("");
         }
       } else if (intag) {
         tags.top() += c;
@@ -303,13 +303,13 @@ bool is_in_tag(const String& str, const String& tag, size_t start, size_t end) {
 
 String tag_at(const String& str, size_t pos) {
   size_t end = str.find_first_of(_(">"), pos);
-  if (end == String::npos) return wxEmptyString;
+  if (end == String::npos) return _("");
   return str.substr(pos + 1, end - pos - 1);
 }
 
 String tag_type_at(const String& str, size_t pos) {
   size_t end = str.find_first_of(_(">-"), pos);
-  if (end == String::npos) return wxEmptyString;
+  if (end == String::npos) return _("");
   return str.substr(pos + 1, end - pos - 1);
 }
 

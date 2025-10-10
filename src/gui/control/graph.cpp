@@ -1172,10 +1172,10 @@ bool GraphControl::hasSelection(size_t axis) const {
   return axis < current_item.size() && current_item[axis] >= 0;
 }
 String GraphControl::getSelection(size_t axis) const {
-  if (!graph || axis >= current_item.size() || axis >= graph->getData()->axes.size()) return wxEmptyString;
+  if (!graph || axis >= current_item.size() || axis >= graph->getData()->axes.size()) return _("");
   GraphAxis& a = *graph->getData()->axes[axis];
   int i = current_item[axis];
-  if (i == -1 || (size_t)i >= a.groups.size()) return wxEmptyString;
+  if (i == -1 || (size_t)i >= a.groups.size()) return _("");
   return a.groups[current_item[axis]].name;
 }
 vector<int> GraphControl::getSelectionIndices() const {

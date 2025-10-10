@@ -40,10 +40,10 @@ CardsPanel::CardsPanel(Window* parent, int id)
   link_viewer_2   = new CardViewer(this, ID_CARD_LINK_VIEWER);
   link_viewer_3   = new CardViewer(this, ID_CARD_LINK_VIEWER);
   link_viewer_4   = new CardViewer(this, ID_CARD_LINK_VIEWER);
-  link_relation_1 = new wxStaticText(this, ID_CARD_LINK_RELATION_1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
-  link_relation_2 = new wxStaticText(this, ID_CARD_LINK_RELATION_2, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
-  link_relation_3 = new wxStaticText(this, ID_CARD_LINK_RELATION_3, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
-  link_relation_4 = new wxStaticText(this, ID_CARD_LINK_RELATION_4, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+  link_relation_1 = new wxStaticText(this, ID_CARD_LINK_RELATION_1, _(""), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+  link_relation_2 = new wxStaticText(this, ID_CARD_LINK_RELATION_2, _(""), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+  link_relation_3 = new wxStaticText(this, ID_CARD_LINK_RELATION_3, _(""), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+  link_relation_4 = new wxStaticText(this, ID_CARD_LINK_RELATION_4, _(""), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
   link_select     = new wxButton(this, ID_CARD_LINK_SELECT, _BUTTON_("link select"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
   link_unlink_1   = new wxButton(this, ID_CARD_LINK_UNLINK_1, _BUTTON_("unlink"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
   link_unlink_2   = new wxButton(this, ID_CARD_LINK_UNLINK_2, _BUTTON_("unlink"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
@@ -659,7 +659,7 @@ void CardsPanel::selectCard(const CardP& card) {
     link_box_1->Show(false);
     link_editor->setCard(card);
     link_viewer_1->setCard(card);
-    //link_relation_1->SetLabel(wxEmptyString);
+    //link_relation_1->SetLabel(_(""));
   }
   if (count >= 2) {
     link_box_2->Show(true);
@@ -670,7 +670,7 @@ void CardsPanel::selectCard(const CardP& card) {
   } else {
     link_box_2->Show(false);
     link_viewer_2->setCard(card);
-    //link_relation_2->SetLabel(wxEmptyString);
+    //link_relation_2->SetLabel(_(""));
   }
   if (count >= 3) {
     link_box_3->Show(true);
@@ -681,7 +681,7 @@ void CardsPanel::selectCard(const CardP& card) {
   } else {
     link_box_3->Show(false);
     link_viewer_3->setCard(card);
-    //link_relation_3->SetLabel(wxEmptyString);
+    //link_relation_3->SetLabel(_(""));
   }
   if (count >= 4) {
     link_box_4->Show(true);
@@ -692,7 +692,7 @@ void CardsPanel::selectCard(const CardP& card) {
   } else {
     link_box_4->Show(false);
     link_viewer_4->setCard(card);
-    //link_relation_4->SetLabel(wxEmptyString);
+    //link_relation_4->SetLabel(_(""));
   }
   if (count >= 5) {
     queue_message(MESSAGE_WARNING, "DEBUG More than 4 linked cards found for card: " + card->identification());

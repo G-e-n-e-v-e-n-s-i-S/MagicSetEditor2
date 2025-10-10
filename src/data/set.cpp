@@ -142,7 +142,7 @@ String Set::identification() const {
       return v->toString();
     }
   }
-  return wxEmptyString;
+  return _("");
 }
 
 

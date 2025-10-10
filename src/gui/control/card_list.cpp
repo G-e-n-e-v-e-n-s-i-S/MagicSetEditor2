@@ -566,7 +566,7 @@ void CardListBase::storeColumns() {
   // store sorting
   GameSettings& gs = settings.gameSettingsFor(*set->game);
   if (sort_by_column >= 0) gs.sort_cards_by = column_fields.at(sort_by_column)->name;
-  else                     gs.sort_cards_by = wxEmptyString;
+  else                     gs.sort_cards_by = _("");
   gs.sort_cards_ascending = sort_ascending;
 }
 
@@ -592,11 +592,11 @@ void CardListBase::selectColumns() {
 String CardListBase::OnGetItemText(long pos, long col) const {
   if (col < 0 || (size_t)col >= column_fields.size()) {
     // wx may give us non existing columns!
-    return wxEmptyString;
+    return _("");
   }
   ValueP val = getCard(pos)->data[column_fields[col]];
   if (val) return val->toString();
-  else     return wxEmptyString;
+  else     return _("");
 }
 
 int CardListBase::OnGetItemImage(long pos) const {

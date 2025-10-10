@@ -73,7 +73,7 @@ wxSizer* ExportWindowBase::Create() {
   s->AddSpacer(4);
   s->Add(new wxStaticLine(this), 0, wxALL | wxEXPAND, 4);
   s->AddSpacer(4);
-  card_count = new wxStaticText(this, wxID_ANY, wxEmptyString);
+  card_count = new wxStaticText(this, wxID_ANY, _(""));
   s->Add(card_count, 0, wxALL & ~wxTOP, 6);
   s->AddSpacer(4);
   // done

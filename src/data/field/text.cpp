@@ -206,7 +206,7 @@ void FakeTextValue::retrieve() {
   if (underlying) {
     value.assign(untagged ? escape(*underlying) : *underlying);
   } else {
-    value.assign(wxEmptyString);
+    value.assign(_(""));
   }
 }
 

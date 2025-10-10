@@ -37,7 +37,7 @@ public:
   /** filename is used only for error messages
    *  package is used for looking up included files.
    */
-  Reader(wxInputStream& input, Packaged* package = nullptr, const String& filename = wxEmptyString, bool ignore_invalid = false);
+  Reader(wxInputStream& input, Packaged* package = nullptr, const String& filename = _(""), bool ignore_invalid = false);
   
   ~Reader() { showWarnings(); }
   

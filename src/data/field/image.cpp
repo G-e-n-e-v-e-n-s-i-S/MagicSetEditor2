@@ -35,7 +35,7 @@ int ImageStyle::update(Context& ctx) {
 // ----------------------------------------------------------------------------- : ImageValue
 
 String ImageValue::toString() const {
-  return filename.empty() ? wxEmptyString : _("<image>");
+  return filename.empty() ? _("") : _("<image>");
 }
 
 // custom reflection: convert to ScriptImageP for scripting

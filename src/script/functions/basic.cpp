@@ -777,8 +777,8 @@ SCRIPT_FUNCTION(get_card_from_link) {
                card->linked_relation_2 == trimmed_input ? card->linked_card_2 :
                card->linked_relation_3 == trimmed_input ? card->linked_card_3 :
                card->linked_relation_4 == trimmed_input ? card->linked_card_4 :
-               wxEmptyString;
-  if (uid == wxEmptyString) return script_nil;
+               _("");
+  if (uid.empty()) return script_nil;
   FOR_EACH(other_card, set->cards) {
     if (other_card->uid == uid) SCRIPT_RETURN(other_card);
   }
