@@ -90,10 +90,10 @@ public:
 
   void initDataObject();
   bool parseData();
-  bool parseUrl(String& url, vector<CardP>& out);
+  bool parseUrl  (String& url,              vector<CardP>& out);
   bool parseFiles(wxArrayString& filenames, vector<CardP>& out);
-  bool parseText(String& text, vector<CardP>& out);
-  bool parseImage(Image& image, vector<CardP>& out);
+  bool parseText (String& text,             vector<CardP>& out);
+  bool parseImage(Image& image,             vector<CardP>& out);
 
   // --------------------------------------------------- : Card linking
   

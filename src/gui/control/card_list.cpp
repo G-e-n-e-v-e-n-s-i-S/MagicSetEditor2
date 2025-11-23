@@ -11,6 +11,7 @@
 #include <gui/control/card_list_column_select.hpp>
 #include <gui/set/window.hpp> // for sorting all cardlists in a window
 #include <gui/card_link_window.hpp>
+#include <gui/web_request_window.hpp>
 #include <gui/util.hpp>
 #include <gui/add_csv_window.hpp>
 #include <gui/add_json_window.hpp>
@@ -260,62 +261,26 @@ bool CardListBase::parseUrl(String& url, vector<CardP>& out) {
   }
   if (!url.StartsWith(_("http"))) return false;
 
-  wxWebRequest request = wxWebSession::GetDefault().CreateRequest(this, url);
-  if (!request.IsOk() ) {
-    queue_message(MESSAGE_ERROR, _ERROR_("cant create web request"));
-    return false;
-  }
-  //request.SetStorage(wxWebRequestBase::Storage::Storage_File);
-  request.Start();
-
-  off_t bytes = 0;
-  off_t last_bytes = 0;
-  off_t expected_bytes = -1;
-  for (size_t i = 0; i < 40; i++)
-  {
-    wxMilliSleep(30);
-    off_t expected_bytes = request.GetBytesExpectedToReceive();
-    off_t bytes = request.GetBytesReceived();
-
-    queue_message(MESSAGE_ERROR, wxString::Format(wxT("%i"), (int)bytes));
-    queue_message(MESSAGE_ERROR, wxString::Format(wxT("%i"), (int)expected_bytes));
-    if (wxGetKeyState(WXK_ESCAPE)) break;
-    if (bytes >= expected_bytes && expected_bytes > 0) break;
-    if (bytes > last_bytes) i = 0;
-    last_bytes = bytes;
-  }
-
-  if (request.GetState() == wxWebRequestBase::State::State_Completed) {
-    wxWebResponse response = request.GetResponse();
-    if (response.GetContentType().StartsWith(_("image"))) {
-      wxImage image(*response.GetStream());
-      if (image.IsOk()) {
-        parseImage(image, out);
+  WebRequestWindow wnd(this, url);
+  if (wnd.ShowModal() == wxID_OK) {
+    const String& content_type = wnd.out.GetContentType();
+    if (content_type.StartsWith(_("image"))) {
+      Image img(*wnd.out.GetStream());
+      if (img.IsOk()) {
+        parseImage(img, out);
       }
-    } else {
-      queue_message(MESSAGE_ERROR, _ERROR_("web request not image"));
-      //if (wxTextInputStream* text_stream = dynamic_cast<wxTextInputStream*>(stream)) {
-      //  String text;
-      //  text_stream >> text;
-      //  queue_message(MESSAGE_ERROR, text);
-      //  if (!parseUrl(text, out)) parseText(text, out);
-      //}
+      else {
+        queue_message(MESSAGE_ERROR, _ERROR_("web request corrupted"));
+      }
     }
-    
-    //wxArrayString filenames;
-    //filenames.push_back(request.GetResponse().GetDataFile());
-    //parseFiles(filenames, out);
-  } else {
-    queue_message(MESSAGE_ERROR, _ERROR_("web request failed"));
-    if (request.GetState() == wxWebRequestBase::State::State_Active) request.Cancel();
+    else if (content_type.StartsWith(_("text"))) {
+      String text = wnd.out.AsString();
+      parseText(text, out);
+    }
+    else {
+      queue_message(MESSAGE_ERROR, _ERROR_("web request unsupported format"));
+    }
   }
-
-  //url.Replace("https:", "http:");
-  //url.Replace("http://", "");
-  //pos = url.find_first_of("/");
-  //wxString server = url.substr(0, pos);
-  //wxString path = url.substr(pos);
-
   return j < out.size();
 }
 
