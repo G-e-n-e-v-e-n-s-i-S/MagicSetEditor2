@@ -163,6 +163,7 @@ private:
   void onItemActivate    (wxListEvent&);
   void onSelectColumns   (wxCommandEvent&);
   void onChar            (wxKeyEvent&);
+  void onBeginDrag       (wxListEvent&);
   void onDrag            (wxMouseEvent&);
   void onContextMenu     (wxContextMenuEvent&);
 };

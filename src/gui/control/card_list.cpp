@@ -23,6 +23,7 @@
 #include <data/settings.hpp>
 #include <data/stylesheet.hpp>
 #include <data/format/clipboard.hpp>
+#include <data/format/formats.hpp>
 #include <data/action/set.hpp>
 #include <data/action/value.hpp>
 #include <script/functions/json.hpp>
@@ -164,6 +165,8 @@ bool CardListBase::doCopy() {
   if (!wxTheClipboard->Open()) return false;
   bool ok = wxTheClipboard->SetData(new CardsOnClipboard(set, cards_to_copy)); // ignore result
   wxTheClipboard->Close();
+
+  queue_message(MESSAGE_ERROR, _("copied ") + wxString::Format(wxT("%i"),cards_to_copy.size()) + _("   ") + (ok ? _("ok") : _("not ok")));
   return ok;
 }
 bool CardListBase::doCopyCardAndLinkedCards() {
@@ -605,6 +608,15 @@ void CardListBase::onChar(wxKeyEvent& ev) {
   }
 }
 
+void CardListBase::onBeginDrag(wxListEvent&) {
+  vector<CardP> cards;
+  getSelection(cards);
+  CardsOnClipboard* card_data = new CardsOnClipboard(set, cards);
+  wxDropSource drag_source(this);
+  drag_source.SetData(*card_data);
+  drag_source.DoDragDrop(wxDrag_CopyOnly);
+}
+
 void CardListBase::onDrag(wxMouseEvent& ev) {
   ev.Skip();
   if (!allowModify()) return;
@@ -670,11 +682,12 @@ wxDragResult CardListDropTarget::OnData(wxCoord x, wxCoord y, wxDragResult defau
 // ----------------------------------------------------------------------------- : CardListBase : Event table
 
 BEGIN_EVENT_TABLE(CardListBase, ItemList)
-  EVT_LIST_COL_RIGHT_CLICK  (wxID_ANY,      CardListBase::onColumnRightClick)
-  EVT_LIST_COL_END_DRAG    (wxID_ANY,      CardListBase::onColumnResize)
-  EVT_LIST_ITEM_ACTIVATED    (wxID_ANY,      CardListBase::onItemActivate)
-  EVT_CHAR          (          CardListBase::onChar)
-  EVT_MOTION          (          CardListBase::onDrag)
-  EVT_MENU          (ID_SELECT_COLUMNS,  CardListBase::onSelectColumns)
-  EVT_CONTEXT_MENU            (                   CardListBase::onContextMenu)
+  EVT_LIST_COL_RIGHT_CLICK (wxID_ANY,          CardListBase::onColumnRightClick)
+  EVT_LIST_COL_END_DRAG    (wxID_ANY,          CardListBase::onColumnResize)
+  EVT_LIST_ITEM_ACTIVATED  (wxID_ANY,          CardListBase::onItemActivate)
+  EVT_LIST_BEGIN_DRAG      (wxID_ANY,          CardListBase::onBeginDrag)
+  EVT_CHAR                 (                   CardListBase::onChar)
+  EVT_MOTION               (                   CardListBase::onDrag)
+  EVT_MENU                 (ID_SELECT_COLUMNS, CardListBase::onSelectColumns)
+  EVT_CONTEXT_MENU         (                   CardListBase::onContextMenu)
 END_EVENT_TABLE  ()
