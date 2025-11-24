@@ -200,6 +200,7 @@ bool CardListBase::doPaste() {
   if (!wxTheClipboard->Open()) return false;
   bool ok = wxTheClipboard->GetData(*drop_target->data_object);
   wxTheClipboard->Close();
+  queue_message(MESSAGE_ERROR, ok ? _("pasted ok") : _("pasted not ok"));
   if (ok) return parseData();
   return false;
 }
