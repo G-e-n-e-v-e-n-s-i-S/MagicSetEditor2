@@ -56,7 +56,9 @@ CardListBase* CardSelectEvent::getTheCardList() const {
 
 CardListBase::CardListBase(Window* parent, int id, long additional_style)
   : ItemList(parent, id, additional_style, true)
-{}
+{
+  drop_target = new CardListDropTarget(this);
+}
 
 CardListBase::~CardListBase() {
   storeColumns();
@@ -146,7 +148,7 @@ void CardListBase::getSelection(vector<CardP>& out) const {
 bool CardListBase::canCut()   const { return canDelete(); }
 bool CardListBase::canCopy()  const { return focusCount() > 0; }
 bool CardListBase::canPaste() const {
-  return allowModify();// && (wxTheClipboard->IsSupported(CardsDataObject::format) || wxTheClipboard->IsSupported(wxDF_BITMAP));
+  return allowModify();
 }
 bool CardListBase::canDelete() const {
   return allowModify() && focusCount() > 0; // TODO: check for selection?
@@ -193,7 +195,7 @@ bool CardListBase::doCopyCardAndLinkedCards() {
 bool CardListBase::doPaste() {
   if (!canPaste()) return false;
   if (!wxTheClipboard->Open()) return false;
-  bool ok = wxTheClipboard->GetData(*data_object);
+  bool ok = wxTheClipboard->GetData(*drop_target->data_object);
   wxTheClipboard->Close();
   if (ok) return parseData();
   return false;
@@ -209,25 +211,6 @@ bool CardListBase::doDelete() {
   return true;
 }
 
-// --------------------------------------------------- : CardListBase : Card linking
-
-bool CardListBase::canLink() const {
-  vector<CardP> selected_cards;
-  getSelection(selected_cards);
-  return selected_cards.size() == 1;
-}
-bool CardListBase::doLink() {
-  CardLinkWindow wnd(this, set, getCard());
-  if (wnd.ShowModal() == wxID_OK) {
-    // The actual linking is done in this window's onOk function
-    return true;
-  }
-  return false;
-}
-bool CardListBase::doUnlink(CardP unlinked_card) {
-  set->actions.addAction(make_unique<UnlinkCardsAction>(*set, getCard(), unlinked_card));
-  return true;
-}
 bool CardListBase::doAddCSV() {
   AddCSVWindow wnd(this, set, true);
   if (wnd.ShowModal() == wxID_OK) {
@@ -244,12 +227,6 @@ bool CardListBase::doAddJSON() {
     return true;
   }
   return false;
-}
-
-wxDragResult CardListBase::OnData(wxCoord x, wxCoord y, wxDragResult defaultDragResult) {
-  if (!GetData()) return wxDragNone;
-  if (!parseData()) return wxDragError;
-  return wxDragCopy;
 }
 
 bool CardListBase::parseUrl(String& url, vector<CardP>& out) {
@@ -364,8 +341,8 @@ bool CardListBase::parseText(String& text, vector<CardP>& out) {
 
 bool CardListBase::parseData() {
   wxBusyCursor wait;
-  wxDataFormat format = data_object->GetReceivedFormat();
-  wxDataObject *data = data_object->GetObject(format);
+  wxDataFormat format = drop_target->data_object->GetReceivedFormat();
+  wxDataObject *data = drop_target->data_object->GetObject(format);
   vector<CardP> new_cards;
 
   if (CardsDataObject* card_data = dynamic_cast<CardsDataObject*>(data)) {
@@ -418,17 +395,28 @@ bool CardListBase::parseData() {
     set->actions.addAction(make_unique<AddCardAction>(ADD, *set, new_cards));
     return true;
   }
-  queue_message(MESSAGE_ERROR, _ERROR_( "no card data found"));
+  //queue_message(MESSAGE_ERROR, _ERROR_( "no card data found"));
   return false;
 }
 
-void CardListBase::initDataObject() {
-  data_object = new wxDataObjectComposite();
-  data_object->Add(new CardsDataObject(), true);
-  data_object->Add(new wxFileDataObject());
-  data_object->Add(new wxImageDataObject());
-  data_object->Add(new wxTextDataObject());
-  SetDataObject(data_object);
+// --------------------------------------------------- : CardListBase : Card linking
+
+bool CardListBase::canLink() const {
+  vector<CardP> selected_cards;
+  getSelection(selected_cards);
+  return selected_cards.size() == 1;
+}
+bool CardListBase::doLink() {
+  CardLinkWindow wnd(this, set, getCard());
+  if (wnd.ShowModal() == wxID_OK) {
+    // The actual linking is done in this window's onOk function
+    return true;
+  }
+  return false;
+}
+bool CardListBase::doUnlink(CardP unlinked_card) {
+  set->actions.addAction(make_unique<UnlinkCardsAction>(*set, getCard(), unlinked_card));
+  return true;
 }
 
 // ----------------------------------------------------------------------------- : CardListBase : Building the list
@@ -655,6 +643,28 @@ void CardListBase::onContextMenu(wxContextMenuEvent&) {
 void CardListBase::onItemActivate(wxListEvent& ev) {
   selectItemPos(ev.GetIndex(), false);
   sendEvent(EVENT_CARD_ACTIVATE);
+}
+
+
+
+
+CardListDropTarget::CardListDropTarget(CardListBase* card_list)
+  : card_list(card_list)
+{
+  data_object = new wxDataObjectComposite();
+  data_object->Add(new CardsDataObject(), true);
+  data_object->Add(new wxFileDataObject());
+  data_object->Add(new wxImageDataObject());
+  data_object->Add(new wxTextDataObject());
+  SetDataObject(data_object);
+}
+
+CardListDropTarget::~CardListDropTarget() {}
+
+wxDragResult CardListDropTarget::OnData(wxCoord x, wxCoord y, wxDragResult defaultDragResult) {
+  if (!GetData()) return wxDragNone;
+  if (!card_list->parseData()) return wxDragError;
+  return wxDragCopy;
 }
 
 // ----------------------------------------------------------------------------- : CardListBase : Event table

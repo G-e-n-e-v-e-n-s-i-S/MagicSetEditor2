@@ -57,8 +57,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
   collapse_notes->SetExtraStyle(wxWS_EX_PROCESS_UI_UPDATES);
   filter          = nullptr;
   editor->next_in_tab_order = card_list;
-  card_list->initDataObject();
-  SetDropTarget(card_list);
+  SetDropTarget(card_list->drop_target);
   wxFont font = link_relation_1->GetFont();
   font.SetWeight(wxFONTWEIGHT_BOLD);
   link_relation_1->SetFont(font);
@@ -539,14 +538,12 @@ bool CardsPanel::canPaste() const {
   else                                return false;
 }
 void CardsPanel::doPaste() {
-  if (card_list->canPaste()) {
-    card_list->doPaste();
-  } else {
-    int id = focused_control(this);
-    if      (id == ID_EDITOR)           editor->doPaste();
-    else if (id == ID_CARD_LINK_EDITOR) link_editor->doPaste();
-    else if (id == ID_NOTES)            notes->doPaste();
-  }
+  if (card_list->doPaste()) return;
+  
+  int id = focused_control(this);
+  if      (id == ID_EDITOR)           editor->doPaste();
+  else if (id == ID_CARD_LINK_EDITOR) link_editor->doPaste();
+  else if (id == ID_NOTES)            notes->doPaste();
 }
 
 // ----------------------------------------------------------------------------- : Text selection
