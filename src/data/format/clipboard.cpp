@@ -151,7 +151,6 @@ CardsOnClipboard::CardsOnClipboard(const SetP& set, const vector<CardP>& cards) 
       img = export_image(set, cards, true, 0, 1.0, 0.0);
     }
     String temp_path = wxFileName::CreateTempFileName(_("mse")) + _(".png");
-    queue_message(MESSAGE_ERROR, temp_path);
     img.SaveFile(temp_path, wxBITMAP_TYPE_PNG);
     wxFileDataObject* data = new wxFileDataObject();
     data->AddFile(temp_path);

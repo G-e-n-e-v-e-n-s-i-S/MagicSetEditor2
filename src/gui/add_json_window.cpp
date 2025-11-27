@@ -172,19 +172,6 @@ void AddJSONWindow::onBrowseFiles(wxCommandEvent&) {
 }
 
 void AddJSONWindow::onOk(wxCommandEvent&) {
-
-
-
-  // debug test shit
-  export_image(set, set->cards.front(), "C:\\Users\\Oli\\Desktop\\tetest\\test.png");
-  auto extImg = make_intrusive<ExternalImage>("C:/Users/Oli/Desktop/tetest/test.png");
-  Image img = extImg->generate(GeneratedImage::Options(0, 0, set->stylesheet.get(), set.get()));
-  if (img.HasOption(wxIMAGE_OPTION_PNG_DESCRIPTION))  queue_message(MESSAGE_ERROR, img.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION));
-  else queue_message(MESSAGE_ERROR, _("no dice"));
-  return;
-
-
-
   /// Perform the import
   wxBusyCursor wait;
   // Read the file

@@ -165,10 +165,9 @@ bool CardListBase::doCopy() {
   if (!wxTheClipboard->Open()) return false;
   bool ok = wxTheClipboard->SetData(new CardsOnClipboard(set, cards_to_copy)); // ignore result
   wxTheClipboard->Close();
-
-  queue_message(MESSAGE_ERROR, _("copied ") + wxString::Format(wxT("%i"),cards_to_copy.size()) + _("   ") + (ok ? _("ok") : _("not ok")));
   return ok;
 }
+
 bool CardListBase::doCopyCardAndLinkedCards() {
   if (!canCopy()) return false;
   vector<CardP> cards_selected;
@@ -200,7 +199,6 @@ bool CardListBase::doPaste() {
   if (!wxTheClipboard->Open()) return false;
   bool ok = wxTheClipboard->GetData(*drop_target->data_object);
   wxTheClipboard->Close();
-  queue_message(MESSAGE_ERROR, ok ? _("pasted ok") : _("pasted not ok"));
   if (ok) return parseData();
   return false;
 }
@@ -234,7 +232,6 @@ bool CardListBase::doAddJSON() {
 }
 
 bool CardListBase::parseUrl(String& url, vector<CardP>& out) {
-  queue_message(MESSAGE_ERROR, _("parsing url"));
   size_t j = out.size();
   size_t pos = url.find("URL=");
   if (pos != std::string::npos) {
@@ -266,12 +263,8 @@ bool CardListBase::parseUrl(String& url, vector<CardP>& out) {
 }
 
 bool CardListBase::parseFiles(wxArrayString& filenames, vector<CardP>& out) {
-  queue_message(MESSAGE_ERROR, _("parsing files"));
   size_t j = out.size();
   for (size_t i = 0; i < filenames.size(); i++) {
-    queue_message(MESSAGE_ERROR, filenames[i]);
-    if (wxFileName::IsFileReadable(filenames[i])) queue_message(MESSAGE_ERROR, _("readable"));
-    else {queue_message(MESSAGE_ERROR, _("unreadable"));  continue;}
     // if it's an image file, try to get meta_data
     Image image_file;
     image_file.SetLoadFlags(image_file.GetLoadFlags() & ~wxImage::Load_Verbose);
@@ -283,7 +276,6 @@ bool CardListBase::parseFiles(wxArrayString& filenames, vector<CardP>& out) {
       if (ifs.bad() || ifs.fail() || !ifs.good() || !ifs.is_open()) continue;
       std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
       wxString text(content);
-      queue_message(MESSAGE_ERROR, text);
       if (!parseUrl(text, out)) parseText(text, out);
     }
   }
@@ -291,7 +283,6 @@ bool CardListBase::parseFiles(wxArrayString& filenames, vector<CardP>& out) {
 }
 
 bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
-  queue_message(MESSAGE_ERROR, _("parsing image"));
   size_t j = out.size();
   if (image.HasOption(wxIMAGE_OPTION_PNG_DESCRIPTION)) {
     parseText(image.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION), out);
@@ -316,11 +307,9 @@ bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
 }
 
 bool CardListBase::parseText(String& text, vector<CardP>& out) {
-  queue_message(MESSAGE_ERROR, _("parsing text"));
   size_t j = out.size();
   if (size_t pos = text.find("<mse-data-start>") != wxString::npos) {
     text = text.substr(pos + 15, text.find("<mse-data-end>") - pos - 15);
-    queue_message(MESSAGE_ERROR,text);
   }
   try {
     ScriptValueP& sv = json_to_mse(text, set.get());
@@ -396,7 +385,6 @@ bool CardListBase::parseData() {
     set->actions.addAction(make_unique<AddCardAction>(ADD, *set, new_cards));
     return true;
   }
-  //queue_message(MESSAGE_ERROR, _ERROR_( "no card data found"));
   return false;
 }
 
@@ -655,8 +643,7 @@ void CardListBase::onItemActivate(wxListEvent& ev) {
   sendEvent(EVENT_CARD_ACTIVATE);
 }
 
-
-
+// ----------------------------------------------------------------------------- : CardListDropTarget
 
 CardListDropTarget::CardListDropTarget(CardListBase* card_list)
   : card_list(card_list)
