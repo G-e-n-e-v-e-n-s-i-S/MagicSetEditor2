@@ -89,14 +89,12 @@ FileFormatP mtg_editor_file_format();
 // ----------------------------------------------------------------------------- : Other ways to export
 
 /// Generate a wxBitmap of one or more cards
-Bitmap export_bitmap(const SetP& set, const CardP& card);
-Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians = 0.0);
-Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians = 0.0);
+Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom = 1.0, const Radians angle_radians = 0.0);
+Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians, vector<double>& scales_out, vector<int>& offsets_out);
 
 /// Generate a wxImage of one or more cards
-Image export_image(const SetP& set, const CardP& card);
-Image export_image(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians = 0.0);
-Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians = 0.0);
+Image export_image(const SetP& set, const CardP& card, const double zoom = 1.0, const Radians angle_radians = 0.0);
+Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi = false, int padding = 0, const double zoom = 1.0, const Radians angle_radians = 0.0);
 
 /// Export the image of one or more cards to a given filename
 void export_image(const SetP& set, const CardP& card, const String& filename);

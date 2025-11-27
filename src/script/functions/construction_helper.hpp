@@ -89,17 +89,24 @@ inline static void set_container(Value* container, ScriptValueP& value, String k
   }
 }
 
+inline static bool set_stylesheet_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
+  // check if the given value is for a stylesheet, if found set it and return true
+  key_name = unified_form(key_name);
+  if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
+    if (!trim(value->toString()).empty()) {
+      card->stylesheet = StyleSheet::byGameAndName(game, value->toString());
+      if (card->stylesheet) card->styling_data.init(card->stylesheet->styling_fields);
+    }
+    return true;
+  }
+  return false;
+}
+
 inline static bool set_builtin_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
   // check if the given value is for a built-in field, if found set it and return true
   key_name = unified_form(key_name);
   if (key_name == _("notes") || key_name == _("note")) {
     card->notes = value->toString();
-    return true;
-  } else if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
-    if (!trim(value->toString()).empty()) {
-      card->stylesheet = StyleSheet::byGameAndName(game, value->toString());
-      if (card->stylesheet) card->styling_data.init(card->stylesheet->styling_fields);
-    }
     return true;
   }
   else if (key_name == _("id") || key_name == _("uid")) {

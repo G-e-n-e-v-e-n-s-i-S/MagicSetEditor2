@@ -298,19 +298,15 @@ bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
     // crop image rects to populate image fields
     for (; j < out.size(); j++) {
       CardP& card = out[j];
-      IndexMap<FieldP, ValueP>::iterator it;
-      for (it = card->data.begin(); it != card->data.end(); it++) {
-        if (ImageValue* ivalue = dynamic_cast<ImageValue*>((*it).get())) {
-          wxRect rect = ivalue->filename.getRect();
+      for (IndexMap<FieldP, ValueP>::iterator it = card->data.begin(); it != card->data.end(); it++) {
+        ImageValue* value = dynamic_cast<ImageValue*>(it->get());
+        if (value && !value->filename.empty()) {
+          wxRect rect = value->filename.getExternalRect();
           if (rect.width > 0 && rect.height > 0) {
-            Image& sub_image = image.GetSubImage(rect);
-            String& temp_name = wxFileName::CreateTempFileName(_("mse"));
-            sub_image.SaveFile(temp_name);
-            wxFileInputStream in_stream(temp_name);
-            auto out_stream = set->openOut(set->newFileName(_("image"), _("")));
-            if (in_stream.IsOk()) out_stream->Write(in_stream);
-            out_stream->Close();
-            wxRemoveFile(temp_name);
+            Image& img = image.GetSubImage(rect);
+            LocalFileName filename = set->newFileName((*it)->fieldP->name, settings.internal_image_extension ? _(".png") : _("")); // a new unique name in the package
+            img.SaveFile(set->nameOut(filename), wxBITMAP_TYPE_PNG);
+            value->filename = filename;
           }
         }
       }
@@ -396,6 +392,7 @@ bool CardListBase::parseData() {
   }
 
   if (new_cards.size() > 0) {
+    queue_message(MESSAGE_ERROR, json_ugly_print(mse_to_json(set.get())));
     set->actions.addAction(make_unique<AddCardAction>(ADD, *set, new_cards));
     return true;
   }
