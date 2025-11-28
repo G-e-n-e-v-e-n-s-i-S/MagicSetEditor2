@@ -48,7 +48,7 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(SymbolVariation) {
 // ----------------------------------------------------------------------------- : SymbolValue
 
 String SymbolValue::toString() const {
-  return filename.empty() ? wxEmptyString : _("<symbol>");
+  return filename.empty() ? _("") : _("<symbol>");
 }
 
 IMPLEMENT_REFLECTION_NO_GET_MEMBER(SymbolValue) {

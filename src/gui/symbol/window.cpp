@@ -83,8 +83,8 @@ void SymbolWindow::init(Window* parent, SymbolP symbol) {
   menuBar->Append(menuFile, _MENU_("file"));
   
   auto menuEdit = new wxMenu();
-    add_menu_item(menuEdit, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", _MENU_1_("undo",wxEmptyString), _HELP_("undo"));
-    add_menu_item(menuEdit, ID_EDIT_REDO, settings.darkModePrefix() + "redo", _MENU_1_("redo",wxEmptyString), _HELP_("redo"));
+    add_menu_item(menuEdit, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", _MENU_1_("undo",_("")), _HELP_("undo"));
+    add_menu_item(menuEdit, ID_EDIT_REDO, settings.darkModePrefix() + "redo", _MENU_1_("redo",_("")), _HELP_("redo"));
     menuEdit->AppendSeparator();
     add_menu_item_tr(menuEdit, ID_EDIT_GROUP, "group", "group");
     add_menu_item_tr(menuEdit, ID_EDIT_UNGROUP, "ungroup", "ungroup");
@@ -111,8 +111,8 @@ void SymbolWindow::init(Window* parent, SymbolP symbol) {
   wxToolBar* tb = CreateToolBar(wxTB_FLAT | wxNO_BORDER | wxTB_HORIZONTAL | wxTB_TEXT);
   add_tool_tr(tb, ID_FILE_STORE, "apply", "store_symbol", true);
   tb->AddSeparator();
-  add_tool(tb, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", _TOOL_("undo"), _TOOLTIP_1_("undo",wxEmptyString), _HELP_("undo"));
-  add_tool(tb, ID_EDIT_REDO, settings.darkModePrefix() + "redo", _TOOL_("redo"), _TOOLTIP_1_("redo",wxEmptyString), _HELP_("redo"));
+  add_tool(tb, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", _TOOL_("undo"), _TOOLTIP_1_("undo",_("")), _HELP_("undo"));
+  add_tool(tb, ID_EDIT_REDO, settings.darkModePrefix() + "redo", _TOOL_("redo"), _TOOLTIP_1_("redo",_("")), _HELP_("redo"));
   tb->AddSeparator();
   add_tool_tr(tb, ID_VIEW_GRID, "grid", "grid", true, wxITEM_CHECK);
   add_tool_tr(tb, ID_VIEW_GRID_SNAP, "grid_snap", "snap", true, wxITEM_CHECK);

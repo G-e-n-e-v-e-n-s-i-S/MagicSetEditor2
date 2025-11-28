@@ -268,8 +268,8 @@ void AutoReplaceWindow::refreshItem() {
     enabled   ->SetValue(ar->enabled);
     whole_word->SetValue(ar->whole_word);
   } else {
-    match     ->SetValue(wxEmptyString);
-    replace   ->SetValue(wxEmptyString);
+    match     ->SetValue(_(""));
+    replace   ->SetValue(_(""));
     enabled   ->SetValue(false);
     whole_word->SetValue(false);
   }

@@ -16,6 +16,7 @@
 #include <data/keyword.hpp>
 #include <util/io/package.hpp>
 #include <script/scriptable.hpp>
+#include <wx/filename.h>
 #include <wx/sstream.h>
 
 // ----------------------------------------------------------------------------- : Clipboard serialization
@@ -140,13 +141,21 @@ KeywordP KeywordDataObject::getKeyword(const SetP& set) {
 // ----------------------------------------------------------------------------- : Card on clipboard
 
 CardsOnClipboard::CardsOnClipboard(const SetP& set, const vector<CardP>& cards) {
-  // Conversion to image format
+  // Conversion to image file
+  if (cards.size() < 6) {
+    Image img;
     if (cards.size() == 1) {
-      Add(new wxImageDataObject(export_image(set, cards[0])));
+      img = export_image(set, cards[0]);
     }
-    else if (cards.size() < 6) {
-      Add(new wxImageDataObject(export_image(set, cards, true, 0, 1.0, 0.0)));
+    else {
+      img = export_image(set, cards, true, 0, 1.0, 0.0);
     }
+    String temp_path = wxFileName::CreateTempFileName(_("mse")) + _(".png");
+    img.SaveFile(temp_path, wxBITMAP_TYPE_PNG);
+    wxFileDataObject* data = new wxFileDataObject();
+    data->AddFile(temp_path);
+    Add(data);
+  }
   // Conversion to serialized card format
-    Add(new CardsDataObject(set, cards), true);
+  Add(new CardsDataObject(set, cards), true);
 }

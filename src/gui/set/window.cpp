@@ -79,8 +79,8 @@ SetWindow::SetWindow(Window* parent, const SetP& set)
   menuBar->Append(menuFile, _MENU_("file"));
   
   auto menuEdit = new wxMenu();
-    add_menu_item(menuEdit, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", _MENU_1_("undo",wxEmptyString),  _HELP_("undo"));
-    add_menu_item(menuEdit, ID_EDIT_REDO, settings.darkModePrefix() + "redo", _MENU_1_("redo",wxEmptyString),  _HELP_("redo"));
+    add_menu_item(menuEdit, ID_EDIT_UNDO, settings.darkModePrefix() + "undo", _MENU_1_("undo",_("")),  _HELP_("undo"));
+    add_menu_item(menuEdit, ID_EDIT_REDO, settings.darkModePrefix() + "redo", _MENU_1_("redo",_("")),  _HELP_("redo"));
     menuEdit->AppendSeparator();
     add_menu_item_tr(menuEdit, ID_EDIT_CUT, settings.darkModePrefix() + "cut", "cut");
     add_menu_item_tr(menuEdit, ID_EDIT_COPY, "copy", "copy");
@@ -554,7 +554,7 @@ void SetWindow::updateRecentSets() {
       // add new item
       wxMenu* file_menu = mb->GetMenu(0);
       size_t pos = file_menu->GetMenuItemCount() - 2; // last two items are separator and exit
-      file_menu->Insert(pos, ID_FILE_RECENT + i, String(_("&")) << (i+1) << _(" ") << file, wxEmptyString);
+      file_menu->Insert(pos, ID_FILE_RECENT + i, String(_("&")) << (i+1) << _(" ") << file, _(""));
     }
     i++;
   }

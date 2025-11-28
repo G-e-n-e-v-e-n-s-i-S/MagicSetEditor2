@@ -90,7 +90,7 @@ void HoverButtonBase::onMouseEnter(wxMouseEvent&) {
 void HoverButtonBase::onMouseLeave(wxMouseEvent&) {
   hover = false;
   refreshIfNeeded();
-  if (!help_text.empty()) set_status_text(this,wxEmptyString);
+  if (!help_text.empty()) set_status_text(this,_(""));
 }
 void HoverButtonBase::onFocus(wxFocusEvent&) {
   focus = true;

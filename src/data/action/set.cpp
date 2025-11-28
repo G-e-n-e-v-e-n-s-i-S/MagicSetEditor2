@@ -66,7 +66,7 @@ void AddCardAction::perform(bool to_undo) {
         FOR_EACH(linked_pair, linked_pairs) {
           String& linked_uid = linked_pair.first.get();
           String& linked_relation = linked_pair.second.get();
-          if (linked_uid == wxEmptyString) continue;
+          if (linked_uid.empty()) continue;
           // If it's an added card, replace the link
           if (all_added_uids.find(linked_uid) != all_added_uids.end()) {
             all_added_uids.at(linked_uid)->updateLink(old_uid, new_uid);

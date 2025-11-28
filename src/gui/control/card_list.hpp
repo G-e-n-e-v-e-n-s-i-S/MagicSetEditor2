@@ -12,10 +12,12 @@
 #include <gui/control/item_list.hpp>
 #include <data/card.hpp>
 #include <data/set.hpp>
+#include <wx/dnd.h>
 
 DECLARE_POINTER_TYPE(ChoiceField);
 DECLARE_POINTER_TYPE(Field);
 class CardListBase;
+class CardListDropTarget;
 
 // ----------------------------------------------------------------------------- : Events
 
@@ -67,8 +69,10 @@ public:
   inline CardP getCard() const                                { return static_pointer_cast<Card>(selected_item); }
   inline void  setCard(const CardP& card, bool event = false) { selectItem(card, true, event); }
   
-  // --------------------------------------------------- : Clipboard
+  // --------------------------------------------------- : Clipboard and Drag'n'Drop
   
+  CardListDropTarget* drop_target;
+
   bool canCut()    const override;
   bool canCopy()   const override;
   bool canPaste()  const override;
@@ -80,6 +84,13 @@ public:
   bool doDelete() override;
   bool doAddCSV();
   bool doAddJSON();
+
+  // Look for cards inside some given data
+  bool parseData();
+  bool parseUrl  (String& url,              vector<CardP>& out);
+  bool parseFiles(wxArrayString& filenames, vector<CardP>& out);
+  bool parseText (String& text,             vector<CardP>& out);
+  bool parseImage(Image& image,             vector<CardP>& out);
 
   // --------------------------------------------------- : Card linking
   
@@ -135,7 +146,7 @@ private:
   vector<FieldP> column_fields; ///< The field to use for each column (by column index)
   FieldP alternate_sort_field;  ///< Second field to sort by, if the column doesn't suffice
   
-  mutable wxListItemAttr item_attr; // for OnGetItemAttr
+  mutable wxListItemAttr item_attr; ///< for OnGetItemAttr
   
 public:
   /// Open a dialog for selecting columns to be shown
@@ -152,7 +163,22 @@ private:
   void onItemActivate    (wxListEvent&);
   void onSelectColumns   (wxCommandEvent&);
   void onChar            (wxKeyEvent&);
+  void onBeginDrag       (wxListEvent&);
   void onDrag            (wxMouseEvent&);
   void onContextMenu     (wxContextMenuEvent&);
+};
+
+// ----------------------------------------------------------------------------- : Drag'n'Drop
+
+class CardListDropTarget : public wxDropTarget {
+public:
+  CardListDropTarget(CardListBase* card_list);
+  ~CardListDropTarget();
+
+  wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult defaultDragResult) override;
+
+  wxDataObjectComposite* data_object; ///< the object that acquires the data from the Clipboard or a Drag'n'Drop
+private:
+  CardListBase*          card_list;   ///< the card list we are the drop target of
 };
 

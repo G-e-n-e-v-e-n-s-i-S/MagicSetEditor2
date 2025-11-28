@@ -381,7 +381,7 @@ void DataEditor::onMouseLeave(wxMouseEvent& ev) {
   }
   // clear status text
   wxFrame* frame = dynamic_cast<wxFrame*>( wxGetTopLevelParent(this) );
-  if (frame) frame->SetStatusText(wxEmptyString);
+  if (frame) frame->SetStatusText(_(""));
 }
 
 bool DataEditor::selectViewer(ValueViewer* v) {

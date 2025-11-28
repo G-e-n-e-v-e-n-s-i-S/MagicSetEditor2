@@ -24,7 +24,7 @@ bool PackageData::contains(QuickFilterPart const& query) const {
 PackageList::PackageList(Window* parent, int id, int direction, bool always_focused)
   : GalleryList(parent, id, direction, always_focused)
 {
-  item_size = subcolumns[0].size = wxSize(125, 150);
+  item_size = subcolumns[0].size = wxSize(130, 150);
   SetThemeEnabled(true);
 }
 
@@ -43,15 +43,23 @@ void PackageList::drawItem(DC& dc, int x, int y, size_t item) {
     dc.DrawBitmap(d->image, x + int(align_delta_x(ALIGN_CENTER, item_size.x, d->image.GetWidth())), y + 3, true);
   }
   // draw short name
-  dc.SetFont(wxFont(12,wxFONTFAMILY_SWISS,wxFONTSTYLE_NORMAL,wxFONTWEIGHT_BOLD,false,_("Arial")));
+  wxFont font = wxFont(11,wxFONTFAMILY_SWISS,wxFONTSTYLE_NORMAL,wxFONTWEIGHT_BOLD,false,_("Arial"));
+  dc.SetFont(font);
   dc.GetTextExtent(capitalize(d->package->short_name), &w, &h);
   pos = align_in_rect(ALIGN_CENTER, RealSize(w,h), rect);
   dc.DrawText(capitalize(d->package->short_name), max(x+1,(int)pos.x), (int)pos.y + 110);
-  // draw name
-  dc.SetFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
+  // draw full name
+  font.SetPointSize(9);
+  font.SetWeight(wxFONTWEIGHT_NORMAL);
+  dc.SetFont(font);
   dc.GetTextExtent(d->package->full_name, &w, &h);
+  if (w > item_size.x) {
+    font.SetPointSize(max(7,9*item_size.x/w));
+    dc.SetFont(font);
+    dc.GetTextExtent(d->package->full_name, &w, &h);
+  }
   RealPoint text_pos = align_in_rect(ALIGN_CENTER, RealSize(w,h), rect);
-  dc.DrawText(d->package->full_name, max(x+1,(int)text_pos.x), (int)text_pos.y + 130);
+  dc.DrawText(d->package->full_name, max(x+1,(int)text_pos.x), (int)(text_pos.y + 130 + 9-font.GetPointSize()));
   dc.DestroyClippingRegion();
 }
 

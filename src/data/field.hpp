@@ -63,7 +63,6 @@ public:
   OptionalScript  import_script;             ///< The script to apply to the supplied value, when creating a new card.
   Dependencies    dependent_scripts;         ///< Scripts that depend on values of this field
   String          package_relative_filename;
-  StyleP          styleP;                    ///< Style for this field, should have the right type! Can be null.
 
   /// Creates a new Value corresponding to this Field
   virtual ValueP newValue() = 0;
@@ -126,7 +125,14 @@ public:
   inline RealPoint getPos()  const { return RealPoint(left, top); }
   inline RealSize  getSize() const { return RealSize(width, height); }
   inline RealRect  getExternalRect() const { return RealRect(left, top, width, height); }
-  
+  inline String    getExternalRectString(double scale = 1.0, int offset = 0) { ///< update the style before calling this
+    return _("---") + wxString::Format(wxT("%i"), (int)std::ceil(scale * left + offset)) +
+           _("-") +   wxString::Format(wxT("%i"), (int)std::ceil(scale * top)) +
+           _("-") +   wxString::Format(wxT("%i"), (int)std::floor(scale * width)) +
+           _("-") +   wxString::Format(wxT("%i"), (int)std::floor(scale * height)) +
+           _("---");
+  }
+
   /// Does this style have a non-zero size (or is it scripted)?
   bool hasSize() const;
   
@@ -164,9 +170,6 @@ public:
   /** change_info is a subset of StyleChange flags */
   void tellListeners(int changes);
   
-  /// Store where on the card the field goes, to save it in filenames
-  String getRect();
-
 private:
   DECLARE_REFLECTION_VIRTUAL();
   /// Things that are listening to changes in this style

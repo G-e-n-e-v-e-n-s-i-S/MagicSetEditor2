@@ -15,6 +15,7 @@
 #include <data/card.hpp>
 #include <data/stylesheet.hpp>
 #include <data/settings.hpp>
+#include <script/functions/json.hpp>
 #include <gui/util.hpp>
 #include <render/card/viewer.hpp>
 #include <wx/filename.h>
@@ -63,24 +64,6 @@ Rotation UnzoomedDataViewer::getRotation() const {
 
 // ----------------------------------------------------------------------------- : wxBitmap export
 
-Bitmap export_bitmap(const SetP& set, const CardP& card) {
-  if (!set) throw Error(_("no set"));
-  UnzoomedDataViewer viewer = UnzoomedDataViewer();
-  viewer.setSet(set);
-  viewer.setCard(card);
-  // size of cards
-  RealSize size = viewer.getRotation().getExternalSize();
-  // create bitmap & dc
-  Bitmap bitmap((int)size.width, (int)size.height);
-  if (!bitmap.Ok()) throw InternalError(_("Unable to create bitmap"));
-  wxMemoryDC dc;
-  dc.SelectObject(bitmap);
-  // draw
-  viewer.draw(dc);
-  dc.SelectObject(wxNullBitmap);
-  return bitmap;
-}
-
 Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians) {
   if (!set) throw Error(_("no set"));
   UnzoomedDataViewer viewer = UnzoomedDataViewer(zoom, angle_radians);
@@ -99,7 +82,7 @@ Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, cons
   return bitmap;
 }
 
-Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians) {
+Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians, vector<double>& scales_out, vector<int>& offsets_out) {
   if (!set) throw Error(_("no set"));
   vector<Bitmap> bitmaps;
   int width = 0;
@@ -113,12 +96,13 @@ Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_
   }
   // Draw card bitmaps
   FOR_EACH(card, cards) {
-    double scaled_zoom = zoom;
+    double scale = zoom;
     if (scale_to_lowest_dpi) {
       double dpi = max(set->stylesheetFor(card).card_dpi, 150.0);
-      scaled_zoom *= lowest_dpi / dpi;
+      scale *= lowest_dpi / dpi;
     }
-    UnzoomedDataViewer viewer = UnzoomedDataViewer(scaled_zoom, angle_radians);
+    scales_out.push_back(scale);
+    UnzoomedDataViewer viewer = UnzoomedDataViewer(scale, angle_radians);
     viewer.setSet(set);
     viewer.setCard(card);
     RealSize size = viewer.getRotation().getExternalSize();
@@ -141,6 +125,7 @@ Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_
   clearDC(globalDC, *wxWHITE_BRUSH);
   int offset = 0;
   FOR_EACH(bitmap, bitmaps) {
+    offsets_out.push_back(offset);
     globalDC.SetDeviceOrigin(offset, 0);
     globalDC.DrawBitmap(bitmap, 0, 0);
     offset += bitmap.GetWidth() + padding;
@@ -151,29 +136,59 @@ Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_
 
 // ----------------------------------------------------------------------------- : wxImage export
 
-Image export_image(const SetP& set, const CardP& card) {
-  Bitmap bitmap = export_bitmap(set, card);
-  Image img = bitmap.ConvertToImage();
-  vector<CardP> cards = { card };
-  CardsDataObject data(set, cards);
-  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, _("<mse-data-start>") + data.GetText() + _("<mse-data-end>"));
-  return img;
-}
-
 Image export_image(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians) {
   Bitmap bitmap = export_bitmap(set, card, zoom, angle_radians);
   Image img = bitmap.ConvertToImage();
-  vector<CardP> cards = { card };
-  CardsDataObject data(set, cards);
-  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, _("<mse-data-start>") + data.GetText() + _("<mse-data-end>"));
+  String data = _("<mse-data-start>[");
+  IndexMap<FieldP, ValueP>& card_data = card->data;
+  boost::json::object& cardv = mse_to_json(card, set.get());
+  boost::json::object& cardv_data = cardv["data"].as_object();
+  for(IndexMap<FieldP, ValueP>::iterator it = card_data.begin() ; it != card_data.end() ; ++it) {
+    ImageValue* value = dynamic_cast<ImageValue*>(it->get());
+    if (value && !value->filename.empty()) {
+      FieldP field = (*it)->fieldP;
+      StyleP style = set->stylesheetFor(card).card_style.at(field->index);
+      if (style) {
+        style->update(set->getContext(card));
+        std::string rect = style->getExternalRectString(zoom, 0).ToStdString();
+        cardv_data[field->name.ToStdString()] = rect;
+      }
+    }
+  }
+  data += json_ugly_print(cardv) + _("]<mse-data-end>");
+  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, data);
   return img;
 }
 
 Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians) {
-  Bitmap bitmap = export_bitmap(set, cards, scale_to_lowest_dpi, padding, zoom, angle_radians);
+  vector<double> scales;
+  vector<int> offsets;
+  Bitmap bitmap = export_bitmap(set, cards, scale_to_lowest_dpi, padding, zoom, angle_radians, scales, offsets);
   Image img = bitmap.ConvertToImage();
-  CardsDataObject data(set, cards);
-  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, _("<mse-data-start>") + data.GetText() + _("<mse-data-end>"));
+  String data = _("<mse-data-start>[");
+  for (int i = 0; i < cards.size(); ++i) {
+    if (i > 0) data += _(",");
+    CardP card = cards[i];
+    IndexMap<FieldP, ValueP>& card_data = card->data;
+    boost::json::object& cardv = mse_to_json(card, set.get());
+    boost::json::object& cardv_data = cardv["data"].as_object();
+    for(IndexMap<FieldP, ValueP>::iterator it = card_data.begin() ; it != card_data.end() ; ++it) {
+      ImageValue* value = dynamic_cast<ImageValue*>(it->get());
+      if (value && !value->filename.empty()) {
+        FieldP field = (*it)->fieldP;
+        StyleSheetP stylesheet = set->stylesheetForP(card);
+        StyleP style = stylesheet->card_style.at(field->index);
+        if (style) {
+          style->update(set->getContext(card));
+          std::string rect = style->getExternalRectString(scales[i], offsets[i]).ToStdString();
+          cardv_data[field->name.ToStdString()] = rect;
+        }
+      }
+    }
+    data += json_ugly_print(cardv);
+  }
+  data += _("]<mse-data-end>");
+  img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, data);
   return img;
 }
 

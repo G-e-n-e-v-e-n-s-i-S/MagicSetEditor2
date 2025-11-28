@@ -30,8 +30,17 @@ SCRIPT_FUNCTION(new_card) {
   CardP new_card = make_intrusive<Card>(*game);
   // iterate on the given key/value pairs
   SCRIPT_PARAM(ScriptValueP, input);
+  // check for a stylesheet first, since other things depend on it
   ScriptValueP it = input->makeIterator();
   ScriptValueP key;
+  while (ScriptValueP value = it->next(&key)) {
+    assert(key);
+    if (key == script_nil) continue;
+    String key_name = key->toString();
+    if (set_stylesheet_container(*game, new_card, value, key_name, ignore_field_not_found)) break;
+  }
+  // set the rest of the key/value pairs
+  it = input->makeIterator();
   while (ScriptValueP value = it->next(&key)) {
     assert(key);
     if (key == script_nil) continue;
@@ -67,7 +76,7 @@ SCRIPT_FUNCTION(new_card) {
           set_container(script_container, script_value, script_key_name);
         }
       }
-      // if the script result is not a collection, simply set the field value to the script value
+      // if the script result is not a collection, simply set the field value to the script result
       else {
         set_container(container, script_input, key_name);
       }

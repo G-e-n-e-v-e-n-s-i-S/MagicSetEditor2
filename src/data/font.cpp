@@ -37,7 +37,7 @@ bool Font::PreloadResourceFonts(bool recursive) {
 
   bool preloadHadErrors = false;
   wxString folder;
-  bool cont = appDir.GetFirst(&folder, wxEmptyString, wxDIR_DIRS);
+  bool cont = appDir.GetFirst(&folder, _(""), wxDIR_DIRS);
   while (cont)
   {
     if (folder.Lower().Contains("fonts")) {
@@ -65,7 +65,7 @@ bool Font::PreloadResourceFonts(bool recursive) {
 
 void Font::TallyResourceFonts(String fontsDirectoryPath, vector<String>& fontFilePaths, bool recursive) {
   wxDir fontsDirectory(fontsDirectoryPath);
-  String fontFileName = wxEmptyString;
+  String fontFileName = _("");
   bool hasNext = fontsDirectory.GetFirst(&fontFileName);
   while (hasNext) {
     String fontFilePath = fontsDirectoryPath + fontFileName;

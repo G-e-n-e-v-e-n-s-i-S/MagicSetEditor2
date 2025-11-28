@@ -54,12 +54,42 @@ public:
   inline String const& toStringForKey() const { return fn; }
 
   /// Retreive a rect from a filename
-  static String getRect(const String& file) {
-      size_t first = file.find(_("---"));
-      if (first == String::npos) return _("");
-      size_t last = file.find(_("---"), first+3);
-      if (first == last) return _("");
-      return file.substr(first, last + 3 - first);
+  inline static wxRect getExternalRect(const String& filename) {
+    size_t first = filename.find(_("---"));
+    if (first == String::npos) return wxRect();
+    size_t last = filename.find(_("---"), first+3);
+    if (last == String::npos) return wxRect();
+    String string = filename.substr(first + 3, last - (first + 3));
+    if (string.empty()) return wxRect();
+
+    size_t divider = string.find(_("-"));
+    if (divider == String::npos) return wxRect();
+    if (divider == 0) return wxRect();
+    int x;
+    if(!string.substr(0, divider).ToInt(&x)) return wxRect();
+    string = string.substr(divider + 1);
+
+    divider = string.find(_("-"));
+    if (divider == String::npos) return wxRect();
+    if (divider == 0) return wxRect();
+    int y;
+    if(!string.substr(0, divider).ToInt(&y)) return wxRect();
+    string = string.substr(divider + 1);
+
+    divider = string.find(_("-"));
+    if (divider == String::npos) return wxRect();
+    if (divider == 0) return wxRect();
+    int width;
+    if(!string.substr(0, divider).ToInt(&width)) return wxRect();
+    string = string.substr(divider + 1);
+
+    int height;
+    if(!string.ToInt(&height)) return wxRect();
+
+    return wxRect(x, y, width, height);
+  }
+  inline wxRect getExternalRect() {
+    return getExternalRect(fn);
   }
 
 private:

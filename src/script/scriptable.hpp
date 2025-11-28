@@ -129,7 +129,8 @@ public:
   inline bool isScripted() const { return script; }
   /// Has this value been read from a Reader?
   inline bool hasBeenRead() const { return !script.unparsed.empty(); }
-  
+  inline String unparsed() const { return script.unparsed; }
+
   /// Updates the value by executing the script, returns true if the value has changed
   inline bool update(Context& ctx) {
     return script.invokeOn(ctx, value);

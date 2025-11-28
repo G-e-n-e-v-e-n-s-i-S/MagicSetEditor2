@@ -513,9 +513,9 @@ SCRIPT_FUNCTION(remove_tags) {
 /** 0 based index, -1 if not found */
 int position_in_vector(const ScriptValueP& of, const ScriptValueP& in, const ScriptValueP& order_by, const ScriptValueP& filter) {
   ScriptType of_t = of->type(), in_t = in->type();
-  if (of_t == SCRIPT_STRING || in_t == SCRIPT_STRING) {
+  if (of_t == SCRIPT_STRING && in_t == SCRIPT_STRING) {
     // string finding
-    return (int)of->toString().find(in->toString()); // (int)npos == -1
+    return (int)in->toString().find(of->toString()); // (int)npos == -1
   } else if (order_by || filter) {
     ScriptObject<Set*>*  s = dynamic_cast<ScriptObject<Set*>* >(in.get());
     ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(of.get());
@@ -754,7 +754,7 @@ SCRIPT_FUNCTION(get_card_stylesheet) {
   ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(input.get());
   ScriptObject<Set*>* s = dynamic_cast<ScriptObject<Set*>*>(set.get());
   if (s && c) {
-    return to_script(&s->getValue()->stylesheetFor(c->getValue()));
+    return to_script(s->getValue()->stylesheetForP(c->getValue()));
   }
   throw ScriptError(_("invalid set or card argument"));
 }
@@ -777,8 +777,8 @@ SCRIPT_FUNCTION(get_card_from_link) {
                card->linked_relation_2 == trimmed_input ? card->linked_card_2 :
                card->linked_relation_3 == trimmed_input ? card->linked_card_3 :
                card->linked_relation_4 == trimmed_input ? card->linked_card_4 :
-               "";
-  if (uid == wxEmptyString) return script_nil;
+               _("");
+  if (uid.empty()) return script_nil;
   FOR_EACH(other_card, set->cards) {
     if (other_card->uid == uid) SCRIPT_RETURN(other_card);
   }

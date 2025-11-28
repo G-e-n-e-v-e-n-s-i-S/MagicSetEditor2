@@ -72,14 +72,14 @@ String ActionStack::undoName() const {
   if (canUndo()) {
     return _(" ") + capitalize(undo_actions.back()->getName(true));
   } else {
-    return wxEmptyString;
+    return _("");
   }
 }
 String ActionStack::redoName() const {
   if (canRedo()) {
     return _(" ") + capitalize(redo_actions.back()->getName(false));
   } else {
-    return wxEmptyString;
+    return _("");
   }
 }
 

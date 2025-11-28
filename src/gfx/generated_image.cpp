@@ -24,7 +24,7 @@ GeneratedImageP GeneratedImage::toImage() const {
   return const_cast<GeneratedImage*>(this)->intrusive_from_this();
 }
 
-Image GeneratedImage::generateConform(const Options& options) const {
+Image GeneratedImage::generateConform(const Options& options) {
   return conform_image(generate(options),options);
 }
 
@@ -81,7 +81,7 @@ Image conform_image(const Image& img, const GeneratedImage::Options& options) {
 
 // ----------------------------------------------------------------------------- : BlankImage
 
-Image BlankImage::generate(const Options& opt) const {
+Image BlankImage::generate(const Options& opt) {
   int w = max(1, opt.width >= 0  ? opt.width  : opt.height);
   int h = max(1, opt.height >= 0 ? opt.height : opt.width);
   Image img(w, h);
@@ -97,7 +97,7 @@ bool BlankImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : LinearBlendImage
 
-Image LinearBlendImage::generate(const Options& opt) const {
+Image LinearBlendImage::generate(const Options& opt) {
   Image img = image1->generate(opt);
   linear_blend(img, image2->generate(opt), x1, y1, x2, y2);
   return img;
@@ -115,7 +115,7 @@ bool LinearBlendImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : MaskedBlendImage
 
-Image MaskedBlendImage::generate(const Options& opt) const {
+Image MaskedBlendImage::generate(const Options& opt) {
   Image img = light->generate(opt);
   mask_blend(img, dark->generate(opt), mask->generate(opt));
   return img;
@@ -132,7 +132,7 @@ bool MaskedBlendImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : CombineBlendImage
 
-Image CombineBlendImage::generate(const Options& opt) const {
+Image CombineBlendImage::generate(const Options& opt) {
   Image img = image1->generate(opt);
   combine_image(img, image2->generate(opt), image_combine);
   return img;
@@ -149,7 +149,7 @@ bool CombineBlendImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : SetMaskImage
 
-Image SetMaskImage::generate(const Options& opt) const {
+Image SetMaskImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   set_alpha(img, mask->generate(opt));
   return img;
@@ -160,7 +160,7 @@ bool SetMaskImage::operator == (const GeneratedImage& that) const {
                && *mask  == *that2->mask;
 }
 
-Image SetAlphaImage::generate(const Options& opt) const {
+Image SetAlphaImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   set_alpha(img, alpha);
   return img;
@@ -173,7 +173,7 @@ bool SetAlphaImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : SetCombineImage
 
-Image SetCombineImage::generate(const Options& opt) const {
+Image SetCombineImage::generate(const Options& opt) {
   return image->generate(opt);
 }
 ImageCombine SetCombineImage::combine() const {
@@ -187,7 +187,7 @@ bool SetCombineImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : SaturateImage
 
-Image SaturateImage::generate(const Options& opt) const {
+Image SaturateImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   saturate(img, amount);
   return img;
@@ -200,7 +200,7 @@ bool SaturateImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : InvertImage
 
-Image InvertImage::generate(const Options& opt) const {
+Image InvertImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   invert(img);
   return img;
@@ -212,7 +212,7 @@ bool InvertImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : RecolorImage
 
-Image RecolorImage::generate(const Options& opt) const {
+Image RecolorImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   recolor(img, color);
   return img;
@@ -223,7 +223,7 @@ bool RecolorImage::operator == (const GeneratedImage& that) const {
                && color == that2->color;
 }
 
-Image RecolorImage2::generate(const Options& opt) const {
+Image RecolorImage2::generate(const Options& opt) {
   Image img = image->generate(opt);
   recolor(img, red,green,blue,white);
   return img;
@@ -239,7 +239,7 @@ bool RecolorImage2::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : FlipImage
 
-Image FlipImageHorizontal::generate(const Options& opt) const {
+Image FlipImageHorizontal::generate(const Options& opt) {
   Image img = image->generate(opt);
   return flip_image_horizontal(img);
 }
@@ -248,7 +248,7 @@ bool FlipImageHorizontal::operator == (const GeneratedImage& that) const {
   return that2 && *image == *that2->image;
 }
 
-Image FlipImageVertical::generate(const Options& opt) const {
+Image FlipImageVertical::generate(const Options& opt) {
   Image img = image->generate(opt);
   return flip_image_vertical(img);
 }
@@ -257,7 +257,7 @@ bool FlipImageVertical::operator == (const GeneratedImage& that) const {
   return that2 && *image == *that2->image;
 }
 
-Image RotateImage::generate(const Options& opt) const {
+Image RotateImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   return rotate_image(img,angle);
 }
@@ -269,7 +269,7 @@ bool RotateImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : EnlargeImage
 
-Image EnlargeImage::generate(const Options& opt) const {
+Image EnlargeImage::generate(const Options& opt) {
   // generate 'sub' image
   Options sub_opt
     ( int(opt.width  * (border_size < 0.5 ? 1 - 2 * border_size : 0))
@@ -307,7 +307,7 @@ bool EnlargeImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : ResizeImage
 
-Image ResizeImage::generate(const Options& opt) const {
+Image ResizeImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   return resample(img, width, height);
 }
@@ -320,7 +320,7 @@ bool ResizeImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : BleedEdgedImage
 
-Image BleedEdgedImage::generate(const Options& opt) const {
+Image BleedEdgedImage::generate(const Options& opt) {
   // create enlarged image
   Image base_img = base_image->generate(opt);
   int w = base_img.GetWidth(), h = base_img.GetHeight();
@@ -467,7 +467,7 @@ bool BleedEdgedImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : InsertedImage
 
-Image InsertedImage::generate(const Options& opt) const {
+Image InsertedImage::generate(const Options& opt) {
   Image base_img =     base_image->generate(opt);
   Image inserted_img = inserted_image->generate(opt);
   int base_x =     offset_x < 0 ? -offset_x : 0;
@@ -507,7 +507,7 @@ bool InsertedImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : CropImage
 
-Image CropImage::generate(const Options& opt) const {
+Image CropImage::generate(const Options& opt) {
   return image->generate(opt).Size(wxSize((int)width, (int)height), wxPoint(-(int)offset_x, -(int)offset_y));
 }
 bool CropImage::operator == (const GeneratedImage& that) const {
@@ -568,7 +568,7 @@ UInt gaussian_blur(Byte* in, UInt* out, int w, int h, double radius) {
   return total_x * total_y;
 }
 
-Image DropShadowImage::generate(const Options& opt) const {
+Image DropShadowImage::generate(const Options& opt) {
   // sub image
   Image img = image->generate(opt);
   if (!img.HasAlpha()) {
@@ -611,7 +611,7 @@ bool DropShadowImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : PackagedImage
 
-Image PackagedImage::generate(const Options& opt) const {
+Image PackagedImage::generate(const Options& opt) {
   // TODO : use opt.width and opt.height?
   // open file from package
   if (!opt.package) throw ScriptError(_("Can only load images in a context where an image is expected"));
@@ -631,7 +631,7 @@ bool PackagedImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : BuiltInImage
 
-Image BuiltInImage::generate(const Options& opt) const {
+Image BuiltInImage::generate(const Options& opt) {
   // TODO : use opt.width and opt.height?
   try {
     Image img = load_resource_image(name);
@@ -646,7 +646,7 @@ bool BuiltInImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : ArbitraryImage
 
-Image ArbitraryImage::generate(const Options& opt) const {
+Image ArbitraryImage::generate(const Options& opt) {
   return image;
 }
 bool ArbitraryImage::operator == (const GeneratedImage& that) const {
@@ -662,7 +662,7 @@ SymbolToImage::SymbolToImage(bool is_local, const LocalFileName& filename, Age a
 {}
 SymbolToImage::~SymbolToImage() {}
 
-Image SymbolToImage::generate(const Options& opt) const {
+Image SymbolToImage::generate(const Options& opt) {
   // TODO : use opt.width and opt.height?
   Package* package = is_local ? opt.local_package : opt.package;
   if (!package) throw ScriptError(_("Can only load images in a context where an image is expected"));
@@ -698,7 +698,7 @@ ImageValueToImage::ImageValueToImage(const LocalFileName& filename, Age age)
 {}
 ImageValueToImage::~ImageValueToImage() {}
 
-Image ImageValueToImage::generate(const Options& opt) const {
+Image ImageValueToImage::generate(const Options& opt) {
   // TODO : use opt.width and opt.height?
   if (!opt.local_package) throw ScriptError(_("Can only load images in a context where an image is expected"));
   Image image;
@@ -719,40 +719,48 @@ bool ImageValueToImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : ExternalImage
 
-Image ExternalImage::generate(const Options& opt) const {
-  wxFileName fname(filepath, wxPATH_UNIX);
-  String filePathString = fname.GetAbsolutePath();
+ExternalImage::ExternalImage(const String& filepath)
+  : filepath(filepath), loaded(false)
+{
+  filepathSanitized = filepath;
+  filepathSanitized.Replace(":",  "-");
+  filepathSanitized.Replace("\\", "-");
+  filepathSanitized.Replace("/",  "-");
+}
 
-  // has a pre-existing .mse-set file been loaded? 
-  if (opt.local_package->needSaveAs()) throw ScriptError(_ERROR_1_("can't import image without set", filePathString));
+Image ExternalImage::generate(const Options& opt) {
+  // has a pre-existing .mse-set file been loaded?
+  if (opt.local_package->needSaveAs()) throw ScriptError(_ERROR_1_("can't import image without set", filepath));
 
   // does the file pointed to by filepath exist?
-  if (!fname.FileExists()) throw ScriptError(_ERROR_1_("import not found", filePathString));
+  wxFileName fname(filepath, wxPATH_UNIX);
+  if (!fname.FileExists()) throw ScriptError(_ERROR_1_("import not found", filepath));
 
+  // add the file to the package (or overwrite it if pre-existing)
+  if (!loaded || !opt.local_package->existsIn(filepathSanitized)) {
+    auto outStream = opt.local_package->openOut(filepathSanitized);
+    wxFileInputStream inStream(filepath);
+    if (!inStream.IsOk()) throw ScriptError(_ERROR_1_("can't create file stream", filepath));
+    outStream->Write(inStream);
+    if (!outStream->IsOk()) throw ScriptError(_ERROR_1_("can't write image to set", filepath));
+    outStream->Close();
+    loaded = true;
+  }
+
+  // save the package with the new image
+  opt.local_package->save(false);
+
+  // generate Image
   String fileExt = fname.GetExt();
   wxBitmapType bitmapType;
   if      (fileExt == _("png"))                         bitmapType = wxBITMAP_TYPE_PNG;
   else if (fileExt == _("jpg") || fileExt == _("jpeg")) bitmapType = wxBITMAP_TYPE_JPEG;
   else                                                  bitmapType = wxBITMAP_TYPE_BMP;
 
-  // does the file exist in the package?
-  String fileNameNoExtension = fname.GetName();
-  if (!opt.local_package->existsIn(fileNameNoExtension)) {
-    auto outStream = opt.local_package->openOut(fileNameNoExtension);
-    wxFileInputStream inStream = wxFileInputStream(filepath.ToStdString());
-    if (!inStream.IsOk()) throw ScriptError(_ERROR_1_("can't create file stream", filePathString));
-    outStream->Write(inStream);
-    if (!outStream->IsOk()) throw ScriptError(_ERROR_1_("can't write image to set", filePathString));
-    outStream->Close();
-  }
+  auto imageInputStream = opt.local_package->openIn(filepathSanitized);
+  Image img(*imageInputStream, bitmapType);
 
-  // save the package with the new image
-  opt.local_package->save(false);
-
-  auto imageInputStream = opt.local_package->openIn(fileNameNoExtension);
-  Image img(*imageInputStream.get(), bitmapType);
-
-  if (!img.IsOk()) throw ScriptError(_ERROR_1_("can't import image", filePathString));
+  if (!img.IsOk()) throw ScriptError(_ERROR_1_("can't import image", filepath));
 
   return img;
 }

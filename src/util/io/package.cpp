@@ -272,11 +272,6 @@ String Package::nameOut(const String& file) {
   } else {
     // create temp file
     String name = wxFileName::CreateTempFileName(_("mse"));
-    String rect = LocalFileName::getRect(file);
-    if (!rect.empty()) {
-      if (name.Contains(".")) name = name.BeforeLast('.') + rect + _(".") + name.AfterLast('.');
-      else name = name + rect;
-    }
     it->second.tempName = name;
     return name;
   }
@@ -366,7 +361,7 @@ LocalFileName LocalFileName::fromReadString(String const& fn, String const& pref
   if (!fn.empty() && clipboard_package()) {
     // copy file into current package
     try {
-      LocalFileName local_name = clipboard_package()->newFileName(_("image"), getRect(fn)); // a new unique name in the package, assume it's an image
+      LocalFileName local_name = clipboard_package()->newFileName(_("image"), _("")); // a new unique name in the package, assume it's an image
       auto out_stream = clipboard_package()->openOut(local_name);
       auto in_stream  = Package::openAbsoluteFile(fn);
       out_stream->Write(*in_stream); // copy
@@ -403,7 +398,7 @@ void Package::loadZipStream() {
 }
 
 void Package::openDirectory(bool fast) {
-  if (!fast) openSubdir(wxEmptyString);
+  if (!fast) openSubdir(_(""));
 }
 
 void Package::openSubdir(const String& name) {
@@ -411,7 +406,7 @@ void Package::openSubdir(const String& name) {
   if (!d.IsOpened()) return; // ignore errors here
   // find files
   String f; // filename
-  for(bool ok = d.GetFirst(&f, wxEmptyString, wxDIR_FILES | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
+  for(bool ok = d.GetFirst(&f, _(""), wxDIR_FILES | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
     if (ignore_file(f)) continue;
     // add file to list of known files
     addFile(name + f);
@@ -420,7 +415,7 @@ void Package::openSubdir(const String& name) {
     modified = max(modified,file_time);
   }
   // find subdirs
-  for(bool ok = d.GetFirst(&f, wxEmptyString, wxDIR_DIRS | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
+  for(bool ok = d.GetFirst(&f, _(""), wxDIR_DIRS | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
     if (!f.empty() && f.GetChar(0) != _('.')) {
       // skip directories starting with '.', like ., .. and .svn
       openSubdir(name+f+_("/"));

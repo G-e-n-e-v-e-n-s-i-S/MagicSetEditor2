@@ -192,7 +192,7 @@ int KeywordList::usage(const Keyword& kw) const {
 // ----------------------------------------------------------------------------- : KeywordList : Item text
 
 String KeywordList::OnGetItemText (long pos, long col) const {
-  if (sorted_list.size() == 0) return wxEmptyString;
+  if (sorted_list.size() == 0) return _("");
   
   const Keyword& kw = *getKeyword(pos);
   switch(col) {
@@ -218,7 +218,7 @@ String KeywordList::OnGetItemText (long pos, long col) const {
       }
       return formatted;
     }
-    default:  return wxEmptyString;
+    default:  return _("");
   }
 }
 int KeywordList::OnGetItemImage(long pos) const {

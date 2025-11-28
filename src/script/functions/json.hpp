@@ -184,15 +184,15 @@ inline static CardP json_to_mse_card(boost::json::object& jv, Set* set) {
   read(card->time_created,                     jv, "time_created");
   read(card->time_modified,                    jv, "time_modified");
   read(card->notes,                            jv, "notes");
-  //read(card->uid,                              jv, "uid");
-  //read(card->linked_card_1,                    jv, "linked_card_1");
-  //read(card->linked_card_2,                    jv, "linked_card_2");
-  //read(card->linked_card_3,                    jv, "linked_card_3");
-  //read(card->linked_card_4,                    jv, "linked_card_4");
-  //read(card->linked_relation_1,                jv, "linked_relation_1");
-  //read(card->linked_relation_2,                jv, "linked_relation_2");
-  //read(card->linked_relation_3,                jv, "linked_relation_3");
-  //read(card->linked_relation_4,                jv, "linked_relation_4");
+  read(card->uid,                              jv, "uid");
+  read(card->linked_card_1,                    jv, "linked_card_1");
+  read(card->linked_card_2,                    jv, "linked_card_2");
+  read(card->linked_card_3,                    jv, "linked_card_3");
+  read(card->linked_card_4,                    jv, "linked_card_4");
+  read(card->linked_relation_1,                jv, "linked_relation_1");
+  read(card->linked_relation_2,                jv, "linked_relation_2");
+  read(card->linked_relation_3,                jv, "linked_relation_3");
+  read(card->linked_relation_4,                jv, "linked_relation_4");
   // card fields
   if (jv.contains("data") && jv["data"].is_object()) {
     boost::json::object datav = jv["data"].as_object();
@@ -315,9 +315,8 @@ inline static ScriptValueP json_to_mse(const boost::json::value& jv, Set* set) {
     return to_script(integer);
   }
   else if (jv.is_string()) {
-    std::string stdstring = boost::json::value_to<std::string>(jv);
-    String wxstring(stdstring.c_str(), wxConvUTF8);
-    return to_script(wxstring);
+    std::string string = boost::json::value_to<std::string>(jv);
+    return to_script(String(string.c_str()));
   }
   else if (jv.is_array()) {
     boost::json::array array = jv.get_array();
@@ -364,7 +363,7 @@ inline static ScriptValueP json_to_mse(const String& string, Set* set) {
     boost::json::parse_options options;
     options.allow_invalid_utf8 = true;
     boost::json::value jv = boost::json::parse(string.ToStdString(), ec, {}, options);
-    if(ec) queue_message(MESSAGE_ERROR, _ERROR_("json cant parse") + _("\n\n") + ec.message());
+    if(ec) return script_nil; //queue_message(MESSAGE_ERROR, _ERROR_("json cant parse") + _("\n\n") + ec.message());
     return json_to_mse(jv, set);
   }
   catch (...) {
@@ -452,22 +451,22 @@ inline static boost::json::object mse_to_json(const KeywordP& keyword) {
   return keywordv;
 }
 
-inline static boost::json::object mse_to_json(const CardP& card, Set* set) {
+inline static boost::json::object mse_to_json(const CardP& card, const Set* set) {
   boost::json::object cardv;
   cardv.emplace("mse_object_type", "card");
   // built-in values
   write(cardv, "time_created",      card->time_created);
   write(cardv, "time_modified",     card->time_modified);
   write(cardv, "notes",             card->notes);
-  //write(cardv, "uid",               card->uid);
-  //write(cardv, "linked_card_1",     card->linked_card_1);
-  //write(cardv, "linked_card_2",     card->linked_card_2);
-  //write(cardv, "linked_card_3",     card->linked_card_3);
-  //write(cardv, "linked_card_4",     card->linked_card_4);
-  //write(cardv, "linked_relation_1", card->linked_relation_1);
-  //write(cardv, "linked_relation_2", card->linked_relation_2);
-  //write(cardv, "linked_relation_3", card->linked_relation_3);
-  //write(cardv, "linked_relation_4", card->linked_relation_4);
+  write(cardv, "uid",               card->uid);
+  write(cardv, "linked_card_1",     card->linked_card_1);
+  write(cardv, "linked_card_2",     card->linked_card_2);
+  write(cardv, "linked_card_3",     card->linked_card_3);
+  write(cardv, "linked_card_4",     card->linked_card_4);
+  write(cardv, "linked_relation_1", card->linked_relation_1);
+  write(cardv, "linked_relation_2", card->linked_relation_2);
+  write(cardv, "linked_relation_3", card->linked_relation_3);
+  write(cardv, "linked_relation_4", card->linked_relation_4);
   // card fields
   write(cardv, "data",              card->data);
   // stylesheet
@@ -494,7 +493,7 @@ inline static boost::json::object mse_to_json(const CardP& card, Set* set) {
   return cardv;
 }
 
-inline static boost::json::object mse_to_json(Set* set) {
+inline static boost::json::object mse_to_json(const Set* set) {
   boost::json::object setv;
   setv.emplace("mse_object_type",    "set");
   // built-in values
@@ -509,19 +508,19 @@ inline static boost::json::object mse_to_json(Set* set) {
   write(setv, "styling",            set->styling_data);
   // cards
   boost::json::array cardsv;
-  for (auto card : set->cards) {
+  for (const CardP& card : set->cards) {
     cardsv.emplace_back(mse_to_json(card, set));
   }
   setv.emplace("cards", cardsv);
   // keywords
   boost::json::array keywordsv;
-  for (auto keyword : set->keywords) {
+  for (const KeywordP& keyword : set->keywords) {
     keywordsv.emplace_back(mse_to_json(keyword));
   }
   if (!keywordsv.empty()) setv.emplace("keywords", keywordsv);
   // pack types
   boost::json::array pack_typesv;
-  for (auto pack_type : set->pack_types) {
+  for (const PackTypeP& pack_type : set->pack_types) {
     pack_typesv.emplace_back(mse_to_json(pack_type));
   }
   if (!pack_typesv.empty()) setv.emplace("pack_types", pack_typesv);

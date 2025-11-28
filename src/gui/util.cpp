@@ -73,7 +73,7 @@ struct FakeEvtHandlerClass : public wxEvtHandler {
     ev.Skip();
   }
   void onControlLeave(wxMouseEvent& ev) {
-    set_status_text((wxWindow*)ev.GetEventObject(), wxEmptyString);
+    set_status_text((wxWindow*)ev.GetEventObject(), _(""));
     ev.Skip();
   }
 };

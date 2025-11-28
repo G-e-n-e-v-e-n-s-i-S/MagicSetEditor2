@@ -89,55 +89,62 @@ inline static void set_container(Value* container, ScriptValueP& value, String k
   }
 }
 
-inline static bool set_builtin_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
-  // check if the given value is for a built-in field, if found set it and return true
+inline static bool set_stylesheet_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
+  // check if the given value is for a stylesheet, if found set it and return true
   key_name = unified_form(key_name);
-  if (key_name == _("notes") || key_name == _("note")) {
-    card->notes = value->toString();
-    return true;
-  } else if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
+  if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
     if (!trim(value->toString()).empty()) {
       card->stylesheet = StyleSheet::byGameAndName(game, value->toString());
       if (card->stylesheet) card->styling_data.init(card->stylesheet->styling_fields);
     }
     return true;
   }
-  //else if (key_name == _("id") || key_name == _("uid")) {
-  //  card->uid = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card") || key_name == _("linked_card_1")) {
-  //  card->linked_card_1 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card_2")) {
-  //  card->linked_card_2 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card_3")) {
-  //  card->linked_card_3 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card_4")) {
-  //  card->linked_card_4 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation") || key_name == _("linked_relation_1")) {
-  //  card->linked_relation_1 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation_2")) {
-  //  card->linked_relation_2 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation_3")) {
-  //  card->linked_relation_3 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation_4")) {
-  //  card->linked_relation_4 = value->toString();
-  //  return true;
-  //}
+  return false;
+}
+
+inline static bool set_builtin_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
+  // check if the given value is for a built-in field, if found set it and return true
+  key_name = unified_form(key_name);
+  if (key_name == _("notes") || key_name == _("note")) {
+    card->notes = value->toString();
+    return true;
+  }
+  else if (key_name == _("id") || key_name == _("uid")) {
+    card->uid = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card") || key_name == _("linked_card_1")) {
+    card->linked_card_1 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_2")) {
+    card->linked_card_2 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_3")) {
+    card->linked_card_3 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_4")) {
+    card->linked_card_4 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation") || key_name == _("linked_relation_1")) {
+    card->linked_relation_1 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_2")) {
+    card->linked_relation_2 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_3")) {
+    card->linked_relation_3 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_4")) {
+    card->linked_relation_4 = value->toString();
+    return true;
+  }
   else if          (key_name == _("styling_data")   || key_name == _("style_data")   || key_name == _("stylesheet_data")   || key_name == _("template_data") || key_name == _("styling")
                  || key_name == _("styling_fields") || key_name == _("style_fields") || key_name == _("stylesheet_fields") || key_name == _("template_fields")
                  || key_name == _("extra_data")     || key_name == _("extra_fields") || key_name == _("extra_card_data")   || key_name == _("extra_card_fields")) {

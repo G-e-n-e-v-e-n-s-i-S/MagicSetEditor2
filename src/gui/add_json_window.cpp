@@ -33,7 +33,7 @@ AddJSONWindow::AddJSONWindow(Window* parent, const SetP& set, bool sizer)
   , set(set)
 {
   // init controls
-  file_path = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  file_path = new wxTextCtrl(this, wxID_ANY, _(""));
   file_browse = new wxButton(this, ID_CARD_ADD_JSON_BROWSE, _BUTTON_("browse"));
   json_type = new wxChoice(this, ID_CARD_ADD_JSON_ARRAY, wxDefaultPosition, wxDefaultSize, 0, nullptr);
   json_type->Clear();
@@ -43,7 +43,7 @@ AddJSONWindow::AddJSONWindow(Window* parent, const SetP& set, bool sizer)
   }
   json_type->Append(_LABEL_("add card json custom"));
   json_type->SetSelection(0);
-  card_array_path = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  card_array_path = new wxTextCtrl(this, wxID_ANY, _(""));
   setJSONType();
   // init sizers
   if (sizer) {
@@ -68,7 +68,7 @@ AddJSONWindow::AddJSONWindow(Window* parent, const SetP& set, bool sizer)
 void AddJSONWindow::setJSONType() {
   int sel = json_type->GetSelection();
   if (sel == json_type->GetCount() - 1) { // Custom type
-    card_array_path->ChangeValue(wxEmptyString);
+    card_array_path->ChangeValue(_(""));
     card_array_path->Enable();
   }
   else {
@@ -89,7 +89,7 @@ void AddJSONWindow::onJSONTypeChange(wxCommandEvent&) {
 }
 
 void AddJSONWindow::onBrowseFiles(wxCommandEvent&) {
-  wxFileDialog* dlg = new wxFileDialog(this, _TITLE_("add card json file"), settings.default_set_dir, wxEmptyString, _("JSON files|*.json|All files (*.*)|*"), wxFD_OPEN);
+  wxFileDialog* dlg = new wxFileDialog(this, _TITLE_("add card json file"), settings.default_set_dir, _(""), _("JSON files|*.json|All files (*.*)|*"), wxFD_OPEN);
   if (dlg->ShowModal() == wxID_OK) {
     file_path->SetValue(dlg->GetPath());
   }
@@ -102,7 +102,7 @@ void AddJSONWindow::onBrowseFiles(wxCommandEvent&) {
   try {
     jv = boost::json::parse(input);
   } catch (...) {
-    queue_message(MESSAGE_ERROR, _ERROR_("add card json failed to parse"));
+    queue_message(MESSAGE_ERROR, _ERROR_("json cant parse"));
     return false;
   }
   // Split path into tokens

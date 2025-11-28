@@ -27,7 +27,7 @@ AddCSVWindow::AddCSVWindow(Window* parent, const SetP& set, bool sizer)
   , set(set)
 {
   // init controls
-  file_path = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  file_path = new wxTextCtrl(this, wxID_ANY, _(""));
   file_browse = new wxButton(this, ID_CARD_ADD_CSV_BROWSE, _BUTTON_("browse"));
   separator_type = new wxChoice(this, ID_CARD_ADD_CSV_SEP, wxDefaultPosition, wxDefaultSize, 0, nullptr);
   separator_type->Clear();
@@ -66,7 +66,7 @@ void AddCSVWindow::onSeparatorTypeChange(wxCommandEvent&) {
 }
 
 void AddCSVWindow::onBrowseFiles(wxCommandEvent&) {
-  wxFileDialog* dlg = new wxFileDialog(this, _TITLE_("add card csv file"), settings.default_set_dir, wxEmptyString, _("CSV files|*.csv;*.tsv|All files (*.*)|*"), wxFD_OPEN);
+  wxFileDialog* dlg = new wxFileDialog(this, _TITLE_("add card csv file"), settings.default_set_dir, _(""), _("CSV files|*.csv;*.tsv|All files (*.*)|*"), wxFD_OPEN);
   if (dlg->ShowModal() == wxID_OK) {
     file_path->SetValue(dlg->GetPath());
   }

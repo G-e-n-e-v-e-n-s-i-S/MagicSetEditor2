@@ -459,7 +459,7 @@ bool TextValueEditor::onChar(wxKeyEvent& ev) {
           return true;
         }
       }
-      replaceSelection(wxEmptyString, _ACTION_("backspace"));
+      replaceSelection(_(""), _ACTION_("backspace"));
       return true;
     case WXK_DELETE:
       if (selection_start == selection_end) {
@@ -470,7 +470,7 @@ bool TextValueEditor::onChar(wxKeyEvent& ev) {
           moveSelection(TYPE_CURSOR, nextCharBoundary(selection_end), true, MOVE_RIGHT);
         }
       }
-      replaceSelection(wxEmptyString, _ACTION_("delete"));
+      replaceSelection(_(""), _ACTION_("delete"));
       return true;
     case WXK_RETURN:
       if (field().multi_line) {
@@ -581,7 +581,7 @@ bool TextValueEditor::onContextMenu(wxMenu& m, wxContextMenuEvent& ev) {
     } else {
       int i = 0;
       FOR_EACH(s,suggestions) {
-        m.Insert(i, ID_SPELLING_SUGGEST + i, s, wxEmptyString);
+        m.Insert(i, ID_SPELLING_SUGGEST + i, s, _(""));
         i++;
       }
     }
@@ -797,7 +797,7 @@ bool TextValueEditor::doCopy() {
 }
 
 bool TextValueEditor::doDelete() {
-  replaceSelection(wxEmptyString, _ACTION_("cut"));
+  replaceSelection(_(""), _ACTION_("cut"));
   return true;
 }
 
