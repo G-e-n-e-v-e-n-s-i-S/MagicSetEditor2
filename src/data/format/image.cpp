@@ -177,7 +177,6 @@ Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lo
       if (value && !value->filename.empty()) {
         FieldP field = (*it)->fieldP;
         StyleSheetP stylesheet = set->stylesheetForP(card);
-        queue_message(MESSAGE_ERROR, _("stylesheet: ") + stylesheet->name());
         StyleP style = stylesheet->card_style.at(field->index);
         if (style) {
           style->update(set->getContext(card));

@@ -381,7 +381,6 @@ bool CardListBase::parseData() {
   }
 
   if (new_cards.size() > 0) {
-    queue_message(MESSAGE_ERROR, json_ugly_print(mse_to_json(set.get())));
     set->actions.addAction(make_unique<AddCardAction>(ADD, *set, new_cards));
     return true;
   }
