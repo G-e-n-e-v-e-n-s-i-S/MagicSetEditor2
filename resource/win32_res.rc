@@ -55,6 +55,7 @@ tool/no_auto IMAGE "tool/no_auto.png"
 
 tool/card_add IMAGE "tool/card_add.png"
 tool/card_add_multiple IMAGE "tool/card_add_multiple.png"
+tool/card_modify_multiple IMAGE "tool/card_modify_multiple.png"
 tool/card_del IMAGE "tool/card_del.png"
 tool/card_link IMAGE "tool/card_link.png"
 tool/card_copy IMAGE "tool/card_copy.png"
