@@ -16,6 +16,7 @@
 #include <gui/util.hpp>
 #include <gui/add_csv_window.hpp>
 #include <gui/add_json_window.hpp>
+#include <gui/bulk_modification_window.hpp>
 #include <data/game.hpp>
 #include <data/field.hpp>
 #include <data/field/choice.hpp>
@@ -227,6 +228,15 @@ bool CardListBase::doAddJSON() {
   AddJSONWindow wnd(this, set, true);
   if (wnd.ShowModal() == wxID_OK) {
     // The actual adding is done in this window's onOk function
+    return true;
+  }
+  return false;
+}
+
+bool CardListBase::doBulkModification() {
+  BulkModificationWindow wnd(this, set, true);
+  if (wnd.ShowModal() == wxID_OK) {
+    // The actual modifying is done in this window's onOk function
     return true;
   }
   return false;

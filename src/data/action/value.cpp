@@ -37,6 +37,9 @@ void ValueAction::setCard(CardP const& card) {
 
 // ----------------------------------------------------------------------------- : Simple
 
+unique_ptr<ValueAction> value_action(const TextValueP& value, const Defaultable<String>& new_value) {
+  return make_unique<SimpleValueAction<TextValue, false>>(value, new_value);
+}
 unique_ptr<ValueAction> value_action(const ChoiceValueP& value, const Defaultable<String>& new_value) {
   return make_unique<SimpleValueAction<ChoiceValue, true>>(value, new_value);
 }
@@ -205,6 +208,33 @@ String ScriptStyleEvent::getName(bool) const {
 }
 void ScriptStyleEvent::perform(bool) {
   assert(false); // this action is just an event, it should not be performed
+}
+
+// ----------------------------------------------------------------------------- : Bulk action
+
+BulkAction::BulkAction(const vector<shared_ptr<Action>>& actions, const SetP& set, CardListBase* card_list_window)
+  : actions(actions), set(set), card_list_window(card_list_window)
+{
+  if (actions.empty()) throw InternalError(_("BulkAction created with no actions"));
+  name_do = actions.front()->getName(false) + _(" ") + _ACTION_("bulk");
+  name_undo = actions.front()->getName(true) + _(" ") + _ACTION_("bulk");
+}
+BulkAction::~BulkAction() {}
+
+String BulkAction::getName(bool to_undo) const {
+  return to_undo ? name_undo : name_do;
+}
+
+void BulkAction::perform(bool to_undo) {
+  FOR_EACH(action, actions) {
+    action->perform(to_undo);
+    set->actions.tellListeners(*action, to_undo);
+  }
+  card_list_window->Refresh();
+}
+
+bool BulkAction::merge(const Action& action) {
+  return false;
 }
 
 // ----------------------------------------------------------------------------- : Action performer

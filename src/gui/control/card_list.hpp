@@ -82,8 +82,12 @@ public:
   bool doCopyCardAndLinkedCards();
   bool doPaste() override;
   bool doDelete() override;
+
+  // Try to perform a bulk operation, return success
   bool doAddCSV();
   bool doAddJSON();
+
+  bool doBulkModification();
 
   // Look for cards inside some given data
   bool parseData(bool ignore_cards_from_own_card_list);

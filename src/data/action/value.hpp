@@ -23,6 +23,7 @@
 #include <data/field/image.hpp>
 #include <data/field/symbol.hpp>
 #include <data/field/package_choice.hpp>
+#include <gui/control/card_list.hpp>
 
 class StyleSheet;
 class LocalFileName;
@@ -30,15 +31,8 @@ DECLARE_POINTER_TYPE(Card);
 DECLARE_POINTER_TYPE(Set);
 DECLARE_POINTER_TYPE(Value);
 DECLARE_POINTER_TYPE(Style);
-DECLARE_POINTER_TYPE(TextValue);
-DECLARE_POINTER_TYPE(ChoiceValue);
-DECLARE_POINTER_TYPE(MultipleChoiceValue);
-DECLARE_POINTER_TYPE(ColorValue);
-DECLARE_POINTER_TYPE(ImageValue);
-DECLARE_POINTER_TYPE(SymbolValue);
-DECLARE_POINTER_TYPE(PackageChoiceValue);
 
-// ----------------------------------------------------------------------------- : ValueAction (based class)
+// ----------------------------------------------------------------------------- : ValueAction (base class)
 
 /// An Action the changes a Value
 class ValueAction : public Action {
@@ -72,6 +66,15 @@ inline void swap_value(MultipleChoiceValue& a, MultipleChoiceValue::ValueType& b
   swap(a.last_change, b.last_change);
 }
 
+/// Action that updates a Value to a new value
+unique_ptr<ValueAction> value_action(const TextValueP&           value, const Defaultable<String>& new_value);
+unique_ptr<ValueAction> value_action(const ChoiceValueP&         value, const Defaultable<String>& new_value);
+unique_ptr<ValueAction> value_action(const MultipleChoiceValueP& value, const Defaultable<String>& new_value, const String& last_change);
+unique_ptr<ValueAction> value_action(const ColorValueP&          value, const Defaultable<Color>&  new_value);
+unique_ptr<ValueAction> value_action(const ImageValueP&          value, const LocalFileName&       new_value);
+unique_ptr<ValueAction> value_action(const SymbolValueP&         value, const LocalFileName&       new_value);
+unique_ptr<ValueAction> value_action(const PackageChoiceValueP&  value, const String&              new_value);
+
 /// A ValueAction that swaps between old and new values
 template <typename T, bool ALLOW_MERGE>
 class SimpleValueAction : public ValueAction {
@@ -79,13 +82,13 @@ public:
   inline SimpleValueAction(const intrusive_ptr<T>& value, const typename T::ValueType& new_value)
     : ValueAction(value), new_value(new_value)
   {}
-  
+
   void perform(bool to_undo) override {
     ValueAction::perform(to_undo);
     swap_value(static_cast<T&>(*valueP), new_value);
     valueP->onAction(*this, to_undo); // notify value
   }
-  
+
   bool merge(const Action& action) override {
     if (!ALLOW_MERGE) return false;
     TYPE_CASE(action, SimpleValueAction) {
@@ -97,17 +100,9 @@ public:
     }
     return false;
   }
-  
+
   typename T::ValueType new_value;
 };
-
-/// Action that updates a Value to a new value
-unique_ptr<ValueAction> value_action(const ChoiceValueP&         value, const Defaultable<String>& new_value);
-unique_ptr<ValueAction> value_action(const MultipleChoiceValueP& value, const Defaultable<String>& new_value, const String& last_change);
-unique_ptr<ValueAction> value_action(const ColorValueP&          value, const Defaultable<Color>&  new_value);
-unique_ptr<ValueAction> value_action(const ImageValueP&          value, const LocalFileName&       new_value);
-unique_ptr<ValueAction> value_action(const SymbolValueP&         value, const LocalFileName&       new_value);
-unique_ptr<ValueAction> value_action(const PackageChoiceValueP&  value, const String&              new_value);
 
 // ----------------------------------------------------------------------------- : Text
 
@@ -206,6 +201,25 @@ public:
   const Style*      style;      ///< The modified style
 };
 
+// ----------------------------------------------------------------------------- : Bulk action
+
+// An action that's just a list of other actions
+class BulkAction : public Action {
+public:
+  BulkAction(const vector<shared_ptr<Action>>& actions, const SetP& set, CardListBase* card_list_window);
+  ~BulkAction() override;
+
+  String getName(bool to_undo) const override;
+  void perform(bool to_undo) override;
+  bool merge(const Action& action) override;
+
+private:
+  String name_do;
+  String name_undo;
+  vector<shared_ptr<Action>> actions;
+  SetP set;
+  CardListBase* card_list_window;
+};
 
 // ----------------------------------------------------------------------------- : Action performer
 

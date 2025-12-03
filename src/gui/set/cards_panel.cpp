@@ -138,6 +138,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
     add_menu_item(menuCard, ID_CARD_REMOVE, "card_del", _MENU_("remove card")+_(" "), _HELP_("remove card"));
     add_menu_item(menuCard, ID_CARD_LINK, "card_link", _MENU_("link card") + _(" "), _HELP_("link card"));
     add_menu_item(menuCard, ID_CARD_AND_LINK_COPY, "card_copy", _MENU_("copy card and links") + _(" "), _HELP_("copy card and links"));
+    add_menu_item(menuCard, ID_CARD_BULK, "card_modify_multiple", _MENU_("bulk modify") + _(" "), _HELP_("bulk modify"));
     menuCard->AppendSeparator();
     auto menuRotate = new wxMenu();
       add_menu_item_tr(menuRotate, ID_CARD_ROTATE_0, "card_rotate_0", "rotate_0", wxITEM_CHECK);
@@ -451,6 +452,9 @@ void CardsPanel::onCommand(int id) {
     }
     case ID_CARD_AND_LINK_COPY:
       card_list->doCopyCardAndLinkedCards();
+      break;
+    case ID_CARD_BULK:
+      card_list->doBulkModification();
       break;
     case ID_CARD_ROTATE:
     case ID_CARD_ROTATE_0: case ID_CARD_ROTATE_90: case ID_CARD_ROTATE_180: case ID_CARD_ROTATE_270: {
