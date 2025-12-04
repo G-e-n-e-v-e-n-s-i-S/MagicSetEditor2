@@ -52,7 +52,7 @@ Rotation UnzoomedDataViewer::getRotation() const {
     return Rotation(angle, stylesheet->getCardRect(), zoom, 1.0, ROTATION_ATTACH_TOP_LEFT);
   }
 
-  double export_zoom = settings.stylesheetSettingsFor(set->stylesheetFor(card)).export_zoom();
+  double export_zoom = settings.exportZoomSettingsFor(set->stylesheetFor(card));
   bool use_viewer_rotation = !settings.stylesheetSettingsFor(set->stylesheetFor(card)).card_normal_export();
 
   if (use_viewer_rotation) {
@@ -196,9 +196,12 @@ Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lo
 }
 
 void export_image(const SetP& set, const CardP& card, const String& filename) {
-  Image img = export_image(set, card);
-  img.SaveFile(filename); // can't use Bitmap::saveFile, it wants to know the file type
-  // but image.saveFile determines it automagicly
+  const StyleSheet& stylesheet = set->stylesheetFor(card);
+  StyleSheetSettings& stylesheet_settings = settings.stylesheetSettingsFor(stylesheet);
+  double zoom = settings.exportZoomSettingsFor(stylesheet);
+  Radians angle = stylesheet_settings.card_normal_export() ? 0.0 : stylesheet_settings.card_angle() / 360.0 * 2.0 * M_PI;
+  Image img = export_image(set, card, zoom, angle);
+  img.SaveFile(filename);
 }
 
 void export_image(const SetP& set, const vector<CardP>& cards,

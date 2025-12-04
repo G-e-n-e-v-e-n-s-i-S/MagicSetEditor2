@@ -57,14 +57,11 @@ private:
   wxComboBox* zoom;
   int zoom_int;
   
-  wxComboBox* export_zoom;
-  int export_zoom_int;
+  wxChoice* export_zoom;
   
   void onSelectColumns(wxCommandEvent&);
   void onZoomChange(wxCommandEvent&);
   void updateZoom();
-  void onExportZoomChange(wxCommandEvent&);
-  void updateExportZoom();
 };
 
 class InternalPreferencesPage : public PreferencesPage {
@@ -73,15 +70,9 @@ public:
   void store() override;
 
 private:
-  DECLARE_EVENT_TABLE();
-
   wxCheckBox* internal_image_extension;
 
-  wxComboBox* internal_scale;
-  int internal_scale_int;
-
-  void onInternalScaleChange(wxCommandEvent&);
-  void updateInternalScale();
+  wxChoice* internal_scale;
 };
 
 // Preferences page for directories of programs
@@ -225,10 +216,10 @@ DisplayPreferencesPage::DisplayPreferencesPage(Window* parent)
   borders            = new wxCheckBox(this, wxID_ANY, _BUTTON_("show lines"));
   draw_editing       = new wxCheckBox(this, wxID_ANY, _BUTTON_("show editing hints"));
   spellcheck_enabled = new wxCheckBox(this, wxID_ANY, _BUTTON_("spellcheck enabled"));
-  non_normal_export  = new wxCheckBox(this, wxID_ANY, _BUTTON_("zoom export"));
+  non_normal_export  = new wxCheckBox(this, wxID_ANY, _BUTTON_("rotation export"));
   notes_export       = new wxCheckBox(this, wxID_ANY, _BUTTON_("notes export"));
   zoom               = new wxComboBox(this, ID_ZOOM);
-  export_zoom        = new wxComboBox(this, ID_EXPORT_ZOOM);
+  export_zoom        = new wxChoice  (this, ID_EXPORT_ZOOM);
 
   //wxButton* columns = new wxButton(this, ID_SELECT_COLUMNS, _BUTTON_("select"));
   // set values
@@ -240,17 +231,19 @@ DisplayPreferencesPage::DisplayPreferencesPage(Window* parent)
   notes_export->      SetValue( settings.default_stylesheet_settings.card_notes_export());
     zoom_int = static_cast<int>(settings.default_stylesheet_settings.card_zoom() * 100);
     zoom->SetValue(String::Format(_("%d%%"),zoom_int));
-    int zoom_choices[] = { 50,66,75,80,100,120,125,150,175,200 };
-    for (unsigned int i = 0 ; i < sizeof(zoom_choices)/sizeof(zoom_choices[0]) ; ++i) {
-        zoom->Append(String::Format(_("%d%%"), zoom_choices[i]));
+    for (int i : Settings::export_zoom_choices) {
+      zoom->Append(String::Format(_("%d%%"), i));
     }
 
-    export_zoom_int = static_cast<int>(settings.default_stylesheet_settings.export_zoom() * 100);
-    export_zoom->SetValue(String::Format(_("%d%%"), export_zoom_int));
-    int export_choices[] = { 50,66,75,80,100,120,125,150,175,200 };
-    for (unsigned int i = 0; i < sizeof(export_choices) / sizeof(export_choices[0]); ++i) {
-        export_zoom->Append(String::Format(_("%d%%"), export_choices[i]));
+    export_zoom->Append(_LABEL_("export around 300"));
+    export_zoom->Append(_LABEL_("export force 300"));
+    export_zoom->Append(_LABEL_("export force 150"));
+    for (int i : Settings::export_zoom_choices) {
+      export_zoom->Append(String::Format(_("%d%%"), i));
     }
+    int default_export_zoom = settings.default_stylesheet_settings.export_zoom_selection();
+    if (default_export_zoom < 0 || default_export_zoom > export_zoom->GetCount() - 1) default_export_zoom = 0;
+    export_zoom->SetSelection(default_export_zoom);
 
   // init sizer
   wxSizer* s = new wxBoxSizer(wxVERTICAL);
@@ -268,7 +261,7 @@ DisplayPreferencesPage::DisplayPreferencesPage(Window* parent)
         s4->Add(new wxStaticText(this, wxID_ANY, _LABEL_("export")), 0, wxALL & ~wxLEFT, 4);
         s4->AddSpacer(2);
         s4->Add(export_zoom);
-        s4->Add(new wxStaticText(this, wxID_ANY, _LABEL_("percent of normal")), 1, wxALL & ~wxRIGHT, 4);
+        //s4->Add(new wxStaticText(this, wxID_ANY, _LABEL_("percent of normal")), 1, wxALL & ~wxRIGHT, 4);
 
       s2->Add(s3, 0, wxEXPAND | wxALL, 4);
       s2->Add(s4, 0, wxEXPAND | wxALL, 4);
@@ -290,8 +283,8 @@ void DisplayPreferencesPage::store() {
   settings.default_stylesheet_settings.card_notes_export       = notes_export->GetValue();
   
   updateZoom();
-  settings.default_stylesheet_settings.card_zoom          = zoom_int / 100.0;
-  settings.default_stylesheet_settings.export_zoom = export_zoom_int / 100.0;
+  settings.default_stylesheet_settings.card_zoom   = zoom_int / 100.0;
+  settings.default_stylesheet_settings.export_zoom_selection = export_zoom->GetSelection();
 }
 
 void DisplayPreferencesPage::onSelectColumns(wxCommandEvent&) {
@@ -303,50 +296,38 @@ void DisplayPreferencesPage::onZoomChange(wxCommandEvent&) {
 }
 
 void DisplayPreferencesPage::updateZoom() {
-    String s = zoom->GetValue();
-    int i = zoom_int;
-    if (wxSscanf(s.c_str(),_("%u"),&i)) {
-        zoom_int = min(max(i,1),1000);
-    }
-    zoom->SetValue(String::Format(_("%d%%"),(int)zoom_int));
-}
-
-void DisplayPreferencesPage::onExportZoomChange(wxCommandEvent&) {
-    updateExportZoom();
-}
-
-void DisplayPreferencesPage::updateExportZoom() {
-    String s = export_zoom->GetValue();
-    int i = export_zoom_int;
-    if (wxSscanf(s.c_str(), _("%u"), &i)) {
-        export_zoom_int = min(max(i, 1), 1000);
-    }
-    export_zoom->SetValue(String::Format(_("%d%%"), (int)export_zoom_int));
+  String s = zoom->GetValue();
+  int i = zoom_int;
+  if (wxSscanf(s.c_str(),_("%u"),&i)) {
+    zoom_int = min(max(i,1),1000);
+  }
+  zoom->SetValue(String::Format(_("%d%%"),(int)zoom_int));
 }
 
 BEGIN_EVENT_TABLE(DisplayPreferencesPage, wxPanel)
   EVT_BUTTON       (ID_SELECT_COLUMNS, DisplayPreferencesPage::onSelectColumns)
   EVT_COMBOBOX     (ID_ZOOM, DisplayPreferencesPage::onZoomChange)
   EVT_TEXT_ENTER   (ID_ZOOM, DisplayPreferencesPage::onZoomChange)
-  EVT_COMBOBOX(ID_EXPORT_ZOOM, DisplayPreferencesPage::onExportZoomChange)
-  EVT_TEXT_ENTER(ID_EXPORT_ZOOM, DisplayPreferencesPage::onExportZoomChange)
 END_EVENT_TABLE  ()
 
 // ----------------------------------------------------------------------------- : Preferences page : internal
 
 InternalPreferencesPage::InternalPreferencesPage(Window* parent) : PreferencesPage(parent) {
   internal_image_extension = new wxCheckBox(this, wxID_ANY, _BUTTON_("internal image extension"));
-  internal_scale = new wxComboBox(this, ID_INTERNAL_SCALE);
+  internal_scale = new wxChoice(this, ID_INTERNAL_SCALE);
 
   internal_image_extension->SetValue(settings.internal_image_extension);
 
-  internal_scale_int = static_cast<int>(settings.internal_scale * 100);
-  internal_scale->SetValue(String::Format(_("%d%%"), internal_scale_int));
-
-  int choices[] = { 100,120,125,150,175,200 };
-  for (unsigned int i = 0; i < sizeof(choices) / sizeof(choices[0]); ++i) {
-    internal_scale->Append(String::Format(_("%d%%"), choices[i]));
+  internal_scale->Append(_LABEL_("use export scale"));
+  internal_scale->Append(_LABEL_("export around 300"));
+  internal_scale->Append(_LABEL_("export force 300"));
+  internal_scale->Append(_LABEL_("export force 150"));
+  for (int i : Settings::export_zoom_choices) {
+    internal_scale->Append(String::Format(_("%d%%"), i));
   }
+  int default_internal_scale = settings.internal_scale_selection;
+  if (default_internal_scale < 0 || default_internal_scale > internal_scale->GetCount() - 1) default_internal_scale = 0;
+  internal_scale->SetSelection(default_internal_scale);
 
   wxSizer* s = new wxBoxSizer(wxVERTICAL);
   wxSizer* s2 = new wxStaticBoxSizer(wxVERTICAL, this, _LABEL_("storage"));
@@ -354,7 +335,7 @@ InternalPreferencesPage::InternalPreferencesPage(Window* parent) : PreferencesPa
       s3->Add(new wxStaticText(this, wxID_ANY, _LABEL_("scale")), 0, wxALL & ~wxLEFT, 4);
       s3->AddSpacer(2);
       s3->Add(internal_scale);
-      s3->Add(new wxStaticText(this, wxID_ANY, _LABEL_("percent of normal")), 1, wxALL & ~wxRIGHT, 4);
+      //s3->Add(new wxStaticText(this, wxID_ANY, _LABEL_("percent of normal")), 1, wxALL & ~wxRIGHT, 4);
     s2->Add(s3);
     s2->Add(new wxStaticText(this, wxID_ANY, _LABEL_("internal scale desc")), 0, wxALL & ~wxLEFT, 4);
     s2->Add(internal_image_extension, 0, wxEXPAND | wxALL, 4);
@@ -365,27 +346,8 @@ InternalPreferencesPage::InternalPreferencesPage(Window* parent) : PreferencesPa
 
 void InternalPreferencesPage::store() {
   settings.internal_image_extension = internal_image_extension->GetValue();
-
-  updateInternalScale();
-  settings.internal_scale = internal_scale_int / 100.0;
+  settings.internal_scale_selection = internal_scale->GetSelection();
 }
-
-void InternalPreferencesPage::onInternalScaleChange(wxCommandEvent&) {
-  updateInternalScale();
-}
-
-void InternalPreferencesPage::updateInternalScale() {
-  String s = internal_scale->GetValue();
-  int i = internal_scale_int;
-  if (wxSscanf(s.c_str(), _("%u"), &i)) {
-    internal_scale_int = min(max(i, 1), 1000);
-  }
-  internal_scale->SetValue(String::Format(_("%d%%"), (int)internal_scale_int));
-}
-
-BEGIN_EVENT_TABLE(InternalPreferencesPage, wxPanel)
-  EVT_COMBOBOX(ID_INTERNAL_SCALE, InternalPreferencesPage::onInternalScaleChange)
-END_EVENT_TABLE()
 
 // ----------------------------------------------------------------------------- : Preferences page : directories
 

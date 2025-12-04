@@ -97,15 +97,15 @@ public:
   StyleSheetSettings();
   
   // Rendering/display settings
-  Defaultable<double> card_zoom;
-  Defaultable<double> export_zoom;
+  Defaultable<double>  card_zoom;
+  Defaultable<int>     export_zoom_selection;
   Defaultable<Degrees> card_angle;
-  Defaultable<bool>   card_anti_alias;
-  Defaultable<bool>   card_borders;
-  Defaultable<bool>   card_draw_editing;
-  Defaultable<bool>   card_normal_export;
-  Defaultable<bool>   card_notes_export;
-  Defaultable<bool>   card_spellcheck_enabled;
+  Defaultable<bool>    card_anti_alias;
+  Defaultable<bool>    card_borders;
+  Defaultable<bool>    card_draw_editing;
+  Defaultable<bool>    card_normal_export;
+  Defaultable<bool>    card_notes_export;
+  Defaultable<bool>    card_spellcheck_enabled;
   
   /// Where the settings are the default, use the value from ss
   void useDefault(const StyleSheetSettings& ss);
@@ -175,12 +175,17 @@ public:
   // --------------------------------------------------- : Game/stylesheet specific
   
   /// Get the settings object for a specific game
-  GameSettings&       gameSettingsFor      (const Game& game);
+  GameSettings&       gameSettingsFor         (const Game& game);
   /// Get the settings for a column for a specific field in a game
-  ColumnSettings&     columnSettingsFor    (const Game& game, const Field& field);
+  ColumnSettings&     columnSettingsFor       (const Game& game, const Field& field);
   /// Get the settings object for a specific stylesheet
-  StyleSheetSettings& stylesheetSettingsFor(const StyleSheet& stylesheet);
-  
+  StyleSheetSettings& stylesheetSettingsFor   (const StyleSheet& stylesheet);
+  double              exportZoomSettingsFor   (const StyleSheet& stylesheet);
+  double              internalScaleSettingsFor(const StyleSheet& stylesheet);
+  double              adaptiveZoomSettingsFor (const StyleSheet& stylesheet, double target_dpi, double leeway_dpi);
+
+  static const vector<int> export_zoom_choices;
+
 private:
   map<String,GameSettingsP>       game_settings;
   map<String,StyleSheetSettingsP> stylesheet_settings;
@@ -211,13 +216,16 @@ public:
   Color darkModeColor();
 
   // --------------------------------------------------- : Special game stuff
+
   String apprentice_location;
   
   // --------------------------------------------------- : Internal settings
-  double internal_scale;
+
+  int internal_scale_selection;
   bool internal_image_extension;
 
   // --------------------------------------------------- : Update checking
+
   #if USE_OLD_STYLE_UPDATE_CHECKER
     String updates_url;
   #endif
@@ -228,6 +236,7 @@ public:
   String website_url;
   
   // --------------------------------------------------- : Installation settings
+
   InstallType install_type;
   
   // --------------------------------------------------- : The io

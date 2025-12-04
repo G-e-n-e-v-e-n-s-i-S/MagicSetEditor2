@@ -96,7 +96,7 @@ Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_
 Image export_image(const SetP& set, const CardP& card, const double zoom = 1.0, const Radians angle_radians = 0.0);
 Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi = false, int padding = 0, const double zoom = 1.0, const Radians angle_radians = 0.0);
 
-/// Export the image of one or more cards to a given filename
+/// Export the image of one or more cards to a given filename, using the app's zoom and rotation settings
 void export_image(const SetP& set, const CardP& card, const String& filename);
 void export_image(const SetP& set, const vector<CardP>& cards, const String& path, const String& filename_template, FilenameConflicts conflicts);
 

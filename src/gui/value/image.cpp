@@ -12,6 +12,7 @@
 #include <data/format/clipboard.hpp>
 #include <data/action/value.hpp>
 #include <data/card.hpp>
+#include <data/stylesheet.hpp>
 #include <wx/clipbrd.h>
 #include <gui/util.hpp>
 
@@ -59,12 +60,21 @@ void ImageValueEditor::sliceImage(const Image& image, const String& filename, co
   if (s.ShowModal() == wxID_OK) {
     // store the image into the set
     LocalFileName new_image_file = getLocalPackage().newFileName(field().name, settings.internal_image_extension ? _(".png") : _("")); // a new unique name in the package
-
+    
     // Specify a desired size based on the stylesheet and a scale multiplier defined within the user's settings.
     // Storing at a greater than 100% resolution allows for better exports >100%, but may change how images look when filters (sharpen) are applied.
     // It also disrupts some of the patterns in use for doing popout planeswalkers since you have to do the math at both scales.
     // Additionally, this bloats the set file size as even under-resolution images are upscaled to the new minimum size.
-    Image img = s.getImage(settings.internal_scale);
+    double internal_scale = 1.0;
+    try {
+      // surrounding this in try catch to be safe for now. maybe this is overkill
+      StyleSheetP stylesheet = editor().getCard()->stylesheet;
+      if (!stylesheet) stylesheet = editor().getSet()->stylesheet;
+      internal_scale = settings.internalScaleSettingsFor(*stylesheet);
+    } catch (...) {
+      queue_message(MESSAGE_ERROR, _("Could not find stylesheet to determine export zoom.\nfilename: " + filename + _("\ncardname: " + cardname)));
+    }
+    Image img = s.getImage(internal_scale);
     img.SaveFile(getLocalPackage().nameOut(new_image_file), wxBITMAP_TYPE_PNG); // always use PNG images, see #69. Disk space is cheap anyway.
     addAction(value_action(valueP(), new_image_file));
   }

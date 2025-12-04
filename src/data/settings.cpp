@@ -53,6 +53,8 @@ IMPLEMENT_REFLECTION_ENUM(FilenameConflicts) {
   VALUE_N("number overwrite",  CONFLICT_NUMBER_OVERWRITE);
 }
 
+const vector<int> Settings::export_zoom_choices = { 50,66,75,80,100,120,125,150,175,200 };
+
 const int COLUMN_NOT_INITIALIZED = -100000;
 
 ColumnSettings::ColumnSettings()
@@ -127,7 +129,7 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(GameSettings) {
 
 StyleSheetSettings::StyleSheetSettings()
   : card_zoom              (1.0,   true)
-  , export_zoom            (1.0,   true)
+  , export_zoom_selection  (0,     true)
   , card_angle             (0,     true)
   , card_anti_alias        (true,  true)
   , card_borders           (true,  true)
@@ -139,7 +141,7 @@ StyleSheetSettings::StyleSheetSettings()
 
 void StyleSheetSettings::useDefault(const StyleSheetSettings& ss) {
   if (card_zoom              .isDefault()) card_zoom              .assignDefault(ss.card_zoom);
-  if (export_zoom            .isDefault()) export_zoom            .assignDefault(ss.export_zoom);
+  if (export_zoom_selection  .isDefault()) export_zoom_selection  .assignDefault(ss.export_zoom_selection);
   if (card_angle             .isDefault()) card_angle             .assignDefault(ss.card_angle);
   if (card_anti_alias        .isDefault()) card_anti_alias        .assignDefault(ss.card_anti_alias);
   if (card_borders           .isDefault()) card_borders           .assignDefault(ss.card_borders);
@@ -151,7 +153,7 @@ void StyleSheetSettings::useDefault(const StyleSheetSettings& ss) {
 
 IMPLEMENT_REFLECTION_NO_SCRIPT(StyleSheetSettings) {
   REFLECT(card_zoom);
-  REFLECT(export_zoom);
+  REFLECT(export_zoom_selection);
   REFLECT(card_angle);
   REFLECT(card_anti_alias);
   REFLECT(card_borders);
@@ -182,19 +184,19 @@ IMPLEMENT_REFLECTION_ENUM(DarkModeType) {
 Settings settings;
 
 Settings::Settings()
-  : locale               (_("en"))
-  , set_window_maximized (false)
-  , set_window_width     (790)
-  , set_window_height    (300)
-  , card_notes_height    (40)
-  , open_sets_in_new_window(true)
-  , symbol_grid_size     (30)
-  , symbol_grid          (true)
-  , symbol_grid_snap     (false)
-  , print_spacing        (0.33)
-  , print_cutter_lines   (CUTTER_ALL)
-  , dark_mode_type       (DARKMODE_SYSTEM)
-  , internal_scale       (1.0)
+  : locale                  (_("en"))
+  , set_window_maximized    (false)
+  , set_window_width        (790)
+  , set_window_height       (300)
+  , card_notes_height       (40)
+  , open_sets_in_new_window (true)
+  , symbol_grid_size        (30)
+  , symbol_grid             (true)
+  , symbol_grid_snap        (false)
+  , print_spacing           (0.33)
+  , print_cutter_lines      (CUTTER_ALL)
+  , dark_mode_type          (DARKMODE_SYSTEM)
+  , internal_scale_selection(0)
   , internal_image_extension(true)
   #if USE_OLD_STYLE_UPDATE_CHECKER
   , updates_url          (_("https://magicseteditor.boards.net/page/downloads"))
@@ -251,6 +253,28 @@ StyleSheetSettings& Settings::stylesheetSettingsFor(const StyleSheet& stylesheet
   return *ss;
 }
 
+double Settings::exportZoomSettingsFor(const StyleSheet& stylesheet) {
+  StyleSheetSettings& ss = stylesheetSettingsFor(stylesheet);
+  int export_zoom = ss.export_zoom_selection();
+  if (export_zoom == 0) return adaptiveZoomSettingsFor(stylesheet, 300.0, 50.0);
+  if (export_zoom == 1) return adaptiveZoomSettingsFor(stylesheet, 300.0, 1.0);
+  if (export_zoom == 2) return adaptiveZoomSettingsFor(stylesheet, 150.0, 1.0);
+  return export_zoom_choices[export_zoom - 3] / 100;
+}
+
+double Settings::internalScaleSettingsFor(const StyleSheet& stylesheet) {
+  if (internal_scale_selection == 0) return exportZoomSettingsFor(stylesheet);
+  if (internal_scale_selection == 1) return adaptiveZoomSettingsFor(stylesheet, 300.0, 50.0);
+  if (internal_scale_selection == 2) return adaptiveZoomSettingsFor(stylesheet, 300.0, 1.0);
+  if (internal_scale_selection == 3) return adaptiveZoomSettingsFor(stylesheet, 150.0, 1.0);
+  return export_zoom_choices[internal_scale_selection - 4] / 100;
+}
+
+double Settings::adaptiveZoomSettingsFor(const StyleSheet& stylesheet, double dpi_target, double dpi_leeway) {
+  if (abs(stylesheet.card_dpi - dpi_target) <= dpi_leeway) return 1.0;
+  return dpi_target / max(10.0, stylesheet.card_dpi);
+}
+
 IndexMap<FieldP,ValueP>& Settings::exportOptionsFor(const ExportTemplate& export_template) {
   return export_options.get(export_template.name(), export_template.option_fields);
 }
@@ -300,7 +324,7 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(Settings) {
   REFLECT(print_cutter_lines);
   REFLECT(dark_mode_type);
   REFLECT(apprentice_location);
-  REFLECT(internal_scale);
+  REFLECT(internal_scale_selection);
   REFLECT(internal_image_extension);
   #if USE_OLD_STYLE_UPDATE_CHECKER
     REFLECT(updates_url);
@@ -341,9 +365,7 @@ void Settings::read() {
     // make sure things aren't in a problematic state
     if (locale.Trim().empty()) locale = _("en");
     if (symbol_grid_size < 30) symbol_grid_size = 30;
-    if (internal_scale < 1.0) internal_scale = 1.0;
     if (default_stylesheet_settings.card_zoom < 0.5) default_stylesheet_settings.card_zoom = 1.0;
-    if (default_stylesheet_settings.export_zoom < 0.5) default_stylesheet_settings.export_zoom = 1.0;
   }
 }
 
