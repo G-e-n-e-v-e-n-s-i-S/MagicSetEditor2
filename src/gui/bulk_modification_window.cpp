@@ -53,7 +53,7 @@ BulkModificationWindow::BulkModificationWindow(Window* parent, const SetP& set, 
   parseModification();
   field_type = new wxChoice(this, ID_CARD_BULK_FIELD, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxCB_SORT);
   field_type->Clear();
-  String default_selection = "";
+  String default_selection = _("");
   field_type->Append(_("id"));
   field_type->Append(_("stylesheet"));
   field_type->Append(_("notes"));
