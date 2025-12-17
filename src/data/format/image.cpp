@@ -11,6 +11,7 @@
 #include <data/format/formats.hpp>
 #include <data/format/clipboard.hpp>
 #include <data/game.hpp>
+#include <data/field/image.hpp>
 #include <data/set.hpp>
 #include <data/card.hpp>
 #include <data/stylesheet.hpp>
