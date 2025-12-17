@@ -8,6 +8,7 @@
 
 // ----------------------------------------------------------------------------- : Includes
 
+#include <util/delayed_index_maps.hpp>
 #include <util/prec.hpp>
 #include <data/set.hpp>
 #include <data/card.hpp>
