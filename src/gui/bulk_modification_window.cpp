@@ -205,7 +205,7 @@ void BulkModificationWindow::onOk(wxCommandEvent&) {
   }
   // get the new script values
   vector<shared_ptr<Action>> actions;
-  String& field_name = field_type->GetString(field_type->GetSelection());
+  String field_name = field_type->GetString(field_type->GetSelection());
   // stylesheet, notes or id change
   if (field_name == _("stylesheet") || field_name == _("notes") || field_name == _("id")) {
     vector<String> new_values;

@@ -296,7 +296,8 @@ bool CardListBase::parseFiles(wxArrayString& filenames, vector<CardP>& out) {
 bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
   size_t j = out.size();
   if (image.HasOption(wxIMAGE_OPTION_PNG_DESCRIPTION)) {
-    parseText(image.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION), out);
+    auto text = image.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION);
+    parseText(text, out);
     // crop image rects to populate image fields
     for (; j < out.size(); j++) {
       CardP& card = out[j];
@@ -307,7 +308,7 @@ bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
           int degrees = 0;
           value->filename.getExternalRect(rect, degrees);
           if (rect.width > 0 && rect.height > 0) {
-            Image& img = image.GetSubImage(rect);
+            Image img = image.GetSubImage(rect);
             img = rotate_image(img, deg_to_rad(360-degrees));
             LocalFileName filename = set->newFileName((*it)->fieldP->name, settings.internal_image_extension ? _(".png") : _("")); // a new unique name in the package
             img.SaveFile(set->nameOut(filename), wxBITMAP_TYPE_PNG);
@@ -326,7 +327,7 @@ bool CardListBase::parseText(String& text, vector<CardP>& out) {
     text = text.substr(pos + 14, text.find("</mse-card-data>") - pos - 14);
   }
   try {
-    ScriptValueP& sv = json_to_mse(text, set.get());
+    ScriptValueP sv = json_to_mse(text, set.get());
     if (sv->type() == SCRIPT_COLLECTION) {
       if (ScriptCustomCollection* custom = dynamic_cast<ScriptCustomCollection*>(sv.get())) {
         for (size_t i = 0; i < custom->value.size(); i++) {

@@ -175,7 +175,7 @@ Image export_image(const SetP& set, const CardP& card, const bool write_metadata
   if (write_metadata) {
     String metadata = _("<mse-card-data>[");
     IndexMap<FieldP, ValueP>& card_data = card->data;
-    boost::json::object& cardv = mse_to_json(card, set.get());
+    boost::json::object cardv = mse_to_json(card, set.get());
     boost::json::object& cardv_data = cardv["data"].as_object();
     StyleSheetP stylesheet = set->stylesheetForP(card);
     if (!settings.stylesheetSettingsFor(*stylesheet).card_notes_export()) cardv["notes"] = "";
@@ -259,7 +259,7 @@ Image export_image( const SetP& set, const vector<CardP>& cards,
     if (i > 0) metadata += _(",");
     CardP card = cards[i];
     IndexMap<FieldP, ValueP>& card_data = card->data;
-    boost::json::object& cardv = mse_to_json(card, set.get());
+    boost::json::object cardv = mse_to_json(card, set.get());
     boost::json::object& cardv_data = cardv["data"].as_object();
     StyleSheetP stylesheet = set->stylesheetForP(card);
     if (!settings.stylesheetSettingsFor(*stylesheet).card_notes_export()) cardv["notes"] = "";
