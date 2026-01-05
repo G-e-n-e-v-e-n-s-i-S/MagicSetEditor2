@@ -101,6 +101,7 @@ These functions are built into the program, other [[type:function]]s can be defi
 | [[fun:dimensions_of]]		Get the width and height of an image.
 | [[fun:symbol_variation]]	Render a variation of a [[type:symbol]].
 | [[fun:import_image]]	Load an image from outside the data folder.
+| [[fun:download_image]]	Download an image from a URL.
 | [[fun:built_in_image]]	Return an image built into the program.
 	
 ! Cards				<<<
@@ -108,9 +109,12 @@ These functions are built into the program, other [[type:function]]s can be defi
 | [[fun:add_card_to_set]]		Add a [[type:card]] to a [[type:set]].
 | [[fun:get_card_styling]]		Get the styling data of a [[type:card]].
 | [[fun:get_card_stylesheet]]	Get the stylesheet of a [[type:card]].
+| [[fun:get_card_export_settings]]	Get the zoom, angle and bleed size at which the card will be exported.
 | [[fun:get_card_from_uid]]		Find the [[type:card]] with the given uid.
-| [[fun:get_card_from_link]]		Find a [[type:card]] that has the given link type to the given [[type:card]].
-| [[fun:has_link]]		Determine if the given the given [[type:card]] has a link of the given type.
+| [[fun:get_cards_from_link]]		Find all [[type:card]]s that have the given link type to the given [[type:card]].
+| [[fun:get_front_face]]		Find a [[type:card]] that has the link type "Front Face" to the given [[type:card]].
+| [[fun:get_back_face]]		Find a [[type:card]] that has the link type "Back Face" to the given [[type:card]].
+| [[fun:has_link]]		Determine if the given [[type:card]] has a link of the given type.
 	
 ! HTML export			<<<
 | [[fun:to_html]]		Convert [[type:tagged text]] to html.

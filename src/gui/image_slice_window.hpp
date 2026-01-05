@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -36,7 +36,7 @@ public:
   wxSize target_size;   ///< Size of the target image
   wxRect selection;     ///< Area to slice from source
   Color  background;    ///< Color for areas outside the source image
-  bool   allow_outside; ///< Allow the slice to extend outside the source image?
+  bool   allow_outside; ///< Allow the slice to extend outside the source image? TODO: This currently crashes
   bool   aspect_fixed;  ///< Aspect ratio lock?
   
   // Filters
@@ -50,7 +50,7 @@ public:
   void centerSelectionHorizontally();
   void centerSelectionVertically();
   /// Get the sliced image
-  Image getSlice(double scale = 1.0) const;
+  Image getSlice() const;
   
   // Zoom factor
   inline double zoomX() const { return target_size.GetWidth()  / (double)selection.width;  }
@@ -68,7 +68,7 @@ public:
   ImageSliceWindow(Window* parent, const Image& source, const String& filename, const String& cardname, const wxSize& target_size, const AlphaMask& target_mask);
   
   /// Return the sliced image
-  Image getImage(double scale) const;
+  Image getImage() const;
 
   // --------------------------------------------------- : Previously Used Settings
 

@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -90,7 +90,7 @@ void HoverButtonBase::onMouseEnter(wxMouseEvent&) {
 void HoverButtonBase::onMouseLeave(wxMouseEvent&) {
   hover = false;
   refreshIfNeeded();
-  if (!help_text.empty()) set_status_text(this,wxEmptyString);
+  if (!help_text.empty()) set_status_text(this,_(""));
 }
 void HoverButtonBase::onFocus(wxFocusEvent&) {
   focus = true;

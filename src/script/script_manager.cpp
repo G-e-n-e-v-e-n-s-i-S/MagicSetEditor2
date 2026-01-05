@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -31,7 +31,7 @@ Context& SetScriptContext::getContext(const StyleSheetP& stylesheet) {
   auto it = contexts.try_emplace(stylesheet.get());
   Context& ctx = it.first->second;
   if (it.second) {
-    // we created a new context
+    // try_emplace created a new context, we now initialize it
     // variables
     //  NOTE: do not use a smart pointer for the pointer to the set, because the set owns this
     //        which would lead to a reference cycle.

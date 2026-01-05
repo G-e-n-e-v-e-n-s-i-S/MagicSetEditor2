@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -48,6 +48,7 @@ public:
   LocalizedString caption;                   ///< Caption for NativeLookEditor
   LocalizedString description;               ///< Description, used in status bar
   String          icon_filename;             ///< Filename for an icon (for list of fields)
+  String          dark_icon_filename;        ///< Filename for an icon (for list of fields) when a variant for dark mode is necessary
   bool            editable;                  ///< Can values of this field be edited?
   bool            save_value;                ///< Should values of this field be written to files? Can be false for script generated fields.
   bool            show_statistics;           ///< Should this field appear as a group by choice in the statistics panel?
@@ -63,7 +64,6 @@ public:
   OptionalScript  import_script;             ///< The script to apply to the supplied value, when creating a new card.
   Dependencies    dependent_scripts;         ///< Scripts that depend on values of this field
   String          package_relative_filename;
-  StyleP          styleP;                    ///< Style for this field, should have the right type! Can be null.
 
   /// Creates a new Value corresponding to this Field
   virtual ValueP newValue() = 0;
@@ -103,15 +103,15 @@ public:
   Style(const FieldP&);
   virtual ~Style();
   
-  const FieldP       fieldP;          ///< Field this style is for, should have the right type!
+  const FieldP         fieldP;        ///< Field this style is for, should have the right type!
   
-  int                z_index;         ///< Stacking of values of this field, higher = on top
-  int                tab_index;       ///< Tab index in editor
-  Scriptable<double> left,  top;      ///< Position of this field
-  Scriptable<double> width, height;   ///< Position of this field
-  Scriptable<double> right, bottom;   ///< Position of this field
-  Scriptable<Degrees> angle;          ///< Rotation of the box
-  Scriptable<bool>   visible;         ///< Is this field visible?
+  int                  z_index;       ///< Stacking of values of this field, higher = on top
+  int                  tab_index;     ///< Tab index in editor
+  Scriptable<double>   left,  top;    ///< Position of this field
+  Scriptable<double>   right, bottom; ///< Position of this field
+  Scriptable<double>   width, height; ///< Size of this field
+  Scriptable<Degrees>  angle;         ///< Rotation of the box
+  Scriptable<bool>     visible;       ///< Is this field visible?
   CachedScriptableMask mask;          ///< Mask image
   
   enum AutomaticSide {
@@ -123,10 +123,35 @@ public:
   } automatic_side : 8;  ///< Which of (left, width,  right) and (top,  height, bottom) is determined automatically?
   bool content_dependent;  ///< Does this style depend on content properties?
   
-  inline RealPoint getPos()  const { return RealPoint(left, top); }
-  inline RealSize  getSize() const { return RealSize(width, height); }
-  inline RealRect  getExternalRect() const { return RealRect(left, top, width, height); }
-  
+  inline RealPoint   getPos()  const { return RealPoint(left, top); }
+  inline RealSize    getSize() const { return RealSize(width, height); }
+  inline RealRect    getExternalRect() const { return RealRect(left, top, width, height); }
+  inline std::string getExternalRectString(double scale, Radians angle, double bleed, int img_width, int img_height, int img_offset) { ///< update the style before calling this
+    double x = left * scale, y = top * scale;
+    double w = width * scale, h = height * scale;
+    RealRect rect(x, y, w, h);
+    int degrees = 0;
+    if (is_rad0(angle)) {
+    } else if (is_rad180(angle)) {
+      rect = RealRect(img_width - x - w, img_height - y - h, w, h);
+      degrees = 180;
+    } else if (is_rad90(angle)) {
+      rect = RealRect(y, img_height - x - w, h, w);
+      degrees = 90;
+    } else if (is_rad270(angle)) {
+      rect = RealRect(img_width - y - h, x, h, w);
+      degrees = 270;
+    } else {
+      return "";
+    }
+    return "<mse-crop-data>" + std::to_string((int)std::ceil (rect.x + bleed + img_offset)) +
+           "-"               + std::to_string((int)std::ceil (rect.y + bleed)) +
+           "-"               + std::to_string((int)std::floor(rect.width)) +
+           "-"               + std::to_string((int)std::floor(rect.height)) +
+           "-"               + std::to_string(degrees) +
+           "</mse-crop-data>";
+  }
+
   /// Does this style have a non-zero size (or is it scripted)?
   bool hasSize() const;
   
@@ -164,9 +189,6 @@ public:
   /** change_info is a subset of StyleChange flags */
   void tellListeners(int changes);
   
-  /// Store where on the card the field goes, to save it in filenames
-  String getRect();
-
 private:
   DECLARE_REFLECTION_VIRTUAL();
   /// Things that are listening to changes in this style

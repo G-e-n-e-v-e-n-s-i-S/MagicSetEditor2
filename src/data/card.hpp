@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -35,7 +35,7 @@ public:
   Card();
   /// Creates a card using the given game
   Card(const Game& game);
-  
+
   /// The values on the fields of the card.
   /** The indices should correspond to the card_fields in the Game */
   IndexMap<FieldP, ValueP> data;
@@ -60,26 +60,26 @@ public:
   StyleSheetP stylesheet;
   /// Alternative options to use for this card, for this card's stylesheet
   /** Optional; if not set use the styling data from the set.
-   *  If stylesheet is set then contains data for the this->stylesheet, otherwise for set->stylesheet
-   */
+  *  If stylesheet is set then contains data for the this->stylesheet, otherwise for set->stylesheet
+  */
   IndexMap<FieldP,ValueP> styling_data;
   /// Is the styling_data set?
   bool has_styling;
-  
+
   /// Extra values for specitic stylesheets, indexed by stylesheet name
   DelayedIndexMaps<FieldP,ValueP> extra_data;
   /// Styling information for a particular stylesheet
   IndexMap<FieldP, ValueP>& extraDataFor(const StyleSheet& stylesheet);
-  
+
   /// Keyword usage statistics
   vector<pair<const Value*,const Keyword*>> keyword_usage;
-  
+
   /// Get the identification of this card, an identification is something like a name, title, etc.
   /** May return "" */
   String identification() const;
   /// Does any field contains the given query string?
   bool contains(QuickFilterPart const& query) const;
-  
+
   /// Link or unlink other cards to this card
   void link(const Set& set, const vector<CardP>& linked_cards, const String& selected_relation, const String& linked_relation);
   void link(const Set& set, CardP& linked_card, const String& selected_relation, const String& linked_relation);
@@ -89,7 +89,17 @@ public:
   void copyLink(const Set& set, String old_uid, String new_uid);
   void updateLink(String old_uid, String new_uid);
 
+  vector<pair<CardP, String>> getLinkedCards(const vector<CardP>& cards);
   vector<pair<CardP, String>> getLinkedCards(const Set& set);
+
+  vector<CardP> getLinkedCardsFromLink(const vector<CardP>& cards, const String& link, bool erase_if_no_card);
+  vector<CardP> getLinkedCardsFromLink(const Set& set, const String& link, bool erase_if_no_card);
+
+  CardP getLinkedOtherFace(const vector<CardP>& cards);
+  CardP getLinkedOtherFace(const Set& set);
+
+  static CardP getCardFromUid(const vector<CardP>& cards, const String& uid);
+  static CardP getCardFromUid(const Set& set, const String& uid);
 
   /// Find a value in the data by name and type
   template <typename T> T& value(const String& name) {
@@ -112,7 +122,7 @@ public:
     }
     throw InternalError(_("Expected a card field with name '")+name+_("'"));
   }
-  
+
   DECLARE_REFLECTION();
 };
 

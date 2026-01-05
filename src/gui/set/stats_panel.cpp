@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -30,7 +30,7 @@ public:
   StatCategoryList(Window* parent, int id)
     : GalleryList(parent, id, wxVERTICAL)
   {
-    item_size = subcolumns[0].size = wxSize(150, 23);
+    item_size = subcolumns[0].size = wxSize(NAME_COLUMN_WIDTH, COLUMN_HEIGHT);
   }
   
   void show(const GameP&);
@@ -105,7 +105,7 @@ public:
     , prefered_dimension_count(dimension_count)
     , show_empty(show_empty)
   {
-    subcolumns[0].size = wxSize(210, 23);
+    subcolumns[0].size = wxSize(NAME_COLUMN_WIDTH, COLUMN_HEIGHT);
     if (dimension_count > 0) {
       subcolumns[0].selection  = NO_SELECTION;
       subcolumns[0].can_select = false;
@@ -116,13 +116,13 @@ public:
     col.selection = show_empty ? NO_SELECTION : 0;
     col.can_select = true;
     col.offset.x = subcolumns[0].size.x + SPACING;
-    col.size = wxSize(18,23);
+    col.size = wxSize(DIMENSION_COLUMN_WIDTH, COLUMN_HEIGHT);
     for (int i = 0 ; i < dimension_count ; ++i) {
       subcolumns.push_back(col);
       col.offset.x += col.size.x + SPACING;
     }
     // total
-    item_size = wxSize(col.offset.x - SPACING, 23);
+    item_size = wxSize(col.offset.x - SPACING, COLUMN_HEIGHT);
   }
   
   void show(const GameP&);
@@ -186,6 +186,21 @@ private:
   GameP game;
   bool show_empty;
   vector<StatsDimensionP> dimensions; ///< Dimensions, sorted by position_hint
+
+  static const int NAME_COLUMN_WIDTH = 210;
+  static const int DIMENSION_COLUMN_WIDTH = 18;
+  static const int COLUMN_HEIGHT = 23;
+
+  DECLARE_EVENT_TABLE();
+
+  void onMotion(wxMouseEvent& ev) {
+    wxFrame* frame = dynamic_cast<wxFrame*>(wxGetTopLevelParent(this));
+    if (frame) frame->SetStatusText(dimensions[findItem(ev)]->description.get());
+  }
+  void onMouseLeave(wxMouseEvent& ev) {
+    wxFrame* frame = dynamic_cast<wxFrame*>(wxGetTopLevelParent(this));
+    if (frame) frame->SetStatusText(String());
+  }
 };
 
 struct ComparePositionHint2{
@@ -228,13 +243,19 @@ void StatDimensionList::drawItem(DC& dc, int x, int y, size_t item) {
   }
   StatsDimension& dim = *dimensions.at(item - show_empty);
   // draw icon
-  if (!dim.icon_filename.empty() && !dim.icon.Ok()) {
-    auto file = game->openIn(dim.icon_filename);
-    Image img(*file);
-    if (img.HasMask()) img.InitAlpha(); // we can't handle masks
-    Image resampled(21, 21);
-    resample_preserve_aspect(img, resampled);
-    if (img.Ok()) dim.icon = Bitmap(resampled);
+  if(!dim.icon.Ok()) {
+    String filename = dim.icon_filename;
+    if (settings.darkMode() && !dim.dark_icon_filename.empty()) {
+      filename = dim.dark_icon_filename;
+    }
+    if (!filename.empty()) {
+      auto file = game->openIn(filename);
+      Image img(*file);
+      if (img.HasMask()) img.InitAlpha(); // we can't handle masks
+      Image resampled(21, 21);
+      resample_preserve_aspect(img, resampled);
+      if (img.Ok()) dim.icon = Bitmap(resampled);
+    }
   }
   if (dim.icon.Ok()) {
     dc.DrawBitmap(dim.icon, x+1, y+1);
@@ -570,6 +591,13 @@ void StatsPanel::filterCards() {
 BEGIN_EVENT_TABLE(StatsPanel, wxPanel)
   EVT_GRAPH_SELECT(wxID_ANY, StatsPanel::onGraphSelect)
 END_EVENT_TABLE()
+
+#if USE_DIMENSION_LISTS
+BEGIN_EVENT_TABLE(StatDimensionList, GalleryList)
+  EVT_MOTION(StatDimensionList::onMotion)
+  EVT_LEAVE_WINDOW(StatDimensionList::onMouseLeave)
+END_EVENT_TABLE()
+#endif
 
 // ----------------------------------------------------------------------------- : Selection
 

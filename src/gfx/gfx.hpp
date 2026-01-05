@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -23,6 +23,7 @@
 /// Resample (resize) an image, uses bilenear filtering
 void resample(const Image& img_in, Image& img_out);
 Image resample(const Image& img_in, int width, int height);
+Image resample(const Image& img_in, double zoom);
 
 /// Resamples an image, first clips the input image to a specified rectangle
 /** The selected rectangle is resampled into the entire output image */

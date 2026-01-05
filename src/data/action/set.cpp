@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -66,7 +66,7 @@ void AddCardAction::perform(bool to_undo) {
         FOR_EACH(linked_pair, linked_pairs) {
           String& linked_uid = linked_pair.first.get();
           String& linked_relation = linked_pair.second.get();
-          if (linked_uid == wxEmptyString) continue;
+          if (linked_uid.empty()) continue;
           // If it's an added card, replace the link
           if (all_added_uids.find(linked_uid) != all_added_uids.end()) {
             all_added_uids.at(linked_uid)->updateLink(old_uid, new_uid);
@@ -212,6 +212,33 @@ String ChangeCardHasStylingAction::getName(bool to_undo) const {
 void ChangeCardHasStylingAction::perform(bool to_undo) {
   card->has_styling = !card->has_styling;
   swap(card->styling_data, styling_data);
+}
+
+// ----------------------------------------------------------------------------- : Change notes
+
+ChangeCardNotesAction::ChangeCardNotesAction(const CardP& card, const String& notes)
+  : card(card), notes(notes)
+{}
+String ChangeCardNotesAction::getName(bool to_undo) const {
+  return _("Change notes");
+}
+void ChangeCardNotesAction::perform(bool to_undo) {
+  swap(card->notes, notes);
+}
+
+// ----------------------------------------------------------------------------- : Change uid
+
+ChangeCardUIDAction::ChangeCardUIDAction(Set& set, const CardP& card, const String& uid)
+  : CardListAction(set), card(card), uid(uid)
+{}
+String ChangeCardUIDAction::getName(bool to_undo) const {
+  return _("Change ID");
+}
+void ChangeCardUIDAction::perform(bool to_undo) {
+  FOR_EACH(c, set.cards) {
+    c->updateLink(card->uid, uid);
+  }
+  swap(card->uid, uid);
 }
 
 // ----------------------------------------------------------------------------- : Pack types

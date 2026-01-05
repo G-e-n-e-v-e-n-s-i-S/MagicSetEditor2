@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -38,15 +38,20 @@ void Installer::validate(Version file_app_version) {
   Packaged::validate(file_app_version);
   // load icons where possible
   FOR_EACH(p,packages) {
-    if (!p->icon_url.empty() && !starts_with(p->icon_url,_("http:"))) {
+    String url = p->icon_url;
+    if (settings.darkMode() && !p->dark_icon_url.empty()) {
+      url = p->dark_icon_url;
+    }
+    if (!url.empty() && !starts_with(url,_("http:"))) {
       // TODO: support absolute icon names
       try{
-        String filename = p->name + _("/") + p->icon_url;
-        auto img_stream = openIn(p->name + _("/") + p->icon_url);
+        String filename = p->name + _("/") + url;
+        auto img_stream = openIn(p->name + _("/") + url);
         image_load_file(p->icon, *img_stream);
       } catch (...) {
         // ignore errors, it's just an image
         p->icon_url.clear();
+        p->dark_icon_url.clear();
       }
     }
   }
@@ -202,6 +207,7 @@ PackageDescription::PackageDescription(const Packaged& package)
   , short_name(package.short_name)
   , full_name(package.full_name)
   , icon_url(package.icon_filename)
+  , dark_icon_url(package.dark_icon_filename)
   , installer_group(package.installer_group)
   , position_hint(package.position_hint)
   //, description(package.description)
@@ -237,6 +243,7 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(PackageDescription) {
   REFLECT(short_name);
   REFLECT(full_name);
   REFLECT(icon_url);
+  REFLECT(dark_icon_url);
   REFLECT(installer_group);
   REFLECT(position_hint);
   REFLECT(description);

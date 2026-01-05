@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -202,27 +202,21 @@ DropDownChoiceList::DropDownChoiceList(Window* parent, bool is_submenu, ValueVie
   : DropDownChoiceListBase(parent, is_submenu, cve, group)
 {
   // determine if slider
-  size_t count = itemCount();
-  if (count > 3) {
-    int value;
-    try {
-      String first_item = capitalize(itemText(0));
-      if (first_item != _("Default")) value = std::stoi(first_item.ToStdString());
-      value = std::stoi(itemText(1).ToStdString());
-      value = std::stoi(itemText(count - 2).ToStdString());
-      value = std::stoi(itemText(count - 1).ToStdString());
-      // the choices are numbers, use a slider
-      is_slider = true;
-      // load slider images if needed
-      if (!slider_loaded) {
-        slider_loaded = true;
+  if (itemCount() > 1 && field().is_slider) {
+    is_slider = true;
+    // load slider images if needed
+    if (!slider_loaded) {
+      slider_loaded = true;
+      try {
         slider_left = load_resource_image(_("slider_left"));
         slider_right = load_resource_image(_("slider_right"));
         slider_center = load_resource_image(_("slider_center"));
         slider_tick = load_resource_image(_("slider_tick"));
       }
+      catch (...) {
+        throw InternalError(_("Can't load slider resources"));
+      }
     }
-    catch (...) {}
   }
 }
 

@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -192,7 +192,7 @@ int KeywordList::usage(const Keyword& kw) const {
 // ----------------------------------------------------------------------------- : KeywordList : Item text
 
 String KeywordList::OnGetItemText (long pos, long col) const {
-  if (sorted_list.size() == 0) return wxEmptyString;
+  if (sorted_list.size() == 0) return _("");
   
   const Keyword& kw = *getKeyword(pos);
   switch(col) {
@@ -218,7 +218,7 @@ String KeywordList::OnGetItemText (long pos, long col) const {
       }
       return formatted;
     }
-    default:  return wxEmptyString;
+    default:  return _("");
   }
 }
 int KeywordList::OnGetItemImage(long pos) const {

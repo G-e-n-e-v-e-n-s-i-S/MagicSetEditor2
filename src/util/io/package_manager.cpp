@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -103,7 +103,7 @@ bool PackageManager::existsInPackage(const String& name) {
     if (start < pos && pos != String::npos) {
       // open package
       PackagedP p = openAny(name.substr(start, pos - start));
-      return p->existsIn(name.substr(pos + 1));
+      return p->contains(name.substr(pos + 1));
     }
   }
   throw FileNotFoundError(name, _("No package name specified, use '/package/filename'"));
@@ -154,7 +154,7 @@ String PackageManager::openFilenameFromPackage(Packaged* package, const String& 
 
 String PackageManager::getDictionaryDir(bool l) const {
   String dir = (l ? local : global).getDirectory();
-  if (dir.empty()) return wxEmptyString;
+  if (dir.empty()) return _("");
   else             return dir + _("/dictionaries/");
 }
 

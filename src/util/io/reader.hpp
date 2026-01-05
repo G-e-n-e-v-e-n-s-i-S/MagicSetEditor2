@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -37,7 +37,7 @@ public:
   /** filename is used only for error messages
    *  package is used for looking up included files.
    */
-  Reader(wxInputStream& input, Packaged* package = nullptr, const String& filename = wxEmptyString, bool ignore_invalid = false);
+  Reader(wxInputStream& input, Packaged* package = nullptr, const String& filename = _(""), bool ignore_invalid = false);
   
   ~Reader() { showWarnings(); }
   

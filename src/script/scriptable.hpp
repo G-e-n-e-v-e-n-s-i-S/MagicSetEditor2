@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -129,7 +129,8 @@ public:
   inline bool isScripted() const { return script; }
   /// Has this value been read from a Reader?
   inline bool hasBeenRead() const { return !script.unparsed.empty(); }
-  
+  inline String unparsed() const { return script.unparsed; }
+
   /// Updates the value by executing the script, returns true if the value has changed
   inline bool update(Context& ctx) {
     return script.invokeOn(ctx, value);

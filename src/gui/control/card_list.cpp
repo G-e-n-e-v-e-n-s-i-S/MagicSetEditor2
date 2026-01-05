@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -7,13 +7,16 @@
 // ----------------------------------------------------------------------------- : Includes
 
 #include <util/prec.hpp>
+#include <util/uid.hpp>
 #include <gui/control/card_list.hpp>
 #include <gui/control/card_list_column_select.hpp>
 #include <gui/set/window.hpp> // for sorting all cardlists in a window
 #include <gui/card_link_window.hpp>
+#include <gui/web_request_window.hpp>
 #include <gui/util.hpp>
 #include <gui/add_csv_window.hpp>
 #include <gui/add_json_window.hpp>
+#include <gui/bulk_modification_window.hpp>
 #include <data/game.hpp>
 #include <data/field.hpp>
 #include <data/field/choice.hpp>
@@ -22,11 +25,16 @@
 #include <data/settings.hpp>
 #include <data/stylesheet.hpp>
 #include <data/format/clipboard.hpp>
+#include <data/format/formats.hpp>
 #include <data/action/set.hpp>
 #include <data/action/value.hpp>
+#include <script/functions/json.hpp>
 #include <util/window_id.hpp>
 #include <wx/clipbrd.h>
+#include <wx/webrequest.h>
+#include <wx/wfstream.h>
 #include <unordered_set>
+#include <fstream>
 
 DECLARE_POINTER_TYPE(ChoiceValue);
 
@@ -51,7 +59,9 @@ CardListBase* CardSelectEvent::getTheCardList() const {
 
 CardListBase::CardListBase(Window* parent, int id, long additional_style)
   : ItemList(parent, id, additional_style, true)
-{}
+{
+  drop_target = new CardListDropTarget(this);
+}
 
 CardListBase::~CardListBase() {
   storeColumns();
@@ -141,7 +151,7 @@ void CardListBase::getSelection(vector<CardP>& out) const {
 bool CardListBase::canCut()   const { return canDelete(); }
 bool CardListBase::canCopy()  const { return focusCount() > 0; }
 bool CardListBase::canPaste() const {
-  return allowModify() && wxTheClipboard->IsSupported(CardsDataObject::format);
+  return allowModify();
 }
 bool CardListBase::canDelete() const {
   return allowModify() && focusCount() > 0; // TODO: check for selection?
@@ -155,10 +165,11 @@ bool CardListBase::doCopy() {
   if (cards_to_copy.empty()) return false;
   // put on clipboard
   if (!wxTheClipboard->Open()) return false;
-  bool ok = wxTheClipboard->SetData(new CardsOnClipboard(set, cards_to_copy)); // ignore result
+  bool ok = wxTheClipboard->SetData(new CardsOnClipboard(set, _(""), cards_to_copy)); // ignore result
   wxTheClipboard->Close();
   return ok;
 }
+
 bool CardListBase::doCopyCardAndLinkedCards() {
   if (!canCopy()) return false;
   vector<CardP> cards_selected;
@@ -180,26 +191,20 @@ bool CardListBase::doCopyCardAndLinkedCards() {
       }
     }
   }
-  bool ok = wxTheClipboard->SetData(new CardsOnClipboard(set, cards_to_copy)); // ignore result
+  bool ok = wxTheClipboard->SetData(new CardsOnClipboard(set, _(""), cards_to_copy)); // ignore result
   wxTheClipboard->Close();
   return ok;
 }
+
 bool CardListBase::doPaste() {
-  // get data
   if (!canPaste()) return false;
   if (!wxTheClipboard->Open()) return false;
-  CardsDataObject data;
-  bool ok = wxTheClipboard->GetData(data);
+  bool ok = wxTheClipboard->GetData(*drop_target->data_object);
   wxTheClipboard->Close();
-  if (!ok) return false;
-  // get cards
-  vector<CardP> new_cards;
-  ok = data.getCards(set, new_cards);
-  if (!ok) return false;
-  // add card to set
-  set->actions.addAction(make_unique<AddCardAction>(ADD, *set, new_cards));
-  return true;
+  if (ok) return parseData(false);
+  return false;
 }
+
 bool CardListBase::doDelete() {
   // cards to delete
   vector<CardP> cards_to_delete;
@@ -208,6 +213,211 @@ bool CardListBase::doDelete() {
   // delete cards
   set->actions.addAction(make_unique<AddCardAction>(REMOVE, *set, cards_to_delete));
   return true;
+}
+
+bool CardListBase::doAddCSV() {
+  AddCSVWindow wnd(this, set, true);
+  if (wnd.ShowModal() == wxID_OK) {
+    // The actual adding is done in this window's onOk function
+    return true;
+  }
+  return false;
+}
+
+bool CardListBase::doAddJSON() {
+  AddJSONWindow wnd(this, set, true);
+  if (wnd.ShowModal() == wxID_OK) {
+    // The actual adding is done in this window's onOk function
+    return true;
+  }
+  return false;
+}
+
+bool CardListBase::doBulkModification() {
+  BulkModificationWindow wnd(this, set, true);
+  if (wnd.ShowModal() == wxID_OK) {
+    // The actual modifying is done in this window's onOk function
+    return true;
+  }
+  return false;
+}
+
+bool CardListBase::parseUrl(String& url, vector<CardP>& out) {
+  size_t j = out.size();
+  size_t pos = url.find("URL=");
+  if (pos != std::string::npos) {
+    url = url.substr(pos+4);
+  }
+  if (!url.StartsWith(_("http"))) return false;
+
+  WebRequestWindow wnd(url);
+  if (wnd.ShowModal() == wxID_OK) {
+    const String& content_type = wnd.out.GetContentType();
+    if (content_type.StartsWith(_("image"))) {
+      Image img(*wnd.out.GetStream());
+      if (img.IsOk()) {
+        parseImage(img, out);
+      }
+      else {
+        queue_message(MESSAGE_ERROR, _ERROR_("web request corrupted"));
+      }
+    }
+    else if (content_type.StartsWith(_("text"))) {
+      String text = wnd.out.AsString();
+      parseText(text, out);
+    }
+    else {
+      queue_message(MESSAGE_ERROR, _ERROR_("web request unsupported format"));
+    }
+  }
+  return j < out.size();
+}
+
+bool CardListBase::parseFiles(wxArrayString& filenames, vector<CardP>& out) {
+  size_t j = out.size();
+  for (size_t i = 0; i < filenames.size(); i++) {
+    // if it's an image file, try to get meta_data
+    Image image_file;
+    image_file.SetLoadFlags(image_file.GetLoadFlags() & ~wxImage::Load_Verbose);
+    if (image_file.LoadFile(filenames[i])) {
+      parseImage(image_file, out);
+    } else {
+      // if it's an url, request the data
+      std::ifstream ifs(filenames[i].ToStdString());
+      if (ifs.bad() || ifs.fail() || !ifs.good() || !ifs.is_open()) continue;
+      std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+      wxString text(content);
+      if (!parseUrl(text, out)) parseText(text, out);
+    }
+  }
+  return j < out.size();
+}
+
+bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
+  size_t j = out.size();
+  if (image.HasOption(wxIMAGE_OPTION_PNG_DESCRIPTION)) {
+    auto text = image.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION);
+    parseText(text, out);
+    // crop image rects to populate image fields
+    for (; j < out.size(); j++) {
+      CardP& card = out[j];
+      for (IndexMap<FieldP, ValueP>::iterator it = card->data.begin(); it != card->data.end(); it++) {
+        ImageValue* value = dynamic_cast<ImageValue*>(it->get());
+        if (value && !value->filename.empty()) {
+          wxRect rect = wxRect(0,0,0,0);
+          int degrees = 0;
+          value->filename.getExternalRect(rect, degrees);
+          if (rect.width > 0 && rect.height > 0) {
+            Image img = image.GetSubImage(rect);
+            img = rotate_image(img, deg_to_rad(360-degrees));
+            LocalFileName filename = set->newFileName("cropped_image", _(".png")); // a new unique name in the package
+            img.SaveFile(set->nameOut(filename), wxBITMAP_TYPE_PNG);
+            value->filename = filename;
+          }
+        }
+      }
+    }
+  }
+  return j < out.size();
+}
+
+bool CardListBase::parseText(String& text, vector<CardP>& out) {
+  size_t j = out.size();
+  if (size_t pos = text.find("<mse-card-data>") != wxString::npos) {
+    text = text.substr(pos + 14, text.find("</mse-card-data>") - pos - 14);
+  }
+  try {
+    ScriptValueP sv = json_to_mse(text, set.get());
+    if (sv->type() == SCRIPT_COLLECTION) {
+      if (ScriptCustomCollection* custom = dynamic_cast<ScriptCustomCollection*>(sv.get())) {
+        for (size_t i = 0; i < custom->value.size(); i++) {
+          if (ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(custom->value[i].get())) {
+            out.push_back(make_intrusive<Card>(*c->getValue()));
+          }
+        }
+      }
+    } else if (ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(sv.get())) {
+      out.push_back(make_intrusive<Card>(*c->getValue()));
+    }
+  } catch (...) {}
+
+  // recreate images to populate image fields
+  for (int k = j; k < out.size(); k++) {
+    CardP& card = out[k];
+    for (IndexMap<FieldP, ValueP>::iterator it = card->data.begin(); it != card->data.end(); it++) {
+      ImageValue* value = dynamic_cast<ImageValue*>(it->get());
+      if (value) {
+        Image img = value->filename.getExternalImage();
+        if (img.IsOk()) {
+          LocalFileName filename = set->newFileName(_("decoded_image"), _(".png")); // a new unique name in the package
+          img.SaveFile(set->nameOut(filename), wxBITMAP_TYPE_PNG);
+          value->filename = filename;
+        }
+      }
+    }
+  }
+
+  return j < out.size();
+}
+
+bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
+  wxBusyCursor wait;
+  wxDataFormat format = drop_target->data_object->GetReceivedFormat();
+  wxDataObject *data = drop_target->data_object->GetObject(format);
+  vector<CardP> new_cards;
+
+  if (CardsDataObject* card_data = dynamic_cast<CardsDataObject*>(data)) {
+    String id = ignore_cards_from_own_card_list ? drop_target->ignored_id : _("");
+    card_data->getCards(set, id, new_cards);
+  }
+  else switch (format.GetType())
+  {
+    case wxDF_FILENAME:
+    {
+      wxFileDataObject* file_data = static_cast<wxFileDataObject*>(data);
+      wxArrayString filenames = file_data->GetFilenames();
+      parseFiles(filenames, new_cards);
+    }
+    break;
+
+    case wxDF_PNG:
+    {
+      wxImageDataObject* image_data = static_cast<wxImageDataObject*>(data);
+      Image image = image_data->GetImage();
+      parseImage(image, new_cards);
+    }
+    break;
+
+    case wxDF_BITMAP:
+    {
+      wxBitmapDataObject* bitmap_data = static_cast<wxBitmapDataObject*>(data);
+      wxBitmap bitmap = bitmap_data->GetBitmap();
+      Image image = bitmap.ConvertToImage();
+      parseImage(image, new_cards);
+    }
+    break;
+
+    case wxDF_UNICODETEXT:
+    case wxDF_TEXT:
+    case wxDF_HTML:
+    {
+      wxTextDataObject* text_data = static_cast<wxTextDataObject*>(data);
+      String text = text_data->GetText();
+      if (!parseUrl(text, new_cards)) parseText(text, new_cards);
+    }
+    break;
+
+    default:
+    {
+      queue_message(MESSAGE_ERROR, _ERROR_("unknown data format"));
+    }
+  }
+
+  if (new_cards.size() > 0) {
+    set->actions.addAction(make_unique<AddCardAction>(ADD, *set, new_cards));
+    return true;
+  }
+  return false;
 }
 
 // --------------------------------------------------- : CardListBase : Card linking
@@ -228,23 +438,6 @@ bool CardListBase::doLink() {
 bool CardListBase::doUnlink(CardP unlinked_card) {
   set->actions.addAction(make_unique<UnlinkCardsAction>(*set, getCard(), unlinked_card));
   return true;
-}
-bool CardListBase::doAddCSV() {
-  AddCSVWindow wnd(this, set, true);
-  if (wnd.ShowModal() == wxID_OK) {
-    // The actual adding is done in this window's onOk function
-    return true;
-  }
-  return false;
-}
-
-bool CardListBase::doAddJSON() {
-  AddJSONWindow wnd(this, set, true);
-  if (wnd.ShowModal() == wxID_OK) {
-    // The actual adding is done in this window's onOk function
-    return true;
-  }
-  return false;
 }
 
 // ----------------------------------------------------------------------------- : CardListBase : Building the list
@@ -347,7 +540,7 @@ void CardListBase::storeColumns() {
   // store sorting
   GameSettings& gs = settings.gameSettingsFor(*set->game);
   if (sort_by_column >= 0) gs.sort_cards_by = column_fields.at(sort_by_column)->name;
-  else                     gs.sort_cards_by = wxEmptyString;
+  else                     gs.sort_cards_by = _("");
   gs.sort_cards_ascending = sort_ascending;
 }
 
@@ -373,11 +566,11 @@ void CardListBase::selectColumns() {
 String CardListBase::OnGetItemText(long pos, long col) const {
   if (col < 0 || (size_t)col >= column_fields.size()) {
     // wx may give us non existing columns!
-    return wxEmptyString;
+    return _("");
   }
   ValueP val = getCard(pos)->data[column_fields[col]];
   if (val) return val->toString();
-  else     return wxEmptyString;
+  else     return _("");
 }
 
 int CardListBase::OnGetItemImage(long pos) const {
@@ -433,6 +626,17 @@ void CardListBase::onChar(wxKeyEvent& ev) {
   }
 }
 
+void CardListBase::onBeginDrag(wxListEvent&) {
+  vector<CardP> cards;
+  getSelection(cards);
+  String transaction_id = generate_uid();
+  CardsOnClipboard* card_data = new CardsOnClipboard(set, transaction_id, cards);
+  drop_target->ignored_id = transaction_id;
+  wxDropSource drag_source(this);
+  drag_source.SetData(*card_data);
+  drag_source.DoDragDrop(wxDrag_CopyOnly);
+}
+
 void CardListBase::onDrag(wxMouseEvent& ev) {
   ev.Skip();
   if (!allowModify()) return;
@@ -463,7 +667,7 @@ void CardListBase::onContextMenu(wxContextMenuEvent&) {
     m.AppendSeparator();
     add_menu_item_tr(&m, ID_CARD_ADD, "card_add", "add card");
     add_menu_item_tr(&m, ID_CARD_REMOVE, "card_del", "remove card");
-    add_menu_item_tr(&m, ID_CARD_LINK, "card_link", "link card");
+    add_menu_item_tr(&m, ID_CARD_LINK, settings.darkModePrefix() + "card_link", "link card");
     PopupMenu(&m);
   }
 }
@@ -473,14 +677,36 @@ void CardListBase::onItemActivate(wxListEvent& ev) {
   sendEvent(EVENT_CARD_ACTIVATE);
 }
 
+// ----------------------------------------------------------------------------- : CardListDropTarget
+
+CardListDropTarget::CardListDropTarget(CardListBase* card_list)
+  : card_list(card_list), ignored_id(_(""))
+{
+  data_object = new wxDataObjectComposite();
+  data_object->Add(new CardsDataObject(), true);
+  data_object->Add(new wxFileDataObject());
+  data_object->Add(new wxImageDataObject());
+  data_object->Add(new wxTextDataObject());
+  SetDataObject(data_object);
+}
+
+CardListDropTarget::~CardListDropTarget() {}
+
+wxDragResult CardListDropTarget::OnData(wxCoord x, wxCoord y, wxDragResult defaultDragResult) {
+  if (!GetData()) return wxDragNone;
+  if (!card_list->parseData(true)) return wxDragError;
+  return wxDragCopy;
+}
+
 // ----------------------------------------------------------------------------- : CardListBase : Event table
 
 BEGIN_EVENT_TABLE(CardListBase, ItemList)
-  EVT_LIST_COL_RIGHT_CLICK  (wxID_ANY,      CardListBase::onColumnRightClick)
-  EVT_LIST_COL_END_DRAG    (wxID_ANY,      CardListBase::onColumnResize)
-  EVT_LIST_ITEM_ACTIVATED    (wxID_ANY,      CardListBase::onItemActivate)
-  EVT_CHAR          (          CardListBase::onChar)
-  EVT_MOTION          (          CardListBase::onDrag)
-  EVT_MENU          (ID_SELECT_COLUMNS,  CardListBase::onSelectColumns)
-  EVT_CONTEXT_MENU            (                   CardListBase::onContextMenu)
+  EVT_LIST_COL_RIGHT_CLICK (wxID_ANY,          CardListBase::onColumnRightClick)
+  EVT_LIST_COL_END_DRAG    (wxID_ANY,          CardListBase::onColumnResize)
+  EVT_LIST_ITEM_ACTIVATED  (wxID_ANY,          CardListBase::onItemActivate)
+  EVT_LIST_BEGIN_DRAG      (wxID_ANY,          CardListBase::onBeginDrag)
+  EVT_CHAR                 (                   CardListBase::onChar)
+  EVT_MOTION               (                   CardListBase::onDrag)
+  EVT_MENU                 (ID_SELECT_COLUMNS, CardListBase::onSelectColumns)
+  EVT_CONTEXT_MENU         (                   CardListBase::onContextMenu)
 END_EVENT_TABLE  ()

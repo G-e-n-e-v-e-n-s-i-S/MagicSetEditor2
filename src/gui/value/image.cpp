@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -12,6 +12,7 @@
 #include <data/format/clipboard.hpp>
 #include <data/action/value.hpp>
 #include <data/card.hpp>
+#include <data/stylesheet.hpp>
 #include <wx/clipbrd.h>
 #include <gui/util.hpp>
 
@@ -49,25 +50,24 @@ bool ImageValueEditor::onLeftDClick(const RealPoint&, wxMouseEvent&) {
 
 void ImageValueEditor::sliceImage(const Image& image, const String& filename, const String& cardname) {
   if (!image.Ok()) return;
+  // determine import scale based on the user's settings.
+  double import_scale = 1.0;
+  StyleSheetP stylesheet = editor().getCard()->stylesheet;
+  if (!stylesheet) stylesheet = editor().getSet()->stylesheet;
+  if (stylesheet) import_scale = settings.importScaleSettingsFor(*stylesheet);
+  RealSize target_size = RealSize(style().getSize() * import_scale);
+  target_size = RealSize((int)target_size.width, (int)target_size.height);
   // mask
-  GeneratedImage::Options options((int)style().width, (int)style().height, &parent.getStylePackage(), &parent.getLocalPackage());
+  GeneratedImage::Options options((int)target_size.width, (int)target_size.height, &parent.getStylePackage(), &parent.getLocalPackage());
   AlphaMask mask;
-  style().mask.getNoCache(options,mask);
+  style().mask.getNoCache(options, mask);
   // slice
-  ImageSliceWindow s(wxGetTopLevelParent(&editor()), image, filename, cardname, style().getSize(), mask);
+  ImageSliceWindow s(wxGetTopLevelParent(&editor()), image, filename, cardname, target_size, mask);
   // clicked ok?
   if (s.ShowModal() == wxID_OK) {
     // store the image into the set
-    StyleP style = field().styleP;
-    String rect = style ? style->getRect() : _("");
-    String extension = settings.internal_image_extension ? _(".png") : _("");
-    LocalFileName new_image_file = getLocalPackage().newFileName(field().name, rect + extension); // a new unique name in the package
-
-    // Specify a desired size based on the stylesheet and a scale multiplier defined within the user's settings.
-    // Storing at a greater than 100% resolution allows for better exports >100%, but may change how images look when filters (sharpen) are applied.
-    // It also disrupts some of the patterns in use for doing popout planeswalkers since you have to do the math at both scales.
-    // Additionally, this bloats the set file size as even under-resolution images are upscaled to the new minimum size.
-    Image img = s.getImage(settings.internal_scale);
+    LocalFileName new_image_file = getLocalPackage().newFileName(field().name, _(".png")); // a new unique name in the package
+    Image img = s.getImage();
     img.SaveFile(getLocalPackage().nameOut(new_image_file), wxBITMAP_TYPE_PNG); // always use PNG images, see #69. Disk space is cheap anyway.
     addAction(value_action(valueP(), new_image_file));
   }

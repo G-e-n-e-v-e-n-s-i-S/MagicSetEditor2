@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -18,6 +18,7 @@ Font::Font()
   : name()
   , size(1)
   , underline(false)
+  , strikethrough(false)
   , scale_down_to(100000)
   , max_stretch(1.0)
   , color(Color(0,0,0))
@@ -37,7 +38,7 @@ bool Font::PreloadResourceFonts(bool recursive) {
 
   bool preloadHadErrors = false;
   wxString folder;
-  bool cont = appDir.GetFirst(&folder, wxEmptyString, wxDIR_DIRS);
+  bool cont = appDir.GetFirst(&folder, _(""), wxDIR_DIRS);
   while (cont)
   {
     if (folder.Lower().Contains("fonts")) {
@@ -65,7 +66,7 @@ bool Font::PreloadResourceFonts(bool recursive) {
 
 void Font::TallyResourceFonts(String fontsDirectoryPath, vector<String>& fontFilePaths, bool recursive) {
   wxDir fontsDirectory(fontsDirectoryPath);
-  String fontFileName = wxEmptyString;
+  String fontFileName = _("");
   bool hasNext = fontsDirectory.GetFirst(&fontFileName);
   while (hasNext) {
     String fontFilePath = fontsDirectoryPath + fontFileName;
@@ -83,13 +84,14 @@ void Font::TallyResourceFonts(String fontsDirectoryPath, vector<String>& fontFil
 
 bool Font::update(Context& ctx) {
   bool changes = false;
-  changes |= name        .update(ctx);
-  changes |= italic_name .update(ctx);
-  changes |= size        .update(ctx);
-  changes |= weight      .update(ctx);
-  changes |= style       .update(ctx);
-  changes |= underline   .update(ctx);
-  changes |= color       .update(ctx);
+  changes |= name                 .update(ctx);
+  changes |= italic_name          .update(ctx);
+  changes |= size                 .update(ctx);
+  changes |= weight               .update(ctx);
+  changes |= style                .update(ctx);
+  changes |= underline            .update(ctx);
+  changes |= strikethrough        .update(ctx);
+  changes |= color                .update(ctx);
   changes |= shadow_color         .update(ctx);
   changes |= shadow_displacement_x.update(ctx);
   changes |= shadow_displacement_y.update(ctx);
@@ -100,20 +102,21 @@ bool Font::update(Context& ctx) {
   return changes;
 }
 void Font::initDependencies(Context& ctx, const Dependency& dep) const {
-  name        .initDependencies(ctx, dep);
-  italic_name .initDependencies(ctx, dep);
-  size        .initDependencies(ctx, dep);
-  weight      .initDependencies(ctx, dep);
-  style       .initDependencies(ctx, dep);
-  underline   .initDependencies(ctx, dep);
-  color       .initDependencies(ctx, dep);
+  name                 .initDependencies(ctx, dep);
+  italic_name          .initDependencies(ctx, dep);
+  size                 .initDependencies(ctx, dep);
+  weight               .initDependencies(ctx, dep);
+  style                .initDependencies(ctx, dep);
+  underline            .initDependencies(ctx, dep);
+  strikethrough        .initDependencies(ctx, dep);
+  color                .initDependencies(ctx, dep);
   shadow_color         .initDependencies(ctx, dep);
   shadow_displacement_x.initDependencies(ctx, dep);
   shadow_displacement_y.initDependencies(ctx, dep);
   shadow_blur          .initDependencies(ctx, dep);
 }
 
-FontP Font::make(int add_flags, bool add_underline, String const* other_family, Color const* other_color, double const* other_size) const {
+FontP Font::make(int add_flags, bool add_underline, bool add_strikethrough, String const* other_family, Color const* other_color, double const* other_size) const {
   FontP f(new Font(*this));
   f->flags |= add_flags;
   if (add_flags & FONT_CODE_STRING) {
@@ -133,6 +136,9 @@ FontP Font::make(int add_flags, bool add_underline, String const* other_family, 
   }
   if (add_underline) {
     f->underline = true;
+  }
+  if (add_strikethrough) {
+    f->strikethrough = true;
   }
   if (other_color) {
     f->color = *other_color;
@@ -156,13 +162,16 @@ wxFont Font::toWxFont(double scale) const {
 
   if (flags & FONT_CODE) {
     if (size_i < 2) {
-      return wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, weight_i, underline(), _("Courier New"));
+      font = wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, weight_i, underline(), _("Courier New"));
+      if (strikethrough()) font.MakeStrikethrough();
+      return font;
     } else {
       font = wxFont(size_i, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, weight_i, underline(), _("Courier New"));
     }
   } else if (name().empty()) {
     font = *wxNORMAL_FONT;
     font.SetPointSize(size > 1 ? size_i : int(scale * font.GetPointSize()));
+    if (strikethrough()) font.MakeStrikethrough();
     return font;
   } else if (flags & FONT_ITALIC && !italic_name().empty()) {
     font = wxFont(size_i, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, weight_i, underline(), italic_name());
@@ -180,6 +189,7 @@ wxFont Font::toWxFont(double scale) const {
     // TODO: do something more sensible, and more portable
     font.SetPixelSize(wxSize(0, -(int)(scale*size*96.0/72.0 + 0.5) ));
   #endif
+  if (strikethrough()) font.MakeStrikethrough();
   return font;
 }
 
@@ -189,6 +199,7 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(Font) {
   REFLECT(weight);
   REFLECT(style);
   REFLECT(underline);
+  REFLECT(strikethrough);
   REFLECT(italic_name);
   REFLECT(color);
   REFLECT(scale_down_to);

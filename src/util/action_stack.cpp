@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -72,14 +72,14 @@ String ActionStack::undoName() const {
   if (canUndo()) {
     return _(" ") + capitalize(undo_actions.back()->getName(true));
   } else {
-    return wxEmptyString;
+    return _("");
   }
 }
 String ActionStack::redoName() const {
   if (canRedo()) {
     return _(" ") + capitalize(redo_actions.back()->getName(false));
   } else {
-    return wxEmptyString;
+    return _("");
   }
 }
 

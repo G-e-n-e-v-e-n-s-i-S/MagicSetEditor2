@@ -14,6 +14,8 @@ This is written as the character with code 1 in files.
 ! Tag			Description
 | @<b>@			The text inside the tag is bold.
 | @<i>@			The text inside the tag is italic.
+| @<u>@			The text inside the tag is underlined.
+| @<strike>@			The text inside the tag is struck through.
 | @<sym>@		The text inside the tag is rendered as symbols, if a [[prop:style:symbol font]] is set for the text box.
 | @<color:???>@		The text inside the tag is rendered with the given [[type:color]].
 | @<size:???>@		The text inside the tag is rendered with the given font size in points, for example @"<size:12>text</size>"@ makes the text 12 points. The text is scaled down proportionally when it does not fit in a text box and the @scale down to@ attribute allows it.

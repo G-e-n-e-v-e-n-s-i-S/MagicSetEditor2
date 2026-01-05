@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -459,7 +459,7 @@ bool TextValueEditor::onChar(wxKeyEvent& ev) {
           return true;
         }
       }
-      replaceSelection(wxEmptyString, _ACTION_("backspace"));
+      replaceSelection(_(""), _ACTION_("backspace"));
       return true;
     case WXK_DELETE:
       if (selection_start == selection_end) {
@@ -470,7 +470,7 @@ bool TextValueEditor::onChar(wxKeyEvent& ev) {
           moveSelection(TYPE_CURSOR, nextCharBoundary(selection_end), true, MOVE_RIGHT);
         }
       }
-      replaceSelection(wxEmptyString, _ACTION_("delete"));
+      replaceSelection(_(""), _ACTION_("delete"));
       return true;
     case WXK_RETURN:
       if (field().multi_line) {
@@ -581,7 +581,7 @@ bool TextValueEditor::onContextMenu(wxMenu& m, wxContextMenuEvent& ev) {
     } else {
       int i = 0;
       FOR_EACH(s,suggestions) {
-        m.Insert(i, ID_SPELLING_SUGGEST + i, s, wxEmptyString);
+        m.Insert(i, ID_SPELLING_SUGGEST + i, s, _(""));
         i++;
       }
     }
@@ -797,7 +797,7 @@ bool TextValueEditor::doCopy() {
 }
 
 bool TextValueEditor::doDelete() {
-  replaceSelection(wxEmptyString, _ACTION_("cut"));
+  replaceSelection(_(""), _ACTION_("cut"));
   return true;
 }
 
@@ -805,7 +805,7 @@ bool TextValueEditor::doDelete() {
 
 bool TextValueEditor::canFormat(int type) const {
   switch (type) {
-    case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE:
+    case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE: case ID_FORMAT_STRIKETHROUGH:
       return !style().always_symbol && style().allow_formating;
     case ID_FORMAT_SYMBOL:
       return !style().always_symbol && style().allow_formating && style().symbol_font.valid();
@@ -825,6 +825,8 @@ bool TextValueEditor::hasFormat(int type) const {
       return is_in_tag(value().value(), _("<i"),   selection_start_i, selection_end_i);
     case ID_FORMAT_UNDERLINE:
       return is_in_tag(value().value(), _("<u"), selection_start_i, selection_end_i);
+    case ID_FORMAT_STRIKETHROUGH:
+      return is_in_tag(value().value(), _("<strike"), selection_start_i, selection_end_i);
     case ID_FORMAT_SYMBOL:
       return is_in_tag(value().value(), _("<sym"), selection_start_i, selection_end_i);
     case ID_FORMAT_REMINDER: {
@@ -853,6 +855,10 @@ void TextValueEditor::doFormat(int type) {
     }
     case ID_FORMAT_UNDERLINE: {
       addAction(toggle_format_action(valueP(), _("u"), selection_start_i, selection_end_i, selection_start, selection_end, _("Underline")));
+      break;
+    }
+    case ID_FORMAT_STRIKETHROUGH: {
+      addAction(toggle_format_action(valueP(), _("strike"), selection_start_i, selection_end_i, selection_start, selection_end, _("Strikethrough")));
       break;
     }
     case ID_FORMAT_SYMBOL: {

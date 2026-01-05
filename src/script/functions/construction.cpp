@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -30,11 +30,20 @@ SCRIPT_FUNCTION(new_card) {
   CardP new_card = make_intrusive<Card>(*game);
   // iterate on the given key/value pairs
   SCRIPT_PARAM(ScriptValueP, input);
+  // check for a stylesheet first, since other things depend on it
   ScriptValueP it = input->makeIterator();
   ScriptValueP key;
   while (ScriptValueP value = it->next(&key)) {
     assert(key);
-    if (key == script_nil) continue;
+    if (key == script_nil || value == script_nil) continue;
+    String key_name = key->toString();
+    if (set_stylesheet_container(*game, new_card, value, key_name, ignore_field_not_found)) break;
+  }
+  // set the rest of the key/value pairs
+  it = input->makeIterator();
+  while (ScriptValueP value = it->next(&key)) {
+    assert(key);
+    if (key == script_nil || value == script_nil) continue;
     String key_name = key->toString();
     // check if the given value is for a built-in field
     if (set_builtin_container(*game, new_card, value, key_name, ignore_field_not_found)) continue;
@@ -52,11 +61,20 @@ SCRIPT_FUNCTION(new_card) {
       // if the script result is a collection, iterate on the key/value pairs
       // treat the keys as field names and the values as what to populate those fields with
       if (script_input->type() == SCRIPT_COLLECTION) {
+        // check for a stylesheet first, since other things depend on it
         ScriptValueP script_it = script_input->makeIterator();
         ScriptValueP script_key;
         while (ScriptValueP script_value = script_it->next(&script_key)) {
           assert(script_key);
-          if (script_key == script_nil) continue;
+          if (script_key == script_nil || script_value == script_nil) continue;
+          String script_key_name = script_key->toString();
+          if (set_stylesheet_container(*game, new_card, script_value, script_key_name, ignore_field_not_found)) break;
+        }
+        // iterate on the rest of the key/value pairs given by the script
+        script_it = script_input->makeIterator();
+        while (ScriptValueP script_value = script_it->next(&script_key)) {
+          assert(script_key);
+          if (script_key == script_nil || script_value == script_nil) continue;
           String script_key_name = script_key->toString();
           // check if the script value is for a built-in field
           if (set_builtin_container(*game, new_card, script_value, script_key_name, ignore_field_not_found)) continue;
@@ -67,7 +85,7 @@ SCRIPT_FUNCTION(new_card) {
           set_container(script_container, script_value, script_key_name);
         }
       }
-      // if the script result is not a collection, simply set the field value to the script value
+      // if the script result is not a collection, simply set the field value to the script result
       else {
         set_container(container, script_input, key_name);
       }
@@ -86,12 +104,20 @@ SCRIPT_FUNCTION(new_card) {
     ctx.setVariable(SCRIPT_VAR_card, to_script(new_card));
     ScriptValueP script_input = game->import_script.invoke(ctx, true);
     if (script_input->type() == SCRIPT_COLLECTION) {
-      // iterate on the key/value pairs given by the script
+      // check for a stylesheet first, since other things depend on it
       ScriptValueP script_it = script_input->makeIterator();
       ScriptValueP script_key;
       while (ScriptValueP script_value = script_it->next(&script_key)) {
         assert(script_key);
-        if (script_key == script_nil) continue;
+        if (script_key == script_nil || script_value == script_nil) continue;
+        String script_key_name = script_key->toString();
+        if (set_stylesheet_container(*game, new_card, script_value, script_key_name, ignore_field_not_found)) break;
+      }
+      // iterate on the rest of the key/value pairs given by the script
+      script_it = script_input->makeIterator();
+      while (ScriptValueP script_value = script_it->next(&script_key)) {
+        assert(script_key);
+        if (script_key == script_nil || script_value == script_nil) continue;
         String script_key_name = script_key->toString();
         // check if the script value is for a built-in field
         if (set_builtin_container(*game, new_card, script_value, script_key_name, ignore_field_not_found)) continue;

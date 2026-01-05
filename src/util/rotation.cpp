@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -75,7 +75,7 @@ RealSize Rotation::trSizeToBB(const RealSize& size) const {
 }
 
 RealRect Rotation::trRectToBB(const RealRect& r) const {
-  const bool special_case_optimization = false;
+  const bool special_case_optimization = true;
   double x = r.x     * zoomX, y = r.y      * zoomY;
   double w = r.width * zoomX, h = r.height * zoomY;
   if (special_case_optimization && is_rad0(angle)) {

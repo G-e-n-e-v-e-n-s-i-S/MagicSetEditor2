@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -40,6 +40,9 @@ IMPLEMENT_REFLECTION(ChoiceField) {
 
 void ChoiceField::after_reading(Version ver) {
   Field::after_reading(ver);
+  if (choices->choices.size() < 1) {
+    choices->choices.push_back(make_intrusive<Choice>(name));
+  }
   choices->initIds();
 }
 // ----------------------------------------------------------------------------- : ChoiceField::Choice

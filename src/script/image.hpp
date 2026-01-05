@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -98,10 +98,15 @@ public:
   void clearCache();
   
 private:
-  Image  cached_i; ///< The cached image
-  Bitmap cached_b; ///< *or* the cached bitmap
-  RealSize cached_size; ///< The size of the image before rotating
-  Radians cached_angle;
+  Image          cached_i; ///< The cached image
+  Bitmap         cached_b; ///< *or* the cached bitmap
+  RealSize       cached_size; ///< The size of the image before rotating, may be different than the options size
+  /// The options as they were last specified
+  RealSize       cached_options_size = RealSize(-1.0,-1.0);
+  double         cached_options_zoom;
+  Radians        cached_options_angle;
+  PreserveAspect cached_options_preserve_aspect;
+  bool           cached_options_saturate;
 };
 
 // ----------------------------------------------------------------------------- : CachedScriptableMask

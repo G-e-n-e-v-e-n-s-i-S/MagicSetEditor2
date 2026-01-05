@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -27,20 +27,21 @@ public:
   StatsDimension();
   StatsDimension(const Field&);
   
-  const bool        automatic;     ///< Based on a card field?
-  String            name;          ///< Name of this dimension
-  LocalizedString   description;   ///< Description, used in status bar
-  int               position_hint; ///< Hint for the ordering
-  String            icon_filename; ///< Icon for lists
-  Bitmap            icon;          ///< The loaded icon (optional of course)
-  OptionalScript    script;        ///< Script that determines the value(s), ran on each card
-  OptionalScript    global_script; ///< Script that determines the value(s), ran only once at the start
-  bool              numeric;       ///< Are the values numeric? If so, they require special sorting
-  double            bin_size;      ///< Bin adjecent numbers?
-  bool              show_empty;    ///< Should "" be shown?
-  bool              split_list;    ///< Split values into multiple ones separated by commas
-  map<String,Color> colors;        ///< Colors for the categories
-  vector<String>    groups;        ///< Order of the items
+  const bool        automatic;          ///< Based on a card field?
+  String            name;               ///< Name of this dimension
+  LocalizedString   description;        ///< Description, used in status bar
+  int               position_hint;      ///< Hint for the ordering
+  String            icon_filename;      ///< Icon for lists
+  String            dark_icon_filename; ///< Icon for lists, if a variant for dark mode is needed
+  Bitmap            icon;               ///< The loaded icon (optional of course)
+  OptionalScript    script;             ///< Script that determines the value(s), ran on each card
+  OptionalScript    global_script;      ///< Script that determines the value(s), ran only once at the start
+  bool              numeric;            ///< Are the values numeric? If so, they require special sorting
+  double            bin_size;           ///< Bin adjecent numbers?
+  bool              show_empty;         ///< Should "" be shown?
+  bool              split_list;         ///< Split values into multiple ones separated by commas
+  map<String,Color> colors;             ///< Colors for the categories
+  vector<String>    groups;             ///< Order of the items
   
   DECLARE_REFLECTION();
 };
@@ -54,15 +55,16 @@ public:
   StatsCategory();
   StatsCategory(const StatsDimensionP&);
   
-  const bool              automatic;       ///< Automatically generated?
-  String                  name;            ///< Name/label
-  LocalizedString         description;     ///< Description, used in status bar
-  int                     position_hint;   ///< Hint for the ordering
-  String                  icon_filename;   ///< Icon for lists
-  Bitmap                  icon;            ///< The loaded icon (optional of course)
-  vector<String>          dimension_names; ///< Names of the dimensions to use
-  vector<StatsDimensionP> dimensions;      ///< Actual dimensions
-  GraphType               type;            ///< Type of graph to use
+  const bool              automatic;          ///< Automatically generated?
+  String                  name;               ///< Name/label
+  LocalizedString         description;        ///< Description, used in status bar
+  int                     position_hint;      ///< Hint for the ordering
+  String                  icon_filename;      ///< Icon for lists
+  String                  dark_icon_filename; ///< Icon for lists when a variant for dark mode is needed
+  Bitmap                  icon;               ///< The loaded icon (optional of course)
+  vector<String>          dimension_names;    ///< Names of the dimensions to use
+  vector<StatsDimensionP> dimensions;         ///< Actual dimensions
+  GraphType               type;               ///< Type of graph to use
   
   /// Initialize dimensions from dimension_names
   void find_dimensions(const vector<StatsDimensionP>& available);

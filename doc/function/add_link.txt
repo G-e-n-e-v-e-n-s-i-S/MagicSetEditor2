@@ -1,0 +1,18 @@
+Function: add_link
+
+--Usage--
+> add_link(input: card, selected_relation: "link type", linked_card: other_card, linked_relation: "link type")
+
+Links the input card and the linked_card together. The link is reciprocal if possible.
+
+(Adds the linked_card to the input card's links, and gives it the linked_relation. Adds the input card to the linked_card's links, and gives it the selected_relation.)
+
+Returns the linked_card, or nil if the linked_card was not found.
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	[[type:card]] or [[type:string]]		One of the two cards we will link, or the uid of a card.
+| @selected_relation@	[[type:string]]		The type of link we will give to the input card.
+| @linked_card@	[[type:card]] or [[type:string]]		The other of the two cards we will link, or the uid of the other card.
+| @linked_relation@	[[type:string]]		The type of link we will give to the linked card.
+| @set@		[[type:set]]		The set in which to look for the other card. This can be omitted since 'set' is a predefined variable.

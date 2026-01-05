@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -104,42 +104,47 @@ void CachedScriptableImage::generateCached(const GeneratedImage::Options& option
   ImageCombine combine_i = value->combine();
   if (combine_i != COMBINE_DEFAULT) *combine = combine_i;
   *size = cached_size;
-  // does the size match?
-  bool w_ok = cached_size.width  == options.width,
-       h_ok = cached_size.height == options.height;
+  // do the options match?
+  Radians relative_rotation = options.angle + rad360 - cached_options_angle;
+  bool ok = almost_equal(cached_options_size.width,        options.width) &&
+            almost_equal(cached_options_size.height,       options.height) &&
+            almost_equal(cached_options_zoom,              options.zoom) &&
+                         cached_options_preserve_aspect == options.preserve_aspect &&
+                         cached_options_saturate        == options.saturate &&
+            is_straight(relative_rotation); // we only need an {0,90,180,270} degree rotation compared to the cached one, this doesn't reduce image quality
   // image or bitmap?
   if (*combine <= COMBINE_NORMAL) {
     // bitmap
-    if (cached_b.Ok() && options.angle == cached_angle) {
-      if ((w_ok && h_ok) || (options.preserve_aspect == ASPECT_FIT && (w_ok || h_ok))) { // only one dimension has to fit when fitting
-        // cached, we are done
-        *bitmap = cached_b;
-        return;
-      }
+    if (cached_b.Ok() && ok && almost_equal(cached_options_angle, options.angle)) {
+      // cached, we are done
+      *bitmap = cached_b;
+      return;
     }
   } else {
     // image
-    Radians relative_rotation = options.angle + rad360 - cached_angle;
-    if (cached_i.Ok() && is_straight(relative_rotation)) {
-      // we need only an {0,90,180,270} degree rotation compared to the cached one, this doesn't reduce image quality
-      if ((w_ok && h_ok) || (options.preserve_aspect == ASPECT_FIT && (w_ok || h_ok))) { // only one dimension has to fit when fitting
-        if (options.angle != cached_angle) {
-          // rotate cached image
-          cached_i = rotate_image(cached_i, relative_rotation);
-          cached_angle = options.angle;
-        }
-        *image = cached_i;
-        return;
+    if (cached_i.Ok() && ok) {
+      if (!almost_equal(cached_options_angle, options.angle)) {
+        // rotate cached image
+        cached_i = rotate_image(cached_i, relative_rotation);
+        cached_options_angle = options.angle;
       }
+      *image = cached_i;
+      return;
     }
   }
+  // store the options as they were asked for
+  cached_options_size            = RealSize(options.width, options.height);
+  cached_options_zoom            = options.zoom;
+  cached_options_preserve_aspect = options.preserve_aspect;
+  cached_options_saturate        = options.saturate;
+  cached_options_angle           = options.angle;
   // hack(part1): temporarily set angle to 0, do actual rotation after applying mask
-  Radians a = options.angle;
   const_cast<GeneratedImage::Options&>(options).angle = 0;
   // generate
   cached_i = generate(options);
   assert(cached_i.Ok());
-  const_cast<GeneratedImage::Options&>(options).angle = cached_angle = a;
+  const_cast<GeneratedImage::Options&>(options).angle = cached_options_angle;
+  // store the size as it actually is (may have been changed by conform_image() when we generated the image)
   *size = cached_size = RealSize(options.width, options.height);
   if (mask) {
     // apply mask
@@ -149,7 +154,7 @@ void CachedScriptableImage::generateCached(const GeneratedImage::Options& option
     mask_opts.angle  = 0;
     mask->get(mask_opts).setAlpha(cached_i);
   }
-  if (options.angle != 0) {
+  if (!almost_equal(options.angle, 0.0)) {
     // hack(part2) do the actual rotation now
     cached_i = rotate_image(cached_i, options.angle);
   }

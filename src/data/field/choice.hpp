@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -33,14 +33,15 @@ public:
   class Choice;
   typedef intrusive_ptr<Choice> ChoiceP;
   
-  ChoiceP choices;        ///< A choice group of possible choices
-  OptionalScript script;      ///< Script to apply to all values
-  OptionalScript default_script;  ///< Script that generates the default value
-  String initial;          ///< Initial choice of a new value, or ""
-  String default_name;      ///< Name of "default" value
-  map<String,Color> choice_colors;      ///< Colors for the various choices (when color_cardlist)
-  map<String,Color> choice_colors_cardlist;  ///< Colors for the various choices, for in the card list
-  
+  ChoiceP choices;                          ///< A choice group of possible choices
+  OptionalScript script;                    ///< Script to apply to all values
+  OptionalScript default_script;            ///< Script that generates the default value
+  String initial;                           ///< Initial choice of a new value, or ""
+  String default_name;                      ///< Name of "default" value
+  map<String,Color> choice_colors;          ///< Colors for the various choices (when color_cardlist)
+  map<String,Color> choice_colors_cardlist; ///< Colors for the various choices, for in the card list
+  bool is_slider = false;                   ///< Should the UI be displayed as a slider?
+
   void initDependencies(Context&, const Dependency&) const override;
   void after_reading(Version ver) override;
 };

@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -208,10 +208,10 @@ void Reader::readLine(bool in_string) {
   size_t pos = line.find_first_of(_(':'), indent);
   key = line.substr(indent, pos - indent);
   if (!ignore_invalid && !in_string && starts_with(key, _(" "))) {
-    warning(_("key: '") + key + _("' starts with a space; only use TABs for indentation!"), 0, false);
-    // try to fix up: 8 spaces is a tab
-    while (starts_with(key, _("        "))) {
-      key = key.substr(8);
+    warning(String(_("key: '")) << key << _("' on line number ") << line_number << _(" starts with a space; only use TABs for indentation!"), 0, false);
+    // try to fix up: 4 spaces is a tab
+    while (starts_with(key, _("    "))) {
+      key = key.substr(4);
       indent += 1;
     }
   }

@@ -1,0 +1,13 @@
+Function: get_cards_from_link
+
+--Usage--
+> get_cards_from_link(input: card, linked_relation: "link type")
+
+Inspects a given [[type:card]]'s links to find those of the given type, and returns an array containing the linked cards.
+Returns an empty array if no link of the given type, or no card was found.
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	[[type:card]]		The card whose links we'll inspect.
+| @linked_relation@	[[type:string]]		The type of link we want to find.
+| @set@		[[type:set]]		The set in which to look. This can be omitted since 'set' is a predefined variable.

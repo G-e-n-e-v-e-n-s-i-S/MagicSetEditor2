@@ -1,0 +1,16 @@
+Function: remove_links
+
+--Usage--
+> remove_links(input: card, linked_card: other card)
+> remove_links(input: card, linked_relation: "link type")
+
+Breaks the link between the input card and the linked_card. If a linked_relation is given, breaks the link between the input card and all cards with the linked_relation.
+
+Returns an array containing all the cards that were unlinked.
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	[[type:card]] or [[type:string]]		One of the two cards we will unlink, or the uid of a card.
+| @linked_card@	[[type:card]] or [[type:string]]		The other of the two cards we will unlink, or the uid of the other card.
+| @linked_relation@	[[type:string]]		The type of link we will break.
+| @set@		[[type:set]]		The set in which to look for the other card. This can be omitted since 'set' is a predefined variable.

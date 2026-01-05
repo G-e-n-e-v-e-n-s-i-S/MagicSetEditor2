@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -73,7 +73,7 @@ wxSizer* ExportWindowBase::Create() {
   s->AddSpacer(4);
   s->Add(new wxStaticLine(this), 0, wxALL | wxEXPAND, 4);
   s->AddSpacer(4);
-  card_count = new wxStaticText(this, wxID_ANY, wxEmptyString);
+  card_count = new wxStaticText(this, wxID_ANY, _(""));
   s->Add(card_count, 0, wxALL & ~wxTOP, 6);
   s->AddSpacer(4);
   // done

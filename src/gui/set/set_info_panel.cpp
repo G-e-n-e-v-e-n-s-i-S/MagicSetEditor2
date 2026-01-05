@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -37,6 +37,7 @@ void SetInfoPanel::initUI(wxToolBar* tb, wxMenuBar* mb) {
   add_tool_tr(tb, ID_FORMAT_BOLD, settings.darkModePrefix() + "bold", "bold", false, wxITEM_CHECK);
   add_tool_tr(tb, ID_FORMAT_ITALIC, settings.darkModePrefix() + "italic", "italic", false, wxITEM_CHECK);
   add_tool_tr(tb, ID_FORMAT_UNDERLINE, settings.darkModePrefix() + "underline", "underline", false, wxITEM_CHECK);
+  add_tool_tr(tb, ID_FORMAT_STRIKETHROUGH, settings.darkModePrefix() + "strikethrough", "strikethrough", false, wxITEM_CHECK);
   add_tool_tr(tb, ID_FORMAT_SYMBOL, settings.darkModePrefix() + "symbol", "symbols", false, wxITEM_CHECK);
   add_tool_tr(tb, ID_FORMAT_REMINDER, settings.darkModePrefix() + "reminder", "reminder_text", false, wxITEM_CHECK);
   tb->Realize();
@@ -45,6 +46,7 @@ void SetInfoPanel::initUI(wxToolBar* tb, wxMenuBar* mb) {
     add_menu_item_tr(menuFormat, ID_FORMAT_BOLD, settings.darkModePrefix() + "bold", "bold", wxITEM_CHECK);
     add_menu_item_tr(menuFormat, ID_FORMAT_ITALIC, settings.darkModePrefix() + "italic", "italic", wxITEM_CHECK);
     add_menu_item_tr(menuFormat, ID_FORMAT_UNDERLINE, settings.darkModePrefix() + "underline", "underline", wxITEM_CHECK);
+    add_menu_item_tr(menuFormat, ID_FORMAT_STRIKETHROUGH, settings.darkModePrefix() + "strikethrough", "strikethrough", wxITEM_CHECK);
     add_menu_item_tr(menuFormat, ID_FORMAT_SYMBOL, settings.darkModePrefix() + "symbol", "symbols", wxITEM_CHECK);
     add_menu_item_tr(menuFormat, ID_FORMAT_REMINDER, settings.darkModePrefix() + "reminder", "reminder_text", wxITEM_CHECK);
   mb->Insert(2, menuFormat, _MENU_("format"));
@@ -57,6 +59,7 @@ void SetInfoPanel::destroyUI(wxToolBar* tb, wxMenuBar* mb) {
   tb->DeleteTool(ID_FORMAT_BOLD);
   tb->DeleteTool(ID_FORMAT_ITALIC);
   tb->DeleteTool(ID_FORMAT_UNDERLINE);
+  tb->DeleteTool(ID_FORMAT_STRIKETHROUGH);
   tb->DeleteTool(ID_FORMAT_SYMBOL);
   tb->DeleteTool(ID_FORMAT_REMINDER);
   // Menus
@@ -65,7 +68,7 @@ void SetInfoPanel::destroyUI(wxToolBar* tb, wxMenuBar* mb) {
 
 void SetInfoPanel::onUpdateUI(wxUpdateUIEvent& ev) {
   switch (ev.GetId()) {
-    case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE: case ID_FORMAT_SYMBOL: case ID_FORMAT_REMINDER: {
+    case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE: case ID_FORMAT_STRIKETHROUGH: case ID_FORMAT_SYMBOL: case ID_FORMAT_REMINDER: {
       ev.Enable(editor->canFormat(ev.GetId()));
       ev.Check (editor->hasFormat(ev.GetId()));
       break;
@@ -75,7 +78,7 @@ void SetInfoPanel::onUpdateUI(wxUpdateUIEvent& ev) {
 
 void SetInfoPanel::onCommand(int id) {
   switch (id) {
-    case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE: case ID_FORMAT_SYMBOL: case ID_FORMAT_REMINDER: {
+    case ID_FORMAT_BOLD: case ID_FORMAT_ITALIC: case ID_FORMAT_UNDERLINE: case ID_FORMAT_STRIKETHROUGH: case ID_FORMAT_SYMBOL: case ID_FORMAT_REMINDER: {
       editor->doFormat(id);
       break;
     }

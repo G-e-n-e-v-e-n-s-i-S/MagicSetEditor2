@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -137,7 +137,7 @@ void uncanonical_name_form_in_place(String& str) {
   }
 }
 
-String unified_form(String& str) {
+String unified_form(String str) {
   str = trim(str);
   for (String::iterator it = str.begin(); it != str.end(); ++it) {
     if (*it == ' ') *it = '_';

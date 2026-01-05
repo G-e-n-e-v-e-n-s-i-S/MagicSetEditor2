@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -97,14 +97,16 @@ public:
   StyleSheetSettings();
   
   // Rendering/display settings
-  Defaultable<double> card_zoom;
-  Defaultable<double> export_zoom;
+  Defaultable<double>  card_zoom;
+  Defaultable<int>     export_scale_selection;
   Defaultable<Degrees> card_angle;
-  Defaultable<bool>   card_anti_alias;
-  Defaultable<bool>   card_borders;
-  Defaultable<bool>   card_draw_editing;
-  Defaultable<bool>   card_normal_export;
-  Defaultable<bool>   card_spellcheck_enabled;
+  Defaultable<bool>    card_anti_alias;
+  Defaultable<bool>    card_borders;
+  Defaultable<bool>    card_draw_editing;
+  Defaultable<bool>    card_normal_export;
+  Defaultable<bool>    card_bleed_export;
+  Defaultable<bool>    card_notes_export;
+  Defaultable<bool>    card_spellcheck_enabled;
   
   /// Where the settings are the default, use the value from ss
   void useDefault(const StyleSheetSettings& ss);
@@ -155,6 +157,7 @@ public:
   String default_image_dir;  ///< Where to look for images to import
   String default_symbol_dir; ///< Where to look for .mse-symbol files
   String default_export_dir; ///< Where to export to by default
+  String default_import_dir; ///< Where to import to by default
   
   // --------------------------------------------------- : Set window
   bool set_window_maximized;
@@ -172,14 +175,24 @@ public:
   String default_game;
   
   // --------------------------------------------------- : Game/stylesheet specific
-  
+
+  struct ExportSettings {
+    double zoom, angle_radians, bleed_pixels;
+  };
+
   /// Get the settings object for a specific game
-  GameSettings&       gameSettingsFor      (const Game& game);
+  GameSettings&       gameSettingsFor          (const Game& game);
   /// Get the settings for a column for a specific field in a game
-  ColumnSettings&     columnSettingsFor    (const Game& game, const Field& field);
+  ColumnSettings&     columnSettingsFor        (const Game& game, const Field& field);
   /// Get the settings object for a specific stylesheet
-  StyleSheetSettings& stylesheetSettingsFor(const StyleSheet& stylesheet);
-  
+  StyleSheetSettings& stylesheetSettingsFor    (const StyleSheet& stylesheet);
+  double              exportScaleSettingsFor   (const StyleSheet& stylesheet);
+  double              importScaleSettingsFor   (const StyleSheet& stylesheet);
+  double              adaptiveScaleSettingsFor (const StyleSheet& stylesheet, double target_dpi, double leeway_dpi);
+  ExportSettings      exportSettingsFor        (const StyleSheet& stylesheet);
+
+  static const vector<int> scale_choices;
+
 private:
   map<String,GameSettingsP>       game_settings;
   map<String,StyleSheetSettingsP> stylesheet_settings;
@@ -197,6 +210,7 @@ public:
   // --------------------------------------------------- : Printing
 
   double print_spacing;
+  double print_bleed;
   CutterLinesType print_cutter_lines;
 
   // --------------------------------------------------- : Dark Mode
@@ -210,13 +224,16 @@ public:
   Color darkModeColor();
 
   // --------------------------------------------------- : Special game stuff
+
   String apprentice_location;
   
   // --------------------------------------------------- : Internal settings
-  double internal_scale;
-  bool internal_image_extension;
+
+  int import_scale_selection;
+  bool allow_image_download;
 
   // --------------------------------------------------- : Update checking
+
   #if USE_OLD_STYLE_UPDATE_CHECKER
     String updates_url;
   #endif
@@ -227,6 +244,7 @@ public:
   String website_url;
   
   // --------------------------------------------------- : Installation settings
+
   InstallType install_type;
   
   // --------------------------------------------------- : The io

@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -429,7 +429,7 @@ String SymbolFont::insertSymbolCode(int menu_id) const {
   if (insert_symbol_menu) {
     return insert_symbol_menu->getCode(menu_id - ID_INSERT_SYMBOL_MENU_MIN, *this);
   } else {
-    return wxEmptyString;
+    return _("");
   }
 }
 
@@ -505,7 +505,7 @@ wxMenuItem* InsertSymbolMenu::makeMenuItem(wxMenu* parent, int first_id, SymbolF
   }
   if (type == Type::SUBMENU) {
     wxMenuItem* item = new wxMenuItem(parent, wxID_ANY, label,
-                                      wxEmptyString, wxITEM_NORMAL,
+                                      _(""), wxITEM_NORMAL,
                                       makeMenu(first_id, font));
     item->SetBitmap(wxNullBitmap);
     return item;

@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -55,7 +55,7 @@ String card_rarity_code(const String& rarity) {
 
 void export_mws(Window* parent, const SetP& set) {
   if (!set->game->isMagic()) {
-    throw Error(_("Can only export Magic sets to Magic Workstation"));
+    throw Error(_("Can only export magic sets to Magic Workstation"));
   }
   
   // Select filename

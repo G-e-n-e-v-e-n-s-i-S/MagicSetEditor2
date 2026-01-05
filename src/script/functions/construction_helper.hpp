@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -40,7 +40,7 @@ inline static Value* get_card_field_container(Game& game, IndexMap<FieldP, Value
   return it->get();
 }
 
-inline static Value* get_container(IndexMap<FieldP, ValueP>& map, String& type, String& key_name, bool ignore_field_not_found) {
+inline static Value* get_container(IndexMap<FieldP, ValueP>& map, const String& type, const String& key_name, bool ignore_field_not_found) {
   // find value container to update
   IndexMap<FieldP, ValueP>::const_iterator it = map.find(key_name);
   if (it == map.end()) {
@@ -68,9 +68,8 @@ inline static void set_container(Value* container, ScriptValueP& value, String k
     cvalue->value = value->toColor();
   }
   else if (ImageValue* ivalue = dynamic_cast<ImageValue*>(container)) {
-    if (ExternalImage* image = dynamic_cast<ExternalImage*>(value.get())) {
-      wxFileName fname(image->toString());
-      ivalue->filename = LocalFileName::fromReadString(fname.GetName(), "");
+    if (ExternalImage* img = dynamic_cast<ExternalImage*>(value.get())) {
+      ivalue->filename = LocalFileName::fromReadString(img->toString(), "");
     } else if (value->type() == SCRIPT_STRING) {
       ivalue->filename = LocalFileName::fromReadString(value->toString(), "");
     } else {
@@ -89,55 +88,62 @@ inline static void set_container(Value* container, ScriptValueP& value, String k
   }
 }
 
-inline static bool set_builtin_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
-  // check if the given value is for a built-in field, if found set it and return true
+inline static bool set_stylesheet_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
+  // check if the given value is for a stylesheet, if found set it and return true
   key_name = unified_form(key_name);
-  if (key_name == _("notes") || key_name == _("note")) {
-    card->notes = value->toString();
-    return true;
-  } else if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
+  if (key_name == _("style") || key_name == _("stylesheet") || key_name == _("template")) {
     if (!trim(value->toString()).empty()) {
       card->stylesheet = StyleSheet::byGameAndName(game, value->toString());
       if (card->stylesheet) card->styling_data.init(card->stylesheet->styling_fields);
     }
     return true;
   }
-  //else if (key_name == _("id") || key_name == _("uid")) {
-  //  card->uid = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card") || key_name == _("linked_card_1")) {
-  //  card->linked_card_1 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card_2")) {
-  //  card->linked_card_2 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card_3")) {
-  //  card->linked_card_3 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_card_4")) {
-  //  card->linked_card_4 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation") || key_name == _("linked_relation_1")) {
-  //  card->linked_relation_1 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation_2")) {
-  //  card->linked_relation_2 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation_3")) {
-  //  card->linked_relation_3 = value->toString();
-  //  return true;
-  //}
-  //else if (key_name == _("linked_relation_4")) {
-  //  card->linked_relation_4 = value->toString();
-  //  return true;
-  //}
+  return false;
+}
+
+inline static bool set_builtin_container(const Game& game, CardP& card, ScriptValueP& value, String key_name, bool ignore_field_not_found) {
+  // check if the given value is for a built-in field, if found set it and return true
+  key_name = unified_form(key_name);
+  if (key_name == _("card_notes") || key_name == _("notes") || key_name == _("note")) {
+    card->notes = value->toString();
+    return true;
+  }
+  else if (key_name == _("id") || key_name == _("uid") || key_name == _("uuid")) {
+    card->uid = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_1") || key_name == _("linked_card")) {
+    card->linked_card_1 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_2")) {
+    card->linked_card_2 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_3")) {
+    card->linked_card_3 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_card_4")) {
+    card->linked_card_4 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_1") || key_name == _("linked_relation")) {
+    card->linked_relation_1 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_2")) {
+    card->linked_relation_2 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_3")) {
+    card->linked_relation_3 = value->toString();
+    return true;
+  }
+  else if (key_name == _("linked_relation_4")) {
+    card->linked_relation_4 = value->toString();
+    return true;
+  }
   else if          (key_name == _("styling_data")   || key_name == _("style_data")   || key_name == _("stylesheet_data")   || key_name == _("template_data") || key_name == _("styling")
                  || key_name == _("styling_fields") || key_name == _("style_fields") || key_name == _("stylesheet_fields") || key_name == _("template_fields")
                  || key_name == _("extra_data")     || key_name == _("extra_fields") || key_name == _("extra_card_data")   || key_name == _("extra_card_fields")) {
@@ -154,7 +160,7 @@ inline static bool set_builtin_container(const Game& game, CardP& card, ScriptVa
     ScriptValueP key;
     while (ScriptValueP value = it->next(&key)) {
       assert(key);
-      if (key == script_nil) continue;
+      if (key == script_nil || value == script_nil) continue;
       String key_name = key->toString();
       Value* container = get_container(data, type, key_name, ignore_field_not_found);
       set_container(container, value, key_name);

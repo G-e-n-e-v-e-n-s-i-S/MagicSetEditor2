@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -42,8 +42,11 @@ private:
       || t == wxEVT_LEFT_DOWN      || t == wxEVT_RIGHT_DOWN
       || t == wxEVT_MOVE
       || t == wxEVT_MENU_HIGHLIGHT || t == wxEVT_MENU_OPEN
-      || t == wxEVT_CLOSE_WINDOW   || t == wxEVT_KILL_FOCUS
+      || t == wxEVT_CLOSE_WINDOW
+#if defined(_WIN32)
+      || t == wxEVT_KILL_FOCUS
       //|| t == wxEVT_ACTIVATE
+#endif
       || t == wxEVT_COMMAND_TOOL_CLICKED)
     {
       // close the list, and pass on the event

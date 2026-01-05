@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -13,6 +13,7 @@
 #include <util/error.hpp>
 #include <util/file_utils.hpp>
 #include <util/vcs.hpp>
+#include <data/format/file_to_text.h>
 
 class Package;
 class wxFileInputStream;
@@ -54,12 +55,69 @@ public:
   inline String const& toStringForKey() const { return fn; }
 
   /// Retreive a rect from a filename
-  static String getRect(const String& file) {
-      size_t first = file.find(_("---"));
-      if (first == String::npos) return _("");
-      size_t last = file.find(_("---"), first+3);
-      if (first == last) return _("");
-      return file.substr(first, last + 3 - first);
+  inline static void getExternalRect(const String& filename, wxRect& rect_out, int& degrees_out) {
+    size_t first = filename.find(_("<mse-crop-data>"));
+    if (first == String::npos) return;
+    size_t last = filename.find(_("</mse-crop-data>"), first + 15);
+    if (last == String::npos) return;
+    String string = filename.substr(first + 15, last - (first + 15));
+    if (string.empty()) return;
+
+    size_t divider = string.find(_("-"));
+    if (divider == String::npos) return;
+    if (divider == 0) return;
+    int x;
+    if(!string.substr(0, divider).ToInt(&x)) return;
+    string = string.substr(divider + 1);
+
+    divider = string.find(_("-"));
+    if (divider == String::npos) return;
+    if (divider == 0) return;
+    int y;
+    if(!string.substr(0, divider).ToInt(&y)) return;
+    string = string.substr(divider + 1);
+
+    divider = string.find(_("-"));
+    if (divider == String::npos) return;
+    if (divider == 0) return;
+    int width;
+    if(!string.substr(0, divider).ToInt(&width)) return;
+    string = string.substr(divider + 1);
+
+    divider = string.find(_("-"));
+    if (divider == String::npos) return;
+    if (divider == 0) return;
+    int height;
+    if(!string.substr(0, divider).ToInt(&height)) return;
+    string = string.substr(divider + 1);
+
+    if(!string.ToInt(&degrees_out)) return;
+
+    rect_out = wxRect(x, y, width, height);
+  }
+  inline void getExternalRect(wxRect& rect_out, int& degrees_out) {
+    getExternalRect(fn, rect_out, degrees_out);
+  }
+
+  /// Retreive an image from a filename
+  inline static Image getExternalImage(const String& filename) {
+    Image img;
+    size_t first = filename.find(_("<mse-image-data>"));
+    if (first == String::npos) return img;
+    size_t last = filename.find(_("</mse-image-data>"), first + 16);
+    if (last == String::npos) return img;
+    std::string s = filename.substr(first + 16, last - (first + 16)).ToStdString();
+    if (s.empty()) return img;
+
+    const std::string& temppath = (wxFileName::CreateTempFileName(_("mse")) + _(".png")).ToStdString();
+    UTF8ToFile(temppath, s);
+    img.LoadFile(temppath, wxBITMAP_TYPE_PNG);
+    wxRemoveFile(temppath);
+    wxRemoveFile(temppath.substr(0, temppath.size() - 4));
+    return img;
+  }
+  inline Image getExternalImage() {
+    return getExternalImage(fn);
   }
 
 private:
@@ -142,15 +200,15 @@ public:
   // --------------------------------------------------- : Managing the inside of the package
 
   /// Check if a file is in the package.
-  bool existsIn(const String& file);
-  inline bool existsIn(const LocalFileName& file) {
-      return existsIn(file.fn);
+  bool contains(const String& file);
+  inline bool contains(const LocalFileName& file) {
+    return contains(file.fn);
   }
 
   /// Open an input stream for a file in the package.
   unique_ptr<wxInputStream> openIn(const String& file);
   inline unique_ptr<wxInputStream> openIn(const LocalFileName& file) {
-      return openIn(file.fn);
+    return openIn(file.fn);
   }
 
   /// Open an output stream for a file in the package.
@@ -275,15 +333,16 @@ public:
   Packaged();
   virtual ~Packaged() {}
 
-  Version version;      ///< Version number of this package
-  Version compatible_version;  ///< Earliest version number this package is compatible with
-  String installer_group;    ///< Group to place this package in in the installer
-  String short_name;      ///< Short name of this package
-  String full_name;      ///< Name of this package, for menus etc.
-  String folder_name;      ///< Name of the folder this package is loaded from.
-  String icon_filename;    ///< Filename of icon to use in package lists
-  vector<PackageDependencyP> dependencies;  ///< Dependencies of this package
-  int    position_hint;    ///< A hint for the package list
+  Version version;                         ///< Version number of this package
+  Version compatible_version;              ///< Earliest version number this package is compatible with
+  String installer_group;                  ///< Group to place this package in in the installer
+  String short_name;                       ///< Short name of this package
+  String full_name;                        ///< Name of this package, for menus etc.
+  String folder_name;                      ///< Name of the folder this package is loaded from.
+  String icon_filename;                    ///< Filename of icon to use in package lists
+  String dark_icon_filename;               ///< Filename of icon to use in package lists, when a variant for dark mode is needed
+  vector<PackageDependencyP> dependencies; ///< Dependencies of this package
+  int    position_hint;                    ///< A hint for the package list
 
   /// Get an input stream for the package icon, if there is any
   unique_ptr<wxInputStream> openIconFile();
@@ -294,7 +353,7 @@ public:
   void open(const String& package, bool just_header = false);
   /// Ensure the package is fully loaded.
   void loadFully();
-  void save();
+  void save(bool remove_unused = true);
   void saveAs(const String& package, bool remove_unused = true, bool as_directory = false);
   void saveCopy(const String& package);
 

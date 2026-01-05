@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -34,7 +34,7 @@ struct Margins {
 // Helper class for TextElements::fromString, to allow persistent formating state accross recusive calls
 struct TextElementsFromString {
   // What formatting is enabled?
-  int bold = 0, italic = 0, underline = 0, symbol = 0;
+  int bold = 0, italic = 0, underline = 0, strikethrough = 0, symbol = 0;
   int soft = 0, kwpph = 0, param = 0, line = 0, soft_line = 0;
   int code = 0, code_kw = 0, code_string = 0, param_ref = 0;
   int param_id = 0, li = 0;
@@ -75,32 +75,34 @@ private:
         // a (formatting) tag
         size_t tag_start = pos;
         pos = skip_tag(text, tag_start);
-        if      (is_tag(text, tag_start, _( "<b")))          bold        += 1;
-        else if (is_tag(text, tag_start, _("</b")))          bold        -= 1;
-        else if (is_tag(text, tag_start, _( "<i")))          italic      += 1;
-        else if (is_tag(text, tag_start, _("</i")))          italic      -= 1;
-        else if (is_tag(text, tag_start, _("<u")))           underline   += 1;
-        else if (is_tag(text, tag_start, _("</u")))          underline   -= 1;
-        else if (is_tag(text, tag_start, _( "<sym")))        symbol      += 1;
-        else if (is_tag(text, tag_start, _("</sym")))        symbol      -= 1;
-        else if (is_tag(text, tag_start, _( "<line")))       line        += 1;
-        else if (is_tag(text, tag_start, _("</line")))       line        -= 1;
-        else if (is_tag(text, tag_start, _( "<soft-line")))  soft_line   += 1;
-        else if (is_tag(text, tag_start, _("</soft-line")))  soft_line   -= 1;
-        else if (is_tag(text, tag_start, _( "<sep-soft")))   soft        += 1;
-        else if (is_tag(text, tag_start, _("</sep-soft")))   soft        -= 1;
-        else if (is_tag(text, tag_start, _( "<soft")))       soft        += 1; // must be after <soft-line
-        else if (is_tag(text, tag_start, _("</soft")))       soft        -= 1;
-        else if (is_tag(text, tag_start, _( "<li")))         li          += 1;
-        else if (is_tag(text, tag_start, _("</li")))         li          -= 1;
-        else if (is_tag(text, tag_start, _( "<atom-kwpph"))) kwpph       += 1;
-        else if (is_tag(text, tag_start, _("</atom-kwpph"))) kwpph       -= 1;
-        else if (is_tag(text, tag_start, _( "<code-kw")))    code_kw     += 1;
-        else if (is_tag(text, tag_start, _("</code-kw")))    code_kw     -= 1;
-        else if (is_tag(text, tag_start, _( "<code-str")))   code_string += 1;
-        else if (is_tag(text, tag_start, _("</code-str")))   code_string -= 1;
-        else if (is_tag(text, tag_start, _( "<code")))       code        += 1;
-        else if (is_tag(text, tag_start, _("</code")))       code        -= 1;
+        if      (is_tag(text, tag_start, _( "<b")))          bold          += 1;
+        else if (is_tag(text, tag_start, _("</b")))          bold          -= 1;
+        else if (is_tag(text, tag_start, _( "<i")))          italic        += 1;
+        else if (is_tag(text, tag_start, _("</i")))          italic        -= 1;
+        else if (is_tag(text, tag_start, _( "<u")))          underline     += 1;
+        else if (is_tag(text, tag_start, _("</u")))          underline     -= 1;
+        else if (is_tag(text, tag_start, _( "<strike")))     strikethrough += 1;
+        else if (is_tag(text, tag_start, _("</strike")))     strikethrough -= 1;
+        else if (is_tag(text, tag_start, _( "<sym")))        symbol        += 1;
+        else if (is_tag(text, tag_start, _("</sym")))        symbol        -= 1;
+        else if (is_tag(text, tag_start, _( "<line")))       line          += 1;
+        else if (is_tag(text, tag_start, _("</line")))       line          -= 1;
+        else if (is_tag(text, tag_start, _( "<soft-line")))  soft_line     += 1;
+        else if (is_tag(text, tag_start, _("</soft-line")))  soft_line     -= 1;
+        else if (is_tag(text, tag_start, _( "<sep-soft")))   soft          += 1;
+        else if (is_tag(text, tag_start, _("</sep-soft")))   soft          -= 1;
+        else if (is_tag(text, tag_start, _( "<soft")))       soft          += 1; // must be after <soft-line
+        else if (is_tag(text, tag_start, _("</soft")))       soft          -= 1;
+        else if (is_tag(text, tag_start, _( "<li")))         li            += 1;
+        else if (is_tag(text, tag_start, _("</li")))         li            -= 1;
+        else if (is_tag(text, tag_start, _( "<atom-kwpph"))) kwpph         += 1;
+        else if (is_tag(text, tag_start, _("</atom-kwpph"))) kwpph         -= 1;
+        else if (is_tag(text, tag_start, _( "<code-kw")))    code_kw       += 1;
+        else if (is_tag(text, tag_start, _("</code-kw")))    code_kw       -= 1;
+        else if (is_tag(text, tag_start, _( "<code-str")))   code_string   += 1;
+        else if (is_tag(text, tag_start, _("</code-str")))   code_string   -= 1;
+        else if (is_tag(text, tag_start, _( "<code")))       code          += 1;
+        else if (is_tag(text, tag_start, _("</code")))       code          -= 1;
         else if (is_tag(text, tag_start, _( "<color"))) {
           size_t colon = text.find_first_of(_(">:"), tag_start);
           if (colon < pos - 1 && text.GetChar(colon) == _(':')) {
@@ -303,6 +305,7 @@ private:
       (code_kw     > 0 ? FONT_CODE_KW     : FONT_NORMAL) |
       (code_string > 0 ? FONT_CODE_STRING : FONT_NORMAL),
       underline > 0,
+      strikethrough > 0,
       fonts.empty() ? nullptr : &fonts.back(),
       param > 0 || param_ref > 0
         ? &param_colors[(param_id++) % param_colors_count]

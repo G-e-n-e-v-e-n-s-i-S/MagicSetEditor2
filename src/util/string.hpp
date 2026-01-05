@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -244,7 +244,7 @@ inline String uncanonical_name_form(String s) {
 }
 
 /// Convert a field name to canonical form, then to lower case, then trim it
-String unified_form(String&);
+String unified_form(String);
 
 /// Convert a field name to a string that can be shown to the user
 String name_to_caption(const String&);

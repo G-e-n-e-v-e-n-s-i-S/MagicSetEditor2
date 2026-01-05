@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -16,6 +16,7 @@
 #include <data/keyword.hpp>
 #include <util/io/package.hpp>
 #include <script/scriptable.hpp>
+#include <wx/filename.h>
 #include <wx/sstream.h>
 
 // ----------------------------------------------------------------------------- : Clipboard serialization
@@ -44,6 +45,7 @@ void deserialize_from_clipboard(T& object, Package& package, const String& data)
 struct WrappedCards {
   Game*         expected_game;
   String        game_name;
+  String        id;
   vector<CardP> cards;
   
   DECLARE_REFLECTION();
@@ -51,6 +53,7 @@ struct WrappedCards {
 
 IMPLEMENT_REFLECTION(WrappedCards) {
   REFLECT(game_name);
+  REFLECT(id);
   if (game_name == expected_game->name()) {
     WITH_DYNAMIC_ARG(game_for_reading, expected_game);
     REFLECT(cards);
@@ -60,7 +63,7 @@ IMPLEMENT_REFLECTION(WrappedCards) {
 
 wxDataFormat CardsDataObject::format = _("application/x-mse-cards");
 
-CardsDataObject::CardsDataObject(const SetP& set, const vector<CardP>& cards) {
+CardsDataObject::CardsDataObject(const SetP& set, const String id, const vector<CardP>& cards) {
   // set the stylesheet, so when deserializing we know whos style options we are reading
   vector<bool> has_styling;
   for (size_t i = 0 ; i < cards.size() ; ++i) {
@@ -69,7 +72,7 @@ CardsDataObject::CardsDataObject(const SetP& set, const vector<CardP>& cards) {
       cards[i]->stylesheet = set->stylesheet;
     }
   }
-  WrappedCards data = { set->game.get(), set->game->name(), cards };
+  WrappedCards data = { set->game.get(), set->game->name(), id, cards };
   SetText(serialize_for_clipboard(*set, data));
   // restore cards
   for (size_t i = 0 ; i < cards.size() ; ++i) {
@@ -84,10 +87,11 @@ CardsDataObject::CardsDataObject() {
   SetFormat(format);
 }
 
-bool CardsDataObject::getCards(const SetP& set, vector<CardP>& out) {
+bool CardsDataObject::getCards(const SetP& set, const String id, vector<CardP>& out) {
   WrappedCards data = { set->game.get(), set->game->name() };
   deserialize_from_clipboard(data, *set, GetText());
   if (data.cards.empty()) return false;
+  if (!id.empty() && data.id == id) return false;
   if (data.game_name == set->game->name()) {
     // Cards are from the same game
     out = data.cards;
@@ -139,14 +143,22 @@ KeywordP KeywordDataObject::getKeyword(const SetP& set) {
 
 // ----------------------------------------------------------------------------- : Card on clipboard
 
-CardsOnClipboard::CardsOnClipboard(const SetP& set, const vector<CardP>& cards) {
-  // Conversion to image format
+CardsOnClipboard::CardsOnClipboard(const SetP& set, const String id, const vector<CardP>& cards) {
+  // Conversion to image file
+  if (cards.size() < 6) {
+    Image img;
     if (cards.size() == 1) {
-      Add(new wxImageDataObject(export_image(set, cards[0])));
+      img = export_image(set, cards[0]);
     }
-    else if (cards.size() < 6) {
-      Add(new wxImageDataObject(export_image(set, cards, true, 0, 1.0, 0.0)));
+    else {
+      img = export_image(set, cards);
     }
+    String temp_path = wxFileName::CreateTempFileName(_("mse")) + _(".png");
+    img.SaveFile(temp_path, wxBITMAP_TYPE_PNG);
+    wxFileDataObject* data = new wxFileDataObject();
+    data->AddFile(temp_path);
+    Add(data);
+  }
   // Conversion to serialized card format
-    Add(new CardsDataObject(set, cards), true);
+  Add(new CardsDataObject(set, id, cards), true);
 }

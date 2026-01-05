@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -16,23 +16,24 @@ extern ScriptValueP script_primary_choice;
 // ----------------------------------------------------------------------------- : Statistics dimension
 
 StatsDimension::StatsDimension()
-  : automatic    (false)
-  , position_hint(0)
-  , numeric      (false)
-  , bin_size     (0)
-  , show_empty   (false)
-  , split_list   (false)
+  : automatic     (false)
+  , position_hint (0)
+  , numeric       (false)
+  , bin_size      (0)
+  , show_empty    (false)
+  , split_list    (false)
 {}
 
 StatsDimension::StatsDimension(const Field& field)
-  : automatic    (true)
-  , name         (field.name)
-  , description  (field.description)
-  , position_hint(field.position_hint)
-  , icon_filename(field.icon_filename)
-  , numeric      (false)
-  , show_empty   (false)
-  , split_list   (false)
+  : automatic          (true)
+  , name               (field.name)
+  , description        (field.description)
+  , position_hint      (field.position_hint)
+  , icon_filename      (field.icon_filename)
+  , dark_icon_filename (field.dark_icon_filename)
+  , numeric            (false)
+  , show_empty         (false)
+  , split_list         (false)
 {
   // choice field?
   const ChoiceField* choice_field = dynamic_cast<const ChoiceField*>(&field);
@@ -67,6 +68,7 @@ IMPLEMENT_REFLECTION_NO_GET_MEMBER(StatsDimension) {
     REFLECT_LOCALIZED(description);
     REFLECT(position_hint);
     REFLECT_N("icon", icon_filename);
+    REFLECT_N("dark_icon", dark_icon_filename);
     REFLECT(script);
     REFLECT(global_script);
     REFLECT(numeric);
@@ -81,19 +83,20 @@ IMPLEMENT_REFLECTION_NO_GET_MEMBER(StatsDimension) {
 // ----------------------------------------------------------------------------- : Statistics category
 
 StatsCategory::StatsCategory()
-  : automatic(false)
-  , position_hint(0)
-  , type(GRAPH_TYPE_BAR)
+  : automatic     (false)
+  , position_hint (0)
+  , type          (GRAPH_TYPE_BAR)
 {}
 
 StatsCategory::StatsCategory(const StatsDimensionP& dim)
-  : automatic(true)
-  , name         (dim->name)
-  , description  (dim->description)
-  , position_hint(dim->position_hint)
-  , icon_filename(dim->icon_filename)
-  , dimensions(1, dim)
-  , type(GRAPH_TYPE_BAR)
+  : automatic          (true)
+  , name               (dim->name)
+  , description        (dim->description)
+  , position_hint      (dim->position_hint)
+  , icon_filename      (dim->icon_filename)
+  , dark_icon_filename (dim->dark_icon_filename)
+  , dimensions         (1, dim)
+  , type               (GRAPH_TYPE_BAR)
 {}
 
 IMPLEMENT_REFLECTION_NO_GET_MEMBER(StatsCategory) {
@@ -102,6 +105,7 @@ IMPLEMENT_REFLECTION_NO_GET_MEMBER(StatsCategory) {
     REFLECT_LOCALIZED(description);
     REFLECT(position_hint);
     REFLECT_N("icon", icon_filename);
+    REFLECT_N("dark_icon", dark_icon_filename);
     REFLECT(type);
     REFLECT_N("dimensions", dimension_names);
   }

@@ -1,14 +1,14 @@
 Function: has_link
 
 --Usage--
-> has_link(card: card, "link type")
+> has_link(input: card, linked_relation: "link type")
 
 Inspects a given [[type:card]]'s links to find one of the given type.
 Returns true if such a link was found, false otherwise.
 
-Note that this function does not check if the linked card exists in the set. For that, use get_card_from_link.
+Note that this function does not check if the linked card exists in the set. For that, use get_cards_from_link.
 
 --Parameters--
 ! Parameter	Type				Description
-| @input@	[[type:string]]		The type of link we want to find.
-| @card@	[[type:card]]		The card whose links we'll inspect.
+| @input@	[[type:card]]		The card whose links we'll inspect.
+| @linked_relation@	[[type:string]]		The type of link we want to find.

@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -218,6 +218,7 @@ String to_html(const String& str_in, const SymbolFontP& symbol_font, double symb
   Tag bold  (_("<b>"), _("</b>")),
       italic(_("<i>"), _("</i>")),
       underline(_("<u>"), _("</u>")),
+      strikethrough(_("<s>"), _("</s>")),
       symbol(_("<span class=\"symbol\">"), _("</span>"));
   TagStack tags;
   String symbols;
@@ -237,6 +238,10 @@ String to_html(const String& str_in, const SymbolFontP& symbol_font, double symb
         tags.open(ret, underline);
       } else if (is_substr(str, i, _("/u"))) {
         tags.close(ret, underline);
+      } else if (is_substr(str, i, _("strike"))) {
+        tags.open(ret, strikethrough);
+      } else if (is_substr(str, i, _("/strike"))) {
+        tags.close(ret, strikethrough);
       } else if (is_substr(str, i, _("sym"))) {
         tags.open (ret, symbol);
       } else if (is_substr(str, i, _("/sym"))) {
@@ -312,8 +317,9 @@ String to_bbcode(const String& str_in) {
   String str = remove_tag_contents(str_in,_("<sep-soft"));
   String ret;
   Tag bold  (_("[b]"), _("[/b]")),
-        italic(_("[i]"), _("[/i]")),
-        underline(_("[u]"), _("[/u]"));
+      italic(_("[i]"), _("[/i]")),
+      underline(_("[u]"), _("[/u]")),
+      strikethrough(_("[s]"), _("[/s]"));
   TagStack tags;
   String symbols;
   for (size_t i = 0 ; i < str.size() ; ) {
@@ -332,6 +338,10 @@ String to_bbcode(const String& str_in) {
         tags.open(ret, underline);
       } else if (is_substr(str, i, _("/u"))) {
         tags.close(ret, underline);
+      } else if (is_substr(str, i, _("strike"))) {
+        tags.open(ret, strikethrough);
+      } else if (is_substr(str, i, _("/strike"))) {
+        tags.close(ret, strikethrough);
       }
       /*else if (is_substr(str, i, _("sym"))) {
         tags.open (ret, symbol);
@@ -428,22 +438,38 @@ SCRIPT_FUNCTION(write_image_file) {
     SCRIPT_RETURN(file); // already written an image with this name
   }
   // get image
+  Image img;
+  SCRIPT_PARAM(Set*, set);
   SCRIPT_PARAM_C(ScriptValueP, input);
-  SCRIPT_OPTIONAL_PARAM_(int, width);
-  SCRIPT_OPTIONAL_PARAM_(int, height);
-  ScriptObject<CardP>* card = dynamic_cast<ScriptObject<CardP>*>(input.get()); // is it a card?
-  Image image;
-  GeneratedImage::Options options(width, height, ei.export_template.get(), ei.set.get());
+  ScriptObject<CardP>* card = dynamic_cast<ScriptObject<CardP>*>(input.get()); // is the input a card or image?
   if (card) {
-    image = conform_image(export_image(ei.set, card->getValue()), options);
+    SCRIPT_PARAM_DEFAULT(double, zoom, 100.0);
+    SCRIPT_PARAM_DEFAULT(Degrees, angle, 0.0);
+    SCRIPT_PARAM_DEFAULT(double, bleed, 0.0);
+    SCRIPT_PARAM_DEFAULT(bool, use_user_settings, false);
+    if (use_user_settings) {
+      // Use the User's Preferences for Export Zoom, Angle and Bleed settings.
+      Settings::ExportSettings card_settings = settings.exportSettingsFor(set->stylesheetFor(card->getValue()));
+      zoom =  card_settings.zoom;
+      angle = card_settings.angle_radians;
+      bleed = card_settings.bleed_pixels;
+    } else {
+      // Use the provided (or defaulted) Zoom, Angle and Bleed.
+      zoom = zoom / 100.0;
+      angle = deg_to_rad(angle);
+    }
+    img = export_image(set, card->getValue(), true, zoom, angle, bleed);
   } else {
-    image = input->toImage()->generateConform(options);
+    SCRIPT_OPTIONAL_PARAM_(int, width)
+    SCRIPT_OPTIONAL_PARAM_(int, height)
+    GeneratedImage::Options options(width, height, ei.export_template.get(), ei.set.get());
+    img = input->toImage()->generateConform(options);
   }
-  if (!image.Ok()) throw Error(_("Unable to generate image for file ") + file);
+  if (!img.Ok()) throw Error(_("Unable to generate image for file ") + file);
   // write
   ensure_dir_valid(out_path);
-  image.SaveFile(out_path);
-  ei.exported_images.insert(make_pair(file, wxSize(image.GetWidth(), image.GetHeight())));
+  img.SaveFile(out_path);
+  ei.exported_images.insert(make_pair(file, wxSize(img.GetWidth(), img.GetHeight())));
   SCRIPT_RETURN(file);
 }
 

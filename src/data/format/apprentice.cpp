@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -616,7 +616,7 @@ ApprenticeExportWindow::ApprenticeExportWindow(Window* parent, const SetP& set)
   , set(set)
   , step_begin(0), step_end(0)
 {
-  if (!set->game->isMagic()) throw Error(_("Can only export Magic sets to Apprentice"));
+  if (!set->game->isMagic()) throw Error(_("Can only export magic sets to Apprentice"));
   
   // create controls
   apprentice = new wxTextCtrl(this, wxID_ANY);

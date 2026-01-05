@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -116,6 +116,11 @@ enum ChildMenuID {
   ID_CARD_ADD_JSON,
   ID_CARD_ADD_JSON_ARRAY,
   ID_CARD_ADD_JSON_BROWSE,
+  ID_CARD_BULK,
+  ID_CARD_BULK_TYPE,
+  ID_CARD_BULK_FIELD,
+  ID_CARD_BULK_MODIFICATION,
+  ID_CARD_BULK_PREDICATE,
 
   // Keyword menu
   ID_KEYWORD_ADD = 6101,
@@ -128,6 +133,7 @@ enum ChildMenuID {
   ID_FORMAT_BOLD = 6201,
   ID_FORMAT_ITALIC,
   ID_FORMAT_UNDERLINE,
+  ID_FORMAT_STRIKETHROUGH,
   ID_FORMAT_SYMBOL,
   ID_FORMAT_REMINDER,
   ID_INSERT_SYMBOL,
@@ -305,7 +311,7 @@ enum ControlID {
   ID_SHARPEN,
   ID_SHARPEN_AMOUNT,
   // Internal window
-  ID_INTERNAL_SCALE,
+  ID_IMPORT_ZOOM,
   // Updates window
   ID_PACKAGE_LIST,
   ID_KEEP,

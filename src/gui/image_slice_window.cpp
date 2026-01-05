@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -71,13 +71,12 @@ void ImageSlice::centerSelectionVertically() {
   }
 }
 
-Image ImageSlice::getSlice(double scale) const {
-  wxSize scaled_target_size = target_size * scale;
-  if (selection.width == scaled_target_size.GetWidth() && selection.height == scaled_target_size.GetHeight() && selection.x == 0 && selection.y == 0) {
+Image ImageSlice::getSlice() const {
+  if (selection.width == target_size.GetWidth() && selection.height == target_size.GetHeight() && selection.x == 0 && selection.y == 0) {
     // exactly the right size
     return source.GetSubImage(selection);
   }
-  Image target(scaled_target_size.GetWidth(), scaled_target_size.GetHeight(), false);
+  Image target(target_size.GetWidth(), target_size.GetHeight(), false);
   if (sharpen && sharpen_amount > 0 && sharpen_amount <= 100) {
     sharp_resample_and_clip(source, target, selection, sharpen_amount);
   } else {
@@ -104,7 +103,6 @@ ImageSliceWindow::ImageSliceWindow(Window* parent, const Image& source, const St
   // init slice
   pair<String, String> settings_entry = { filename, cardname };
   if (previously_used_settings_value.find(settings_entry) != previously_used_settings_value.end()) {
-    //slice.allow_outside = true; this currrently crashes
     slice.aspect_fixed = false;
     slice.sharpen = true;
     slice.sharpen_amount = previously_used_settings_value[settings_entry].second;
@@ -242,8 +240,8 @@ void ImageSliceWindow::onOk(wxCommandEvent&) {
   EndModal(wxID_OK);
 }
 
-Image ImageSliceWindow::getImage(double scale) const {
-  Image img = slice.getSlice(scale);
+Image ImageSliceWindow::getImage() const {
+  Image img = slice.getSlice();
   previously_used_settings_path[slice.card_name] = slice.source_path;
   previously_used_settings_value[{ slice.source_path, slice.card_name }] = { slice.selection, slice.sharpen_amount };
   return img;
@@ -458,7 +456,7 @@ void ImageSlicePreview::update() {
 }
 
 wxSize ImageSlicePreview::getBestSliceSize() const {
-  float target_ratio = ((float)slice.target_size.GetWidth()) / ((float)slice.target_size.GetHeight());
+  double target_ratio = ((double)slice.target_size.GetWidth()) / ((double)slice.target_size.GetHeight());
   if (target_ratio > 1.0) {
     return wxSize(500, 500 / target_ratio);
   } else {
@@ -485,10 +483,11 @@ void ImageSlicePreview::draw(DC& dc) {
     mask.setAlpha(image);
     if (image.HasAlpha()) {
       // create bitmap
-      bitmap = Bitmap(image.GetWidth(), image.GetHeight());
+      int width = image.GetWidth(), height = image.GetHeight();
+      bitmap = Bitmap(width, height);
       wxMemoryDC mdc; mdc.SelectObject(bitmap);
       // draw checker pattern behind image
-      RealRect rect = (RealRect) GetClientSize();
+      RealRect rect = RealRect(0, 0, width, height);
       RotatedDC rdc(mdc, 0, rect, 1, QUALITY_LOW);
       draw_checker(rdc, rect);
       rdc.DrawImage(image, RealPoint(0,0));
@@ -587,7 +586,6 @@ ImageSliceSelector::ImageSliceSelector(Window* parent, int id, ImageSlice& slice
   , slice(slice)
   , mouse_down(false)
 {
-  
   float target_ratio = ((float) slice.source.GetWidth()) / ((float) slice.source.GetHeight());
   if (target_ratio > 1.0) {
     SetMinSize(wxSize(500, 500 / target_ratio));

@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -73,7 +73,7 @@ struct FakeEvtHandlerClass : public wxEvtHandler {
     ev.Skip();
   }
   void onControlLeave(wxMouseEvent& ev) {
-    set_status_text((wxWindow*)ev.GetEventObject(), wxEmptyString);
+    set_status_text((wxWindow*)ev.GetEventObject(), _(""));
     ev.Skip();
   }
 };

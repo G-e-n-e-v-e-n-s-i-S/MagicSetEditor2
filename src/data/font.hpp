@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -38,6 +38,7 @@ public:
   Scriptable<double> size;                 ///< Size of the font
   Scriptable<String> weight, style;        ///< Weight and style of the font (bold/italic)
   Scriptable<bool>   underline;            ///< Underlined?
+  Scriptable<bool>   strikethrough;        ///< Struck through?
   double             scale_down_to;        ///< Smallest size to scale down to
   double             max_stretch;          ///< How much should the font be stretched before scaling down?
   Scriptable<Color>  color;                ///< Color to use
@@ -67,7 +68,7 @@ public:
   }
   
   /// Add style to a font, and optionally change the font family, color and size
-  FontP make(int add_flags, bool add_underline, String const* other_family, Color const* other_color, double const* other_size) const;
+  FontP make(int add_flags, bool add_underline, bool add_strikethrough, String const* other_family, Color const* other_color, double const* other_size) const;
   
   /// Convert this font to a wxFont
   wxFont toWxFont(double scale) const;

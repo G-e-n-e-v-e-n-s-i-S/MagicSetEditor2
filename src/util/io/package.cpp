@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -189,7 +189,7 @@ public:
 
 // ----------------------------------------------------------------------------- : Package : inside
 
-bool Package::existsIn(const String& file) {
+bool Package::contains(const String& file) {
   FileInfos::iterator it = files.find(normalize_internal_filename(file));
   if (it == files.end()) {
     // does it look like a relative filename?
@@ -227,8 +227,16 @@ unique_ptr<wxInputStream> Package::openIn(const String& file) {
   FileInfos::iterator it = files.find(normalize_internal_filename(file));
   if (it == files.end()) {
     // does it look like a relative filename?
-    if (filename.find(_(".mse-")) != String::npos) {
-      throw PackageError(_ERROR_2_("file not found package like", file, filename));
+    if (size_t pos = filename.find(_(".mse-")) != String::npos) {
+      // check for nested folder
+      pos = filename.find_last_of(_("/\\"));
+      String nestedFilename = filename + filename.SubString(pos, filename.size()) + wxFileName::GetPathSeparator() + file;
+      if (wxFileExists(nestedFilename)) {
+        throw PackageError(_ERROR_1_("nested folder", filename));
+      }
+      else {
+        throw PackageError(_ERROR_2_("file not found package like", file, filename));
+      }
     }
   }
   unique_ptr<wxInputStream> stream;
@@ -272,11 +280,6 @@ String Package::nameOut(const String& file) {
   } else {
     // create temp file
     String name = wxFileName::CreateTempFileName(_("mse"));
-    String rect = LocalFileName::getRect(file);
-    if (!rect.empty()) {
-      if (name.Contains(".")) name = name.BeforeLast('.') + rect + _(".") + name.AfterLast('.');
-      else name = name + rect;
-    }
     it->second.tempName = name;
     return name;
   }
@@ -366,7 +369,7 @@ LocalFileName LocalFileName::fromReadString(String const& fn, String const& pref
   if (!fn.empty() && clipboard_package()) {
     // copy file into current package
     try {
-      LocalFileName local_name = clipboard_package()->newFileName(_("image"), getRect(fn)); // a new unique name in the package, assume it's an image
+      LocalFileName local_name = clipboard_package()->newFileName(_("image"), _("")); // a new unique name in the package, assume it's an image
       auto out_stream = clipboard_package()->openOut(local_name);
       auto in_stream  = Package::openAbsoluteFile(fn);
       out_stream->Write(*in_stream); // copy
@@ -403,7 +406,7 @@ void Package::loadZipStream() {
 }
 
 void Package::openDirectory(bool fast) {
-  if (!fast) openSubdir(wxEmptyString);
+  if (!fast) openSubdir(_(""));
 }
 
 void Package::openSubdir(const String& name) {
@@ -411,7 +414,7 @@ void Package::openSubdir(const String& name) {
   if (!d.IsOpened()) return; // ignore errors here
   // find files
   String f; // filename
-  for(bool ok = d.GetFirst(&f, wxEmptyString, wxDIR_FILES | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
+  for(bool ok = d.GetFirst(&f, _(""), wxDIR_FILES | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
     if (ignore_file(f)) continue;
     // add file to list of known files
     addFile(name + f);
@@ -420,7 +423,7 @@ void Package::openSubdir(const String& name) {
     modified = max(modified,file_time);
   }
   // find subdirs
-  for(bool ok = d.GetFirst(&f, wxEmptyString, wxDIR_DIRS | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
+  for(bool ok = d.GetFirst(&f, _(""), wxDIR_DIRS | wxDIR_HIDDEN) ; ok ; ok = d.GetNext(&f)) {
     if (!f.empty() && f.GetChar(0) != _('.')) {
       // skip directories starting with '.', like ., .. and .svn
       openSubdir(name+f+_("/"));
@@ -577,6 +580,7 @@ IMPLEMENT_REFLECTION(Packaged) {
   REFLECT(full_name);
   REFLECT(folder_name);
   REFLECT_N("icon", icon_filename);
+  REFLECT_N("dark_icon", dark_icon_filename);
   REFLECT_NO_SCRIPT(position_hint);
   REFLECT(installer_group);
   REFLECT(version);
@@ -590,8 +594,17 @@ Packaged::Packaged()
 {}
 
 unique_ptr<wxInputStream> Packaged::openIconFile() {
-  if (!icon_filename.empty()) {
-    return openIn(icon_filename);
+  String filename = icon_filename;
+  if (!dark_icon_filename.empty()) {
+    if (settings.darkMode()) {
+      wxFileName fn (dark_icon_filename);
+      String extension = fn.GetExt();
+      filename = dark_icon_filename.Replace(extension, _("")) + "_dark" + extension;
+    }
+    else filename = dark_icon_filename;
+  }
+  if (!filename.empty()) {
+    return openIn(filename);
   } else {
     return unique_ptr<wxInputStream>();
   }
@@ -637,11 +650,11 @@ void Packaged::loadFully() {
   }
 }
 
-void Packaged::save() {
+void Packaged::save(bool remove_unused) {
   WITH_DYNAMIC_ARG(writing_package, this);
   writeFile(typeName(), *this, fileVersion());
   referenceFile(typeName());
-  Package::save();
+  Package::save(remove_unused);
 }
 void Packaged::saveAs(const String& package, bool remove_unused, bool as_directory) {
   WITH_DYNAMIC_ARG(writing_package, this);

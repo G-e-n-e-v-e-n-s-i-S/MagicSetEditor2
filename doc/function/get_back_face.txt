@@ -1,0 +1,12 @@
+Function: get_back_face
+
+--Usage--
+> get_back_face(input: card)
+
+Inspects a given [[type:card]]'s links to find one of type "Back Face", and returns the linked card.
+Returns nil if no link of type "Back Face", or no card was found.
+
+--Parameters--
+! Parameter	Type				Description
+| @input@	[[type:card]]		The card whose links we'll inspect.
+| @set@		[[type:set]]		The set in which to look. This can be omited since 'set' is a predefined variable.

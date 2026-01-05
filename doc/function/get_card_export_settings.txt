@@ -1,0 +1,13 @@
+Function: get_card_export_settings
+
+--Usage--
+> get_card_export_settings(card)
+
+Get the zoom, angle and bleed with which a card is to be exported, as specified by the user in the preferences menu.
+
+Returns and array whose first element is the zoom percentage, the second is the angle in degrees, and the third is the bleed edge size in pixels.
+
+--Parameters--
+! Parameter	Type					Description
+| @input@	[[type:card]]		The card you want to retrieve the export settings from.
+| @set@		[[type:set]]		The set the card belongs to. This can be omited since "set" is a predefined variable.

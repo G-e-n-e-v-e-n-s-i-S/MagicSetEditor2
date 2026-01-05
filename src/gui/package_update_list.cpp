@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -159,13 +159,13 @@ public:
   PackageIconRequest(PackageUpdateList* list, PackageUpdateList::TreeItem* ti)
     : ThumbnailRequest(
       list,
-      _("package_") + ti->package->description->icon_url + _("_") + ti->package->description->version.toString(),
+      _("package_") + (settings.darkMode() && !ti->package->description->dark_icon_url.empty() ? ti->package->description->dark_icon_url : ti->package->description->icon_url) + _("_") + ti->package->description->version.toString(),
       wxDateTime(1,wxDateTime::Jan,2000))
     , list(list), ti(ti)
   {}
   
   Image generate() override {
-    wxURL url(ti->package->description->icon_url);
+    wxURL url(settings.darkMode() && !ti->package->description->dark_icon_url.empty() ? ti->package->description->dark_icon_url : ti->package->description->icon_url);
     unique_ptr<wxInputStream> isP(url.GetInputStream());
     if (!isP) return wxImage();
     SeekAtStartInputStream is2(*isP);
@@ -220,7 +220,8 @@ void PackageUpdateList::initItems() {
       ti.setIcon(p->description->icon);
     } else if (p) {                       // it doesn't have an icon (yet)
       ti.setIcon(load_resource_image(_("installer_package")));
-      if (!p->description->icon_url.empty()) {
+      String icon_url = settings.darkMode() && !p->description->dark_icon_url.empty() ? p->description->dark_icon_url : p->description->icon_url;
+      if (!icon_url.empty()) {
         // download icon
         thumbnail_thread.request(make_intrusive<PackageIconRequest>(this,&ti));
       }

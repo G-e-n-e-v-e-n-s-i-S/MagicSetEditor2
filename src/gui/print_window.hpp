@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -29,12 +29,12 @@ public:
 
     threshold_top = 0.75 * default_size_mm.width;
     threshold_bottom = 0.1;
-    threshold_size = RealSize(0.05 * default_size_mm.width, 0.05 * default_size_mm.height);
+    threshold_size = RealSize(0.03 * default_size_mm.width, 0.03 * default_size_mm.height);
   }
   
   SetP set;
   vector<CardP> cards;      ///< Cards selected by the user for print
-  RealSize default_size_mm; ///< Size of a card with the default stylesheet in millimetres
+  RealSize default_size_mm; ///< Size of a card with the default stylesheet in millimetres, without bleed
 
   // align cards that are at most this far appart in millimeters
   double threshold_top;
@@ -44,10 +44,8 @@ public:
   RealSize threshold_size;
 
   struct CardLayout {
-    CardLayout(const CardP& card, const RealSize& size_mm, const RealSize& size_px, Radians rot)
-    : card(card), size_mm(size_mm), size_px(size_px), rot(rot) {
-      px_per_mm = RealSize(size_px.width / size_mm.width, size_px.height / size_mm.height);
-    }
+    CardLayout(const CardP& card, const RealSize& size_mm, const RealSize& size_px, double bleed_size_px, Radians rotation)
+    : card(card), size_mm(size_mm), size_px(size_px), bleed_size_px(bleed_size_px), rot(rotation), other_face(-1) {}
 
     bool operator<(const CardLayout& that) const {
       return size_mm.width > that.size_mm.width; // put the widest cards first
@@ -56,15 +54,17 @@ public:
     CardP card;
     RealSize size_mm;
     RealSize size_px;
-    RealSize px_per_mm;
+    double bleed_size_px;
     Radians rot;
     RealSize pos;
+    int other_face;
   };
 
   void init(const RealSize& page_size);
 
   RealSize page_size;                      ///< Size of a page in millimetres
   vector<CardLayout> card_layouts;         ///< Locations of the cards on the pages
+  vector<CardLayout> sorted_layouts;       ///< Same as card_layouts, but sorted from widest to narrowest
   vector<vector<CardLayout>> page_layouts; ///< The CardLayout grouped by page
   vector<RealSize> page_margins;           ///< The empty space on the sides of the pages
 
@@ -74,6 +74,7 @@ public:
 private:
   // calculate the width and height of each card in millimeters
   void measure_cards();
+  CardLayout measure_card(const CardP& card);
   // calculate where the cards go on the pages
   void layout_cards();
   // if two cards are almost aligned, align them

@@ -1,0 +1,13 @@
+Function: download_image
+
+--Usage--
+> download_image(image_url)
+
+Load an image from the internet.
+
+--Parameters--
+! Parameter	Type			Description
+| @input@	[[type:string]]		URL of the image to load
+
+--Examples--
+> new_card([image: download_image("https://cards.scryfall.io/art_crop/front/c/6/c634273a-94b0-4104-9d10-ae522ece1fc7.jpg?1755341328"), name: "Adagia, Windswept Bastion"])

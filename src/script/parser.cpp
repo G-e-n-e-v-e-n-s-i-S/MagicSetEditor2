@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -44,7 +44,7 @@ struct Token {
   String    value;
   bool      newline; ///< Is there a newline between this token and the previous one?
   String::const_iterator pos; ///< Start position of the token
-  
+
   inline bool operator == (TokenType     t) const { return type  == t; }
   inline bool operator != (TokenType     t) const { return type  != t; }
   inline bool operator == (const String& s) const { return type != TOK_STRING && value == s; }
@@ -53,7 +53,7 @@ struct Token {
   inline bool operator != (const Char*   s) const { return type == TOK_STRING || value != s; }
 };
 
-enum OpenBrace 
+enum OpenBrace
 {  BRACE_STRING    // "
 ,  BRACE_STRING_MODE  // fake brace for string mode
 ,  BRACE_PAREN      // (, [, {
@@ -64,7 +64,7 @@ enum OpenBrace
 class TokenIterator {
 public:
   TokenIterator(const String& str, Packaged* package, bool string_mode, String const& filename, vector<ScriptParseError>& errors);
-  
+
   /// Peek at the next token, doesn't move to the one after that
   /** Can peek further forward by using higher values of offset.
    *  offset=0 returns the last token that was read, or newline if putBack() was used.
@@ -76,10 +76,10 @@ public:
   /** Only one token can be correctly put back, the put back token will read as a newline.
    */
   void putBack();
-  
+
   /// Get the current line number
   int getLineNumber();
-  
+
 private:
   String::const_iterator pos;
   const String::const_iterator begin, end;
@@ -87,14 +87,14 @@ private:
   vector<Token>    buffer; ///< buffer of unread tokens, front() = current
   stack<OpenBrace> open_braces; ///< braces/quotes we entered from script mode
   bool             newline; ///< Did we just pass a newline?
-  
+
   /// Add a token to the buffer, with the current newline value, resets newline
   void addToken(TokenType type, const String& value, String::const_iterator start);
   /// Read the next token, and add it to the buffer
   void readToken();
   /// Read the next token, which is a string
   void readStringToken(bool string_mode = false);
-  
+
 public:
   Packaged* package; ///< Package the input is from
   /// All errors found
@@ -186,7 +186,7 @@ void TokenIterator::readToken() {
     pos += 23; // "include localized file:"
     const char* newlines = "\r\n";
     auto eol = find_first_of(pos, end, newlines, newlines + 2);
-    String include_file = trim(StringView(pos, eol)) + _("_") + settings.locale;
+    String include_file = String(trim(StringView(pos, eol))) + _("_") + settings.locale;
     // include_file("filename_en")
     addToken(TOK_NAME, "include_file", pos - 23);
     addToken(TOK_LPAREN, "(", pos);
@@ -197,7 +197,7 @@ void TokenIterator::readToken() {
     pos += 18; // "include dark file:"
     const char* newlines = "\r\n";
     auto eol = find_first_of(pos, end, newlines, newlines + 2);
-    String include_file = trim(StringView(pos, eol)) + (settings.darkMode() ? _("_dark") : _(""));
+    String include_file = String(trim(StringView(pos, eol))) + (settings.darkMode() ? _("_dark") : _(""));
     // include_file("filename_dark")
     addToken(TOK_NAME, "include_file", pos - 18);
     addToken(TOK_LPAREN, "(", pos);
@@ -398,9 +398,9 @@ enum ExprType
 /** @param input    Read tokens from the input
  *  @param scrip    Add resulting instructions to the script
  *  @param min_prec Minimum precedence level for operators
- *  
+ *
  *  @returns the type of expression
- *  
+ *
  *  NOTE: The net stack effect of an expression should be +1
  */
 ExprType parseExpr(TokenIterator& input, Script& script, Precedence min_prec);
@@ -767,7 +767,7 @@ ExprType parseOper(TokenIterator& input, Script& script, Precedence minPrec, Ins
         return EXPR_FAILED;
       }
       script.getInstructions().pop_back();
-      if(token==_("->")) {	  
+      if(token==_("->")) {
         type = parseOper(input, script, PREC_SET,  I_SET_GLB, instr.data);
       } else {
         type = parseOper(input, script, PREC_SET,  I_SET_VAR, instr.data);

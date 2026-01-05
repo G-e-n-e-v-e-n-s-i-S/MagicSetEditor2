@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -88,17 +88,11 @@ FileFormatP mtg_editor_file_format();
 
 // ----------------------------------------------------------------------------- : Other ways to export
 
-/// Generate a wxBitmap of one or more cards
-Bitmap export_bitmap(const SetP& set, const CardP& card);
-Bitmap export_bitmap(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians = 0.0);
-Bitmap export_bitmap(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians = 0.0);
-
 /// Generate a wxImage of one or more cards
-Image export_image(const SetP& set, const CardP& card);
-Image export_image(const SetP& set, const CardP& card, const double zoom, const Radians angle_radians = 0.0);
-Image export_image(const SetP& set, const vector<CardP>& cards, bool scale_to_lowest_dpi, int padding, const double zoom, const Radians angle_radians = 0.0);
+Image export_image(const SetP& set, const CardP& card, const bool write_metadata = true, const double zoom = 1.0, const Radians angle_radians = 0.0, const double bleed_pixels = 0.0);
+Image export_image(const SetP& set, const vector<CardP>& cards, const int padding = 2, const double global_zoom = 1.0, const bool use_zoom_setting = true, const bool use_rotation_setting = true, const bool use_bleed_setting = false);
 
-/// Export the image of one or more cards to a given filename
+/// Export the image of one or more cards to a given filename, using the app's zoom, rotation and bleed settings, and including metadata
 void export_image(const SetP& set, const CardP& card, const String& filename);
 void export_image(const SetP& set, const vector<CardP>& cards, const String& path, const String& filename_template, FilenameConflicts conflicts);
 

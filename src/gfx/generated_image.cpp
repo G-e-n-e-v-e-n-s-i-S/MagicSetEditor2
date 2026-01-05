@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -10,10 +10,12 @@
 #include <gfx/generated_image.hpp>
 #include <util/io/package.hpp>
 #include <util/error.hpp>
+#include <data/set.hpp>
 #include <data/symbol.hpp>
 #include <data/field/symbol.hpp>
 #include <render/symbol/filter.hpp>
 #include <gui/util.hpp> // load_resource_image
+#include <gui/web_request_window.hpp>
 #include <wx/wfstream.h>
 
 // ----------------------------------------------------------------------------- : GeneratedImage
@@ -24,7 +26,7 @@ GeneratedImageP GeneratedImage::toImage() const {
   return const_cast<GeneratedImage*>(this)->intrusive_from_this();
 }
 
-Image GeneratedImage::generateConform(const Options& options) const {
+Image GeneratedImage::generateConform(const Options& options) {
   return conform_image(generate(options),options);
 }
 
@@ -34,7 +36,7 @@ Image conform_image(const Image& img, const GeneratedImage::Options& options) {
   int iw = image.GetWidth(), ih = image.GetHeight();
   if ((iw == options.width && ih == options.height) || (options.width == 0 && options.height == 0)) {
     // zoom?
-    if (options.zoom != 1.0) {
+    if (!almost_equal(options.zoom, 1.0)) {
       image = resample(image, int(iw * options.zoom), int(ih * options.zoom));
     } else {
       // already the right size
@@ -73,7 +75,7 @@ Image conform_image(const Image& img, const GeneratedImage::Options& options) {
   options.width  = image.GetWidth();
   options.height = image.GetHeight();
   // rotate?
-  if (options.angle != 0) {
+  if (!almost_equal(options.angle, 0)) {
     image = rotate_image(image, options.angle);
   }
   return image;
@@ -81,7 +83,7 @@ Image conform_image(const Image& img, const GeneratedImage::Options& options) {
 
 // ----------------------------------------------------------------------------- : BlankImage
 
-Image BlankImage::generate(const Options& opt) const {
+Image BlankImage::generate(const Options& opt) {
   int w = max(1, opt.width >= 0  ? opt.width  : opt.height);
   int h = max(1, opt.height >= 0 ? opt.height : opt.width);
   Image img(w, h);
@@ -97,7 +99,7 @@ bool BlankImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : LinearBlendImage
 
-Image LinearBlendImage::generate(const Options& opt) const {
+Image LinearBlendImage::generate(const Options& opt) {
   Image img = image1->generate(opt);
   linear_blend(img, image2->generate(opt), x1, y1, x2, y2);
   return img;
@@ -115,7 +117,7 @@ bool LinearBlendImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : MaskedBlendImage
 
-Image MaskedBlendImage::generate(const Options& opt) const {
+Image MaskedBlendImage::generate(const Options& opt) {
   Image img = light->generate(opt);
   mask_blend(img, dark->generate(opt), mask->generate(opt));
   return img;
@@ -132,7 +134,7 @@ bool MaskedBlendImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : CombineBlendImage
 
-Image CombineBlendImage::generate(const Options& opt) const {
+Image CombineBlendImage::generate(const Options& opt) {
   Image img = image1->generate(opt);
   combine_image(img, image2->generate(opt), image_combine);
   return img;
@@ -149,7 +151,7 @@ bool CombineBlendImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : SetMaskImage
 
-Image SetMaskImage::generate(const Options& opt) const {
+Image SetMaskImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   set_alpha(img, mask->generate(opt));
   return img;
@@ -160,7 +162,7 @@ bool SetMaskImage::operator == (const GeneratedImage& that) const {
                && *mask  == *that2->mask;
 }
 
-Image SetAlphaImage::generate(const Options& opt) const {
+Image SetAlphaImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   set_alpha(img, alpha);
   return img;
@@ -173,7 +175,7 @@ bool SetAlphaImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : SetCombineImage
 
-Image SetCombineImage::generate(const Options& opt) const {
+Image SetCombineImage::generate(const Options& opt) {
   return image->generate(opt);
 }
 ImageCombine SetCombineImage::combine() const {
@@ -187,7 +189,7 @@ bool SetCombineImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : SaturateImage
 
-Image SaturateImage::generate(const Options& opt) const {
+Image SaturateImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   saturate(img, amount);
   return img;
@@ -200,7 +202,7 @@ bool SaturateImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : InvertImage
 
-Image InvertImage::generate(const Options& opt) const {
+Image InvertImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   invert(img);
   return img;
@@ -212,7 +214,7 @@ bool InvertImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : RecolorImage
 
-Image RecolorImage::generate(const Options& opt) const {
+Image RecolorImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   recolor(img, color);
   return img;
@@ -223,7 +225,7 @@ bool RecolorImage::operator == (const GeneratedImage& that) const {
                && color == that2->color;
 }
 
-Image RecolorImage2::generate(const Options& opt) const {
+Image RecolorImage2::generate(const Options& opt) {
   Image img = image->generate(opt);
   recolor(img, red,green,blue,white);
   return img;
@@ -239,7 +241,7 @@ bool RecolorImage2::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : FlipImage
 
-Image FlipImageHorizontal::generate(const Options& opt) const {
+Image FlipImageHorizontal::generate(const Options& opt) {
   Image img = image->generate(opt);
   return flip_image_horizontal(img);
 }
@@ -248,7 +250,7 @@ bool FlipImageHorizontal::operator == (const GeneratedImage& that) const {
   return that2 && *image == *that2->image;
 }
 
-Image FlipImageVertical::generate(const Options& opt) const {
+Image FlipImageVertical::generate(const Options& opt) {
   Image img = image->generate(opt);
   return flip_image_vertical(img);
 }
@@ -257,7 +259,7 @@ bool FlipImageVertical::operator == (const GeneratedImage& that) const {
   return that2 && *image == *that2->image;
 }
 
-Image RotateImage::generate(const Options& opt) const {
+Image RotateImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   return rotate_image(img,angle);
 }
@@ -269,7 +271,7 @@ bool RotateImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : EnlargeImage
 
-Image EnlargeImage::generate(const Options& opt) const {
+Image EnlargeImage::generate(const Options& opt) {
   // generate 'sub' image
   Options sub_opt
     ( int(opt.width  * (border_size < 0.5 ? 1 - 2 * border_size : 0))
@@ -307,7 +309,7 @@ bool EnlargeImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : ResizeImage
 
-Image ResizeImage::generate(const Options& opt) const {
+Image ResizeImage::generate(const Options& opt) {
   Image img = image->generate(opt);
   return resample(img, width, height);
 }
@@ -320,17 +322,19 @@ bool ResizeImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : BleedEdgedImage
 
-Image BleedEdgedImage::generate(const Options& opt) const {
+Image BleedEdgedImage::generate(const Options& opt) {
   // create enlarged image
   Image base_img = base_image->generate(opt);
   int w = base_img.GetWidth(), h = base_img.GetHeight();
-  if (w <= 0 || h <= 0) {
-    queue_message(MESSAGE_ERROR, _("Cannot add bleed edge to empty image"));
+  if (w <= 3 || h <= 3) {
+    queue_message(MESSAGE_ERROR, _("Image too small to add bleed edge"));
     return base_img;
   }
   bool is_landscape = w > h;
   int dw = int(w * (horizontal_size > 0.0 ? horizontal_size : is_landscape ? 0.037 : 0.048));
-  int dh = int(h * (vertical_size > 0.0 ? vertical_size : is_landscape ? 0.048 : 0.037));
+  int dh = int(h * (vertical_size   > 0.0 ? vertical_size   : is_landscape ? 0.048 : 0.037));
+  dw = min(w-1, max(0, dw));
+  dh = min(h-1, max(0, dh));
   if (dw <= 0 && dh <= 0) {
     return base_img;
   }
@@ -338,120 +342,76 @@ Image BleedEdgedImage::generate(const Options& opt) const {
   UInt size = width * height;
   Image img = wxImage(width, height, false);
   img.InitAlpha();
-  Byte* data = img.GetData();
+  Byte* pixels = img.GetData();
   Byte* alpha = img.GetAlpha();
   // fill with background color
   for (UInt i = 0; i < size; ++i) {
-    data[3 * i + 0] = background_color.Red();
-    data[3 * i + 1] = background_color.Green();
-    data[3 * i + 2] = background_color.Blue();
+    pixels[3 * i + 0] = background_color.Red();
+    pixels[3 * i + 1] = background_color.Green();
+    pixels[3 * i + 2] = background_color.Blue();
     alpha[i] = background_color.Alpha();
   }
   // paste original image
   img.Paste(base_img, dw, dh, wxIMAGE_ALPHA_BLEND_COMPOSE);
-  // fill top left corner
-  int pixel;
-  int x_start = 0;
-  int y_start = 0;
-  int ref = dw + dh * width;
-  for (int y = 0; y < dh; ++y) {
-    for (int x = 0; x < dw; ++x) {
-      pixel = x_start + x + (y_start + y) * width;
-      data[3 * pixel + 0] = data[3 * ref + 0];
-      data[3 * pixel + 1] = data[3 * ref + 1];
-      data[3 * pixel + 2] = data[3 * ref + 2];
-      alpha[pixel] = alpha[ref];
-    }
-  }
-  // fill top right corner
-  x_start = width - dw;
-  y_start = 0;
-  ref = x_start - 1 + dh * width;
-  for (int y = 0; y < dh; ++y) {
-    for (int x = 0; x < dw; ++x) {
-      pixel = x_start + x + (y_start + y) * width;
-      data[3 * pixel + 0] = data[3 * ref + 0];
-      data[3 * pixel + 1] = data[3 * ref + 1];
-      data[3 * pixel + 2] = data[3 * ref + 2];
-      alpha[pixel] = alpha[ref];
-    }
-  }
-  // fill bottom left corner
-  x_start = 0;
-  y_start = height - dh;
-  ref = dw + (y_start - 1) * width;
-  for (int y = 0; y < dh; ++y) {
-    for (int x = 0; x < dw; ++x) {
-      pixel = x_start + x + (y_start + y) * width;
-      data[3 * pixel + 0] = data[3 * ref + 0];
-      data[3 * pixel + 1] = data[3 * ref + 1];
-      data[3 * pixel + 2] = data[3 * ref + 2];
-      alpha[pixel] = alpha[ref];
-    }
-  }
-  // fill bottom right corner
-  x_start = width - dw;
-  y_start = height - dh;
-  ref = (x_start - 1) + (y_start - 1) * width;
-  for (int y = 0; y < dh; ++y) {
-    for (int x = 0; x < dw; ++x) {
-      pixel = x_start + x + (y_start + y) * width;
-      data[3 * pixel + 0] = data[3 * ref + 0];
-      data[3 * pixel + 1] = data[3 * ref + 1];
-      data[3 * pixel + 2] = data[3 * ref + 2];
-      alpha[pixel] = alpha[ref];
-    }
-  }
+  int pixel, mirror, x_start, y_start, x_size, y_size;
   // fill left border
   x_start = 0;
   y_start = dh;
-  for (int y = 0; y < height - dh - dh; ++y) {
-    ref = dw + (y_start + y) * width;
-    for (int x = 0; x < dw; ++x) {
+  x_size = dw;
+  y_size = height - dh - dh;
+  for (int y = 0; y < y_size; ++y) {
+    for (int x = 0; x < x_size; ++x) {
       pixel = x_start + x + (y_start + y) * width;
-      data[3 * pixel + 0] = data[3 * ref + 0];
-      data[3 * pixel + 1] = data[3 * ref + 1];
-      data[3 * pixel + 2] = data[3 * ref + 2];
-      alpha[pixel] = alpha[ref];
-    }
-  }
-  // fill top border
-  x_start = dw;
-  y_start = 0;
-  for (int y = 0; y < dh; ++y) {
-    for (int x = 0; x < width - dw - dw; ++x) {
-      pixel = x_start + x + (y_start + y) * width;
-      ref = x_start + x + dh * width;
-      data[3 * pixel + 0] = data[3 * ref + 0];
-      data[3 * pixel + 1] = data[3 * ref + 1];
-      data[3 * pixel + 2] = data[3 * ref + 2];
-      alpha[pixel] = alpha[ref];
+      mirror = 2 * dw - x + (y_start + y) * width;
+      pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
+      pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
+      pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
+      alpha[pixel] = alpha[mirror];
     }
   }
   // fill right border
   x_start = width - dw;
   y_start = dh;
-  for (int y = 0; y < height - dh - dh; ++y) {
-    ref = width - dw - 1 + (y_start + y) * width;
-    for (int x = 0; x < dw; ++x) {
-      pixel = x_start + x + (y_start + y) * width;
-      data[3 * pixel + 0] = data[3 * ref + 0];
-      data[3 * pixel + 1] = data[3 * ref + 1];
-      data[3 * pixel + 2] = data[3 * ref + 2];
-      alpha[pixel] = alpha[ref];
+  x_size = dw;
+  y_size = height - dh - dh;
+  for (int y = 0; y < y_size; ++y) {
+    for (int x = 0; x < x_size; ++x) {
+      pixel =        x_start + x + (y_start + y) * width;
+      mirror = - 2 + x_start - x + (y_start + y) * width;
+      pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
+      pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
+      pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
+      alpha[pixel] = alpha[mirror];
+    }
+  }
+  // fill top border
+  x_start = 0;
+  y_start = 0;
+  x_size = width;
+  y_size = dh;
+  for (int y = 0; y < y_size; ++y) {
+    for (int x = 0; x < x_size; ++x) {
+      pixel =  x_start + x + (y_start + y) * width;
+      mirror = x_start + x + ( 2 * dh - y) * width;
+      pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
+      pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
+      pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
+      alpha[pixel] = alpha[mirror];
     }
   }
   // fill bottom border
-  x_start = dw;
+  x_start = 0;
   y_start = height - dh;
-  for (int y = 0; y < dh; ++y) {
-    for (int x = 0; x < width - dw - dw; ++x) {
-      pixel = x_start + x + (y_start + y) * width;
-      ref = x_start + x + (height - dh - 1) * width;
-      data[3 * pixel + 0] = data[3 * ref + 0];
-      data[3 * pixel + 1] = data[3 * ref + 1];
-      data[3 * pixel + 2] = data[3 * ref + 2];
-      alpha[pixel] = alpha[ref];
+  x_size = width;
+  y_size = dh;
+  for (int y = 0; y < y_size; ++y) {
+    for (int x = 0; x < x_size; ++x) {
+      pixel =  x_start + x + (      y_start + y) * width;
+      mirror = x_start + x + (- 2 + y_start - y) * width;
+      pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
+      pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
+      pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
+      alpha[pixel] = alpha[mirror];
     }
   }
   // done
@@ -467,7 +427,7 @@ bool BleedEdgedImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : InsertedImage
 
-Image InsertedImage::generate(const Options& opt) const {
+Image InsertedImage::generate(const Options& opt) {
   Image base_img =     base_image->generate(opt);
   Image inserted_img = inserted_image->generate(opt);
   int base_x =     offset_x < 0 ? -offset_x : 0;
@@ -507,7 +467,7 @@ bool InsertedImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : CropImage
 
-Image CropImage::generate(const Options& opt) const {
+Image CropImage::generate(const Options& opt) {
   return image->generate(opt).Size(wxSize((int)width, (int)height), wxPoint(-(int)offset_x, -(int)offset_y));
 }
 bool CropImage::operator == (const GeneratedImage& that) const {
@@ -568,7 +528,7 @@ UInt gaussian_blur(Byte* in, UInt* out, int w, int h, double radius) {
   return total_x * total_y;
 }
 
-Image DropShadowImage::generate(const Options& opt) const {
+Image DropShadowImage::generate(const Options& opt) {
   // sub image
   Image img = image->generate(opt);
   if (!img.HasAlpha()) {
@@ -611,7 +571,7 @@ bool DropShadowImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : PackagedImage
 
-Image PackagedImage::generate(const Options& opt) const {
+Image PackagedImage::generate(const Options& opt) {
   // TODO : use opt.width and opt.height?
   // open file from package
   if (!opt.package) throw ScriptError(_("Can only load images in a context where an image is expected"));
@@ -631,7 +591,7 @@ bool PackagedImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : BuiltInImage
 
-Image BuiltInImage::generate(const Options& opt) const {
+Image BuiltInImage::generate(const Options& opt) {
   // TODO : use opt.width and opt.height?
   try {
     Image img = load_resource_image(name);
@@ -646,7 +606,7 @@ bool BuiltInImage::operator == (const GeneratedImage& that) const {
 
 // ----------------------------------------------------------------------------- : ArbitraryImage
 
-Image ArbitraryImage::generate(const Options& opt) const {
+Image ArbitraryImage::generate(const Options& opt) {
   return image;
 }
 bool ArbitraryImage::operator == (const GeneratedImage& that) const {
@@ -662,7 +622,7 @@ SymbolToImage::SymbolToImage(bool is_local, const LocalFileName& filename, Age a
 {}
 SymbolToImage::~SymbolToImage() {}
 
-Image SymbolToImage::generate(const Options& opt) const {
+Image SymbolToImage::generate(const Options& opt) {
   // TODO : use opt.width and opt.height?
   Package* package = is_local ? opt.local_package : opt.package;
   if (!package) throw ScriptError(_("Can only load images in a context where an image is expected"));
@@ -698,7 +658,7 @@ ImageValueToImage::ImageValueToImage(const LocalFileName& filename, Age age)
 {}
 ImageValueToImage::~ImageValueToImage() {}
 
-Image ImageValueToImage::generate(const Options& opt) const {
+Image ImageValueToImage::generate(const Options& opt) {
   // TODO : use opt.width and opt.height?
   if (!opt.local_package) throw ScriptError(_("Can only load images in a context where an image is expected"));
   Image image;
@@ -717,47 +677,88 @@ bool ImageValueToImage::operator == (const GeneratedImage& that) const {
                && age      == that2->age;
 }
 
-// ----------------------------------------------------------------------------- : ExternalImage
+// ----------------------------------------------------------------------------- : ImportedImage
 
-Image ExternalImage::generate(const Options& opt) const {
-  wxFileName fname(filepath, wxPATH_UNIX);
-  String filePathString = fname.GetAbsolutePath();
+ImportedImage::ImportedImage(Set* set, const String& filepath)
+{
+  loadpath = filepath;
 
-  // has a pre-existing .mse-set file been loaded? 
-  if (opt.local_package->needSaveAs()) throw ScriptError(_ERROR_1_("can't import image without set", filePathString));
+  // has the set already been saved at least once?
+  if (set->needSaveAs()) throw ScriptError(_ERROR_1_("can't import image without set", loadpath));
 
   // does the file pointed to by filepath exist?
-  if (!fname.FileExists()) throw ScriptError(_ERROR_1_("import not found", filePathString));
+  if (!wxFileName(loadpath, wxPATH_UNIX).FileExists()) throw ScriptError(_ERROR_1_("import not found", loadpath));
 
-  String fileExt = fname.GetExt();
-  wxBitmapType bitmapType;
-  if      (fileExt == _("png"))                         bitmapType = wxBITMAP_TYPE_PNG;
-  else if (fileExt == _("jpg") || fileExt == _("jpeg")) bitmapType = wxBITMAP_TYPE_JPEG;
-  else                                                  bitmapType = wxBITMAP_TYPE_BMP;
+  // is the file an image?
+  Image img;
+  img.LoadFile(loadpath);
+  if (!img.IsOk()) throw ScriptError(_ERROR_1_("import not image", loadpath));
 
-  // does the file exist in the package?
-  String fileNameNoExtension = fname.GetName();
-  if (!opt.local_package->existsIn(fileNameNoExtension)) {
-    auto outStream = opt.local_package->openOut(fileNameNoExtension);
-    wxFileInputStream inStream = wxFileInputStream(filepath.ToStdString());
-    if (!inStream.IsOk()) throw ScriptError(_ERROR_1_("can't create file stream", filePathString));
-    outStream->Write(inStream);
-    if (!outStream->IsOk()) throw ScriptError(_ERROR_1_("can't write image to set", filePathString));
-    outStream->Close();
-  }
+  // add the file to the set (or overwrite it if pre-existing), save set
+  savename = normalize_internal_filename(loadpath);
+  savename.Replace(":",  "-");
+  savename.Replace("/",  "-");
+  auto outStream = set->openOut(savename);
+  img.SaveFile(*outStream, wxBITMAP_TYPE_PNG);
+  if (!outStream->IsOk()) throw ScriptError(_ERROR_1_("can't write image to set", loadpath));
+  outStream->Close();
+  set->save(false);
+}
 
-  // save the package with the new image
-  opt.local_package->save(false);
+Image ImportedImage::generate(const Options& opt) {
+  auto imageInputStream = opt.local_package->openIn(savename);
+  Image img(*imageInputStream, wxBITMAP_TYPE_PNG);
 
-  auto imageInputStream = opt.local_package->openIn(fileNameNoExtension);
-  Image img(*imageInputStream.get(), bitmapType);
-
-  if (!img.IsOk()) throw ScriptError(_ERROR_1_("can't import image", filePathString));
+  if (!img.IsOk()) throw ScriptError(_ERROR_1_("can't import image", loadpath));
 
   return img;
 }
 
-bool ExternalImage::operator == (const GeneratedImage& that) const {
-  const ExternalImage* that2 = dynamic_cast<const ExternalImage*>(&that);
-  return that2 && that2->filepath == filepath;
+bool ImportedImage::operator == (const GeneratedImage& that) const {
+  const ImportedImage* that2 = dynamic_cast<const ImportedImage*>(&that);
+  return that2 && that2->loadpath == loadpath;
+}
+
+// ----------------------------------------------------------------------------- : DownloadedImage
+
+DownloadedImage::DownloadedImage(Set* set, const String& url)
+{
+  loadpath = url;
+
+  // has the set already been saved at least once?
+  if (set->needSaveAs()) throw ScriptError(_ERROR_1_("can't download image without set", loadpath));
+
+  // can we download the data?
+  WebRequestWindow wnd(loadpath);
+  if (wnd.ShowModal() != wxID_OK) throw ScriptError(_ERROR_1_("can't download image", loadpath));
+
+  // is the data an image?
+  const String& content_type = wnd.out.GetContentType();
+  if (!content_type.StartsWith(_("image"))) throw ScriptError(_ERROR_1_("download not image", loadpath));
+  Image img(*wnd.out.GetStream());
+  if (!img.IsOk()) throw ScriptError(_ERROR_("web request corrupted"));
+
+  // add the file to the set (or overwrite it if pre-existing), save set
+  savename = normalize_internal_filename(loadpath);
+  savename.Replace(":",  "-");
+  savename.Replace("/",  "-");
+  auto outStream = set->openOut(savename);
+  img.SaveFile(*outStream, wxBITMAP_TYPE_PNG);
+  if (!outStream->IsOk()) throw ScriptError(_ERROR_1_("can't write image to set", loadpath));
+  outStream->Close();
+  set->save(false);
+}
+
+Image DownloadedImage::generate(const Options& opt) {
+  auto imageInputStream = opt.local_package->openIn(savename);
+  Image img(*imageInputStream, wxBITMAP_TYPE_PNG);
+
+  if (!img.IsOk()) throw ScriptError(_ERROR_1_("can't download image", loadpath));
+
+  return img;
+}
+
+bool DownloadedImage::operator == (const GeneratedImage& that) const {
+  const DownloadedImage* that2 = dynamic_cast<const DownloadedImage*>(&that);
+  return that2 && that2->loadpath == loadpath;
 }

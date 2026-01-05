@@ -1,5 +1,5 @@
 //+----------------------------------------------------------------------------+
-//| Description:  Magic Set Editor - Program to make Magic (tm) cards          |
+//| Description:  Magic Set Editor - Program to make card games                |
 //| Copyright:    (C) Twan van Laarhoven and the other MSE developers          |
 //| License:      GNU General Public License 2 or later (see file COPYING)     |
 //+----------------------------------------------------------------------------+
@@ -27,7 +27,7 @@ AddCSVWindow::AddCSVWindow(Window* parent, const SetP& set, bool sizer)
   , set(set)
 {
   // init controls
-  file_path = new wxTextCtrl(this, wxID_ANY, wxEmptyString);
+  file_path = new wxTextCtrl(this, wxID_ANY, _(""));
   file_browse = new wxButton(this, ID_CARD_ADD_CSV_BROWSE, _BUTTON_("browse"));
   separator_type = new wxChoice(this, ID_CARD_ADD_CSV_SEP, wxDefaultPosition, wxDefaultSize, 0, nullptr);
   separator_type->Clear();
@@ -66,9 +66,11 @@ void AddCSVWindow::onSeparatorTypeChange(wxCommandEvent&) {
 }
 
 void AddCSVWindow::onBrowseFiles(wxCommandEvent&) {
-  wxFileDialog* dlg = new wxFileDialog(this, _TITLE_("add card csv file"), settings.default_set_dir, wxEmptyString, _("CSV files|*.csv;*.tsv|All files (*.*)|*"), wxFD_OPEN);
+  wxFileDialog* dlg = new wxFileDialog(this, _TITLE_("add card csv file"), settings.default_import_dir, _(""), _("CSV files|*.csv;*.tsv|All files (*.*)|*"), wxFD_OPEN);
   if (dlg->ShowModal() == wxID_OK) {
-    file_path->SetValue(dlg->GetPath());
+    const String& path = dlg->GetPath();
+    file_path->SetValue(path);
+    settings.default_import_dir = wxPathOnly(path);
   }
 }
 
@@ -167,7 +169,7 @@ void AddCSVWindow::onOk(wxCommandEvent&) {
   /// Perform the import
   wxBusyCursor wait;
   // Read the file
-  auto& file = std::ifstream(file_path->GetValue().ToStdString());
+  auto file = std::ifstream(file_path->GetValue().ToStdString());
   if (file.fail()) {
     queue_message(MESSAGE_ERROR, _ERROR_("add card csv file not found"));
     EndModal(wxID_ABORT);
