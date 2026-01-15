@@ -303,14 +303,16 @@ void SymbolFont::draw(RotatedDC& dc, RealRect rect, double scale, const SymbolFo
     if (font.hasStroke()) {
       int blur_radius = lround(font.stroke_blur() * s_scale);
       int stroke_radius = lround(font.stroke_radius() * s_scale);
-      Image s_img = make_stroke_image(bmp.ConvertToImage(), font.stroke_color(), stroke_radius, blur_radius);
+      Image s_img = bmp.ConvertToImage();
+      s_img = make_stroke_image(s_img, font.stroke_color(), stroke_radius, blur_radius);
       RealSize  s_size = dc.trInvS(RealSize(s_img));
       RealPoint s_pos(bmp_pos.x - (s_size.width - bmp_size.width)/2, bmp_pos.y - (s_size.height - bmp_size.height)/2);
       dc.DrawImage(s_img, s_pos);
     }
     else if (font.hasShadow()) {
       int blur_radius = lround(font.shadow_blur() * s_scale);
-      Image s_img = make_stroke_image(bmp.ConvertToImage(), font.shadow_color(), 0, blur_radius);
+      Image s_img = bmp.ConvertToImage();
+      s_img = make_stroke_image(s_img, font.shadow_color(), 0, blur_radius);
       RealSize  s_size = dc.trInvS(RealSize(s_img));
       RealPoint s_pos(bmp_pos.x - (s_size.width - bmp_size.width)/2, bmp_pos.y - (s_size.height - bmp_size.height)/2);
       RealSize s_displacement = dc.trInvS(RealSize(font.shadow_displacement_x, font.shadow_displacement_y) * s_scale);
@@ -343,7 +345,8 @@ void SymbolFont::draw(RotatedDC& dc, RealRect rect, double scale, const SymbolFo
     double text_stretch = 1.0;
     RealSize ts;
     while (true) {
-      if (text_size <= 0) goto continue_outer; // text too small
+      if (text_size <= 0)
+        goto continue_outer; // text too small
       dc.SetFont(*sym.text_font, text_size / sym.text_font->size);
       ts = dc.GetTextExtent(text);
       if (ts.height <= sym_rect.height) {
@@ -358,10 +361,12 @@ void SymbolFont::draw(RotatedDC& dc, RealRect rect, double scale, const SymbolFo
       // text doesn't fit
       text_size -= dc.getFontSizeStep();
     }
+    {
     // align text
     RealPoint text_pos = align_in_rect(sym.text_alignment, ts, sym_rect);
     // draw text
     dc.DrawTextWithShadowOrStroke(text, *sym.text_font, text_pos, font_size, text_stretch);
+    }
     continue_outer:;
   }
 }
