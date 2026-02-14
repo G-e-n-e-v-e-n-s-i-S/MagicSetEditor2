@@ -13,24 +13,27 @@
 // ----------------------------------------------------------------------------- : Line
 
 struct TextViewer::Line {
-  size_t         start;       ///< Index of the first character in this line
-  size_t         end_or_soft; ///< Index just beyond the last non-soft character
-  vector<double> positions;   ///< x position of each character in this line, gives the number of characters + 1, never empty
-  double         top;         ///< y position of (the top of) this line
-  double         line_height; ///< The height of this line in pixels
-  LineBreak      break_after; ///< Is there a saparator after this line?
+  size_t         start;          ///< Index of the first character in this line
+  size_t         end_or_soft;    ///< Index just beyond the last non-soft character
+  vector<double> positions;      ///< x position of each character in this line, gives the number of characters + 1, never empty
+  double         top;            ///< y position of (the top of) this line
+  double         line_height;    ///< The height of this line in pixels
+  LineBreak      break_after;    ///< Is there a saparator after this line?
   optional<Alignment> alignment; ///< Alignment of this line
-  bool           justifying;  ///< Is the text justified? Only true when *really* justifying.
-  double         margin_left; ///< Left margin
-  double         margin_right;///< Rightmargin
+  bool           justifying;     ///< Is the text justified? Only true when *really* justifying.
+  double         margin_left;    ///< Left   margin
+  double         margin_right;   ///< Right  margin
+  double         margin_top;     ///< Top    margin
+  double         margin_bottom;  ///< Bottom margin
   
   Line()
     : start(0), end_or_soft(0), top(0), line_height(0)
     , break_after(LineBreak::NO), justifying(false)
+    , margin_top(0.0), margin_bottom(0.0)
   {}
   
   /// The position (just beyond) the bottom of this line
-  double bottom() const { return top + line_height; }
+  double bottom() const { return top + line_height + margin_bottom; }
   /// The width of this line
   double width()  const { return positions[end_or_soft-start] - positions.front(); }
   /// Index just beyond the last character on this line
@@ -41,7 +44,7 @@ struct TextViewer::Line {
   
   /// Is this line visible using the given rectangle?
   bool visible(const Rotation& rot) const {
-    return top + line_height > 0 && top < rot.getHeight();
+    return top + line_height + margin_bottom > 0 && top - margin_top < rot.getHeight();
   }
   
   /// Get a rectangle of the selection on this line
@@ -138,10 +141,10 @@ void TextViewer::drawSeparators(RotatedDC& dc) {
   bool separator = false;
   double y = 0;
   FOR_EACH(l, lines) {
-    double y2 = l.top + l.line_height;
+    double y2 = l.top + l.line_height + l.margin_bottom;
     if (separator && l.visible(dc)) {
       // between the two lines
-      y = (y + l.top) / 2;
+      y = (y + l.top - l.margin_top) / 2;
       dc.DrawLine(RealPoint(0, y), RealPoint(dc.getInternalRect().width, y));
     }
     separator = l.break_after == LineBreak::LINE;
@@ -273,7 +276,8 @@ size_t TextViewer::firstVisibleChar(size_t index, int delta) const {
 
 double TextViewer::heightOfLastLine() const {
   if (lines.empty()) return 0;
-  return lines.back().line_height;
+  const Line& last_line = lines.back();
+  return last_line.margin_top + last_line.line_height + last_line.margin_bottom;
 }
 
 // ----------------------------------------------------------------------------- : Scrolling
@@ -284,15 +288,15 @@ size_t TextViewer::lineCount() const {
 size_t TextViewer::visibleLineCount(double height) const {
   size_t count = 0;
   FOR_EACH_CONST(l, lines) {
-    if (l.top + l.line_height > height) return count;
-    if (l.top >= 0) ++count;
+    if (l.bottom() > height) return count;
+    if (l.top - l.margin_top >= 0) ++count;
   }
   return count;
 }
 size_t TextViewer::firstVisibleLine() const {
   size_t i = 0;
   FOR_EACH_CONST(l, lines) {
-    if (l.top >= 0) return i;
+    if (l.top - l.margin_top >= 0) return i;
     i++;
   }
   return 0; //no visible lines
@@ -311,7 +315,7 @@ void TextViewer::scrollBy(double delta) {
 bool TextViewer::ensureVisible(double height, size_t char_id) {
   if (lines.empty()) return true;
   const Line& line = findLine(char_id);
-  if (line.top < 0) {
+  if (line.top - line.margin_top < 0) {
     // scroll up
     scrollBy(-line.top);
     return true;
@@ -357,7 +361,7 @@ TextLayoutP TextViewer::extractLayoutInfo() const {
   TextLayoutP layout = make_intrusive<TextLayout>();
   LineLayoutP paragraph, block;
   for (auto const& l : lines) {
-    LineLayoutP line = make_intrusive<LineLayout>(l.width(), l.top, l.line_height, LineLayout::Type::LINE);
+    LineLayoutP line = make_intrusive<LineLayout>(l.width(), l.top - l.margin_top, l.line_height + l.margin_bottom, LineLayout::Type::LINE);
     if (!block) {
       block = make_intrusive<LineLayout>(*line);
       block->type = LineLayout::Type::BLOCK;
@@ -554,12 +558,38 @@ RealSize TextViewer::fitLineWidth(Line& line, RotatedDC& dc, const TextStyle& st
   return line_size;
 }
 
+static void shiftLinesDown(vector<TextViewer::Line>& lines, size_t start_index, double delta) {
+  TextViewer::Line& first_line = lines[start_index];
+  first_line.margin_top = delta;
+  for (size_t i = start_index; i < lines.size(); ++i) {
+    lines[i].top += delta;
+  }
+}
+
+static pair<double, double> computeVerticalDeltas(const TextParagraph& startPara, vector<TextViewer::Line>& lines, size_t current_para_start_line) {
+  if (current_para_start_line >= lines.size()) return { 0.0, 0.0 };
+  double para_start_top = lines[current_para_start_line].top;
+
+  const TextViewer::Line& last = lines.back();
+  double para_end_bottom = last.top + last.line_height;
+  double para_height = para_end_bottom - para_start_top;
+
+  if (para_height >= startPara.min_height) return { 0.0, 0.0 };
+  double size_to_add = startPara.min_height - para_height;
+  const Alignment align = startPara.internal_valign.value_or(ALIGN_TOP);
+  if (align & ALIGN_BOTTOM) return { size_to_add, 0.0 };
+  if (align & ALIGN_MIDDLE) return { size_to_add / 2.0, size_to_add / 2.0 };
+  return { 0.0, size_to_add };
+}
+
 bool TextViewer::prepareLinesAtScale(RotatedDC& dc, const vector<CharInfo>& chars, const TextStyle& style, bool stop_if_too_long, vector<Line>& lines) const {
   // Try to layout the text at the current scale
   lines.clear();
 
   // The current "paragraph" in the input string
   size_t i_para = 0;
+  size_t current_para_start_line = 0;
+  TextParagraph startPara;
   assert(elements.paragraphs.size() > 0);
 
   // first line
@@ -684,10 +714,25 @@ bool TextViewer::prepareLinesAtScale(RotatedDC& dc, const vector<CharInfo>& char
       if (line.break_after == LineBreak::LINE) line.line_height = 0;
       if (line.break_after >= LineBreak::HARD) {
         // end of paragraph
-        // look at next paragraph
         assert(elements.paragraphs[i_para].end == i + 1);
         assert(i_para + 1 < elements.paragraphs.size());
-        if (i_para+1 < elements.paragraphs.size()) ++i_para;
+
+        const TextParagraph& para = elements.paragraphs[i_para];
+        if (para.min_height > 0.0) {
+          startPara = para;
+        }
+        if (line.break_after == LineBreak::LINE) {
+          // enforce minimum height for paragraph 
+          if (para.min_height_closed) {
+            pair<double, double> deltas = computeVerticalDeltas(startPara, lines, current_para_start_line);
+            if (deltas.first > 0.0) shiftLinesDown(lines, current_para_start_line, deltas.first);
+            if (deltas.second > 0.0) lines.back().margin_bottom = deltas.second;
+            line.top += deltas.first + deltas.second;
+          }
+          current_para_start_line = lines.size();
+        }
+
+        if (i_para + 1 < elements.paragraphs.size()) ++i_para;
         assert(elements.paragraphs[i_para].start == i + 1);
         line.margin_left = elements.paragraphs[i_para].margin_left;
         line.margin_right = elements.paragraphs[i_para].margin_right;
@@ -700,6 +745,7 @@ bool TextViewer::prepareLinesAtScale(RotatedDC& dc, const vector<CharInfo>& char
       line.positions.push_back(line_size.width); // start position
     }
   }
+
   // the last word
   FOR_EACH(p, positions_word) {
     line.positions.push_back(line_size.width + p);
@@ -714,6 +760,14 @@ bool TextViewer::prepareLinesAtScale(RotatedDC& dc, const vector<CharInfo>& char
   }
   line.end_or_soft = max(line.start, min(line.end_or_soft, line.end()));
   lines.push_back(line);
+  if (elements.paragraphs.size() > 0) {
+    const TextParagraph& para = elements.paragraphs[i_para];
+    if (startPara.min_height > 0.0 && para.min_height_closed) {
+      auto deltas = computeVerticalDeltas(startPara, lines, current_para_start_line);
+      if (deltas.first > 0.0) shiftLinesDown(lines, current_para_start_line, deltas.first);
+      if (deltas.second > 0.0) lines.back().margin_bottom = std::max(lines.back().margin_bottom, deltas.second);
+    }
+  }
   // does it fit vertically?
   if (style.paragraph_height > 0) {
     // height = max(paragraph_height) * paragraph_count
@@ -772,10 +826,10 @@ void TextViewer::alignParagraph(size_t start_line, size_t end_line, const vector
   double height = 0;
   for (size_t li = end_line - 1 ; li + 1 > start_line ; --li) {
     Line& l = lines[li];
-    height = l.top + l.line_height;
+    height = l.bottom();
     if (l.line_height) break; // not an empty line
   }
-  height -= lines[start_line].top;
+  height -= (lines[start_line].top - lines[start_line].margin_top);
   
   // stretch lines by increasing the space between them
   if (height < s.height) {

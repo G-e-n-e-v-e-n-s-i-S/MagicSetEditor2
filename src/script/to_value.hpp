@@ -118,7 +118,9 @@ class ScriptCollection : public ScriptCollectionBase {
 public:
   inline ScriptCollection(const Collection* v) : value(v) {}
   String typeName() const override {
-    return _TYPE_1_("collection of", type_name(*value->begin()));
+      if (!value || value->empty())
+          return _TYPE_1_("collection of", "<empty>");
+      return _TYPE_1_("collection of", type_name(*value->begin()));
   }
   ScriptValueP getIndex(int index) const override {
     if (index >= 0 && index < (int)value->size()) {

@@ -136,6 +136,7 @@ ScriptValueP Context::dependencies(const Dependency& dep, const Script& script) 
   // Scope for evaluating this script.
   size_t stack_size = stack.size();
   size_t scope      = openScope();
+  vector<size_t> branch_scopes;
   
   // Forward jumps waiting to be performed, by order of target (descending)
   priority_queue<Jump*,vector<Jump*>,JumpOrder> jumps;
@@ -151,6 +152,9 @@ ScriptValueP Context::dependencies(const Dependency& dep, const Script& script) 
       while (!jumps.empty() && jumps.top()->target == instr) {
         // unify with current execution path
         Jump* j = jumps.top(); jumps.pop();
+        // close branch scope
+        closeScope(branch_scopes.back());
+        branch_scopes.pop_back();
         // unify stack
         assert(stack_size + j->stack_top.size()  ==  stack.size());
         for (size_t i = 0; i < j->stack_top.size() ; ++i) {
@@ -185,11 +189,12 @@ ScriptValueP Context::dependencies(const Dependency& dep, const Script& script) 
             Jump* jump = new Jump;
             jump->target = &script.instructions[0] + i.data;
             jump->stack_top.assign(stack.begin() + stack_size, stack.end());
-            getBindings(scope, jump->bindings);
+            size_t current_branch_scope = branch_scopes.back();
+            getBindings(current_branch_scope, jump->bindings);
             jumps.push(jump);
             // clear scope
             stack.resize(stack_size);
-            resetBindings(scope);
+            resetBindings(current_branch_scope);
             // we don't follow this jump just yet, there may be jumps that point to earlier positions
             Jump* jumpTo = jumps.top(); jumps.pop();
             instr = jumpTo->target;
@@ -213,7 +218,9 @@ ScriptValueP Context::dependencies(const Dependency& dep, const Script& script) 
           jump->target = &script.instructions[0] + i.data; // note: operator[] triggers assertion (in msvc>=9) failure if i.data==instructions.size()
           assert(jump->target >= instr); // jumps must be forward
           jump->stack_top.assign(stack.begin() + stack_size, stack.end());
-          getBindings(scope, jump->bindings);
+          size_t branch_scope = openScope();
+          branch_scopes.push_back(branch_scope);
+          getBindings(branch_scope, jump->bindings);
           jumps.push(jump);
           // just fall through for the case that the condition holds
           if (i.instr != I_JUMP_IF_NOT) {

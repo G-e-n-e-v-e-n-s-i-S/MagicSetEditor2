@@ -23,57 +23,69 @@
 
 // Combining multiple (text) values into a single one
 // The combined value is  value1 <sep>something</sep> value2 <sep>something</sep> value3
-// 
+//
 
-SCRIPT_FUNCTION_WITH_DEP(combined_editor) {
-  // read 'field#' arguments
+static vector<TextValue*> readFieldArguments(Context& ctx) {
   vector<TextValue*> values;
-  for (int i = 0 ; ; ++i) {
+  for (int i = 0; ; ++i) {
     String name = _("field"); if (i > 0) name = name << i;
     SCRIPT_OPTIONAL_PARAM_N(ValueP, name, value) {
       TextValue* text_value = dynamic_cast<TextValue*>(value.get());
-      if (!text_value) throw ScriptError(_("Argument '")+name+_("' should be a text field")); 
+      if (!text_value) throw ScriptError(_("Argument '") + name + _("' should be a text field"));
       values.push_back(text_value);
-    } else if (i > 0) break;
+    }
+    else if (i > 0) break;
   }
   if (values.empty()) {
     throw ScriptError(_("No fields specified for combined_editor"));
   }
-  // read 'separator#' arguments
+  return values;
+}
+
+static vector<String> readSeparatorArguments(Context &ctx, vector<TextValue*> &values) {
   vector<String> separators;
-  for (int i = 0 ; ; ++i) {
+  for (int i = 0; ; ++i) {
     String name = _("separator"); if (i > 0) name = name << i;
     SCRIPT_OPTIONAL_PARAM_N(String, name, separator) {
       separators.push_back(separator);
-    } else if (i > 0) break;
+    }
+    else if (i > 0) break;
   }
   if (separators.size() < values.size() - 1) {
-    throw ScriptError(String::Format(_("Not enough separators for combine_editor, expected %d"), static_cast<int>(values.size()-1)));
+    throw ScriptError(String::Format(_("Not enough separators for combine_editor, expected %d"), static_cast<int>(values.size() - 1)));
   }
-  // the value
+  return separators;
+}
+
+static String removePrefixSuffix(Context& ctx) {
   SCRIPT_PARAM_C(String, value);
-  // remove suffix/prefix
   SCRIPT_OPTIONAL_PARAM_(String, prefix);
   SCRIPT_OPTIONAL_PARAM_(String, suffix);
-  if (is_substr(value,0,_("<prefix"))) {
+  if (is_substr(value, 0, _("<prefix"))) {
     value = value.substr(min(value.size(), match_close_tag_end(value, 0)));
   }
   size_t pos = value.rfind(_("<suffix"));
-  if (pos != String::npos && match_close_tag_end(value,pos) >= value.size()) {
+  if (pos != String::npos && match_close_tag_end(value, pos) >= value.size()) {
     value = value.substr(0, pos);
   }
-  // split the value
-  vector<pair<String,bool>> value_parts; // (value part, is empty)
-  pos = value.find(_("<sep"));
+  return value;
+}
+
+static vector<pair<String, bool>> splitTheValue(String value, size_t targetSize) {
+  vector<pair<String, bool>> value_parts; // (value part, is empty)
+  size_t pos = value.find(_("<sep"));
   while (pos != String::npos) {
     String part = value.substr(0, pos);
     value_parts.push_back(make_pair(part, false));
-    value = value.substr(min(match_close_tag_end(value,pos), value.size()));
+    value = value.substr(min(match_close_tag_end(value, pos), value.size()));
     pos = value.find(_("<sep"));
   }
   value_parts.push_back(make_pair(value, false));
-  value_parts.resize(values.size()); // TODO: what if there are more value_parts than values?
-  // update the values if our input value is newer?
+  value_parts.resize(targetSize); // TODO: what if there are more value_parts than values?
+  return value_parts;
+}
+
+static void updateValuesIfInputNewer(Context& ctx, vector<TextValue*> &values, vector<pair<String, bool>> &value_parts) {
   Age new_value_update = last_update_age();
   FOR_EACH_2(v, values, nv, value_parts) {
     //if (v->value() != nv.first && v->last_update < new_value_update) {
@@ -92,100 +104,225 @@ SCRIPT_FUNCTION_WITH_DEP(combined_editor) {
     nv.first = v->value();
     nv.second = index_to_untagged(nv.first, nv.first.size()) == 0;
   }
-  // options
-  SCRIPT_PARAM_DEFAULT(bool, hide_when_empty,   false);
+}
+
+static String handleEmpty(Context& ctx, vector<pair<String, bool>> &value_parts, vector<String> &separators, String new_value, size_t size_before_last) {
+  SCRIPT_OPTIONAL_PARAM_(String, prefix);
+  SCRIPT_OPTIONAL_PARAM_(String, suffix);
+  if (!suffix.empty()) {
+    if (is_substr(new_value, size_before_last, _("<sep-soft>")) && value_parts.size() >= 2) {
+      // If the value ends in a soft separator, we have this situation:
+      //   [blah]<sep-soft>ABC</sep-soft><suffix>XYZ</suffix>
+      // This renderes as:
+      //   [blah]   XYZ
+      // Which looks bad, so instead change the text to
+      //   [blah]<sep>XYZ<soft>ABC</soft></sep>
+      // Which might be slightly incorrect, but soft text doesn't matter anyway.
+      size_t after = min(new_value.size(), match_close_tag_end(new_value, size_before_last));
+      new_value = new_value.substr(0, size_before_last)
+        + _("<sep>")
+        + suffix
+        + _("<soft>")
+        + separators[value_parts.size() - 2]
+        + _("</soft></sep>")
+        + new_value.substr(after);
+    } else {
+      new_value += _("<suffix>") + suffix + _("</suffix>");
+    }
+  }
+  if (!prefix.empty()) {
+    new_value = _("<prefix>") + prefix + _("</prefix>") + new_value;
+  }
+  return new_value;
+}
+
+static String min_height_wrap(size_t index, const vector<double>& min_heights, String alignment, vector<pair<String, bool>>& value_parts) {
+  String value = value_parts[index].first;
+  if (index < min_heights.size() && min_heights[index] > 0.0)
+    return String::Format(_("<min-height:%g:%s>%s</min-height>"), min_heights[index], alignment, value);
+  return value;
+}
+
+static String recombineParts(Context &ctx, vector<pair<String, bool>> &value_parts, vector<String> &separators, const vector<double>& min_heights = {}, String alignment = "") {
+  SCRIPT_PARAM_DEFAULT(bool, hide_when_empty, false);
   SCRIPT_PARAM_DEFAULT(bool, soft_before_empty, false);
-  // recombine the parts
-  String new_value = value_parts.front().first;
+  String new_value = min_height_wrap(0, min_heights, alignment, value_parts);
   bool   new_value_empty = value_parts.front().second;
   size_t size_before_last = 0;
-  for (size_t i = 1 ; i < value_parts.size() ; ++i) {
+  for (size_t i = 1; i < value_parts.size(); ++i) {
     size_before_last = new_value.size();
     if (value_parts[i].second && new_value_empty && hide_when_empty) {
       // no separator
-    } else if (value_parts[i].second && soft_before_empty) {
+    }
+    else if (value_parts[i].second && soft_before_empty) {
       // soft separator
       new_value += _("<sep-soft>") + separators[i - 1] + _("</sep-soft>");
       new_value_empty = false;
-    } else {
+    }
+    else {
       // normal separator
-      new_value += _("<sep>")      + separators[i - 1] + _("</sep>");
+      new_value += _("<sep>") + separators[i - 1] + _("</sep>");
       new_value_empty = false;
     }
-    new_value += value_parts[i].first;
+    new_value += min_height_wrap(i, min_heights, alignment, value_parts);
   }
-  if (!new_value_empty || !hide_when_empty) {
-    if (!suffix.empty()) {
-      if (is_substr(new_value, size_before_last, _("<sep-soft>")) && value_parts.size() >= 2) {
-        // If the value ends in a soft separator, we have this situation:
-        //   [blah]<sep-soft>ABC</sep-soft><suffix>XYZ</suffix>
-        // This renderes as:
-        //   [blah]   XYZ
-        // Which looks bad, so instead change the text to
-        //   [blah]<sep>XYZ<soft>ABC</soft></sep>
-        // Which might be slightly incorrect, but soft text doesn't matter anyway.
-        size_t after = min(new_value.size(), match_close_tag_end(new_value, size_before_last));
-        new_value = new_value.substr(0, size_before_last)
-                  + _("<sep>")
-                  + suffix
-                  + _("<soft>")
-                  + separators[value_parts.size() - 2]
-                  + _("</soft></sep>")
-                  + new_value.substr(after);
-      } else {
-        new_value += _("<suffix>") + suffix + _("</suffix>");
-      }
-    }
-    if (!prefix.empty()) {
-      new_value = _("<prefix>") + prefix + _("</prefix>") + new_value;
-    }
-  }
+  if (!new_value_empty || !hide_when_empty)
+    new_value = handleEmpty(ctx, value_parts, separators, new_value, size_before_last);
+  return new_value;
+}
+
+SCRIPT_FUNCTION_WITH_DEP(combined_editor) {
+  vector<TextValue*> values = readFieldArguments(ctx);
+  vector<String> separators = readSeparatorArguments(ctx, values);
+  String value = removePrefixSuffix(ctx);
+  vector<pair<String, bool>> value_parts = splitTheValue(value, values.size());
+  updateValuesIfInputNewer(ctx, values, value_parts);
+  String new_value = recombineParts(ctx, value_parts, separators);
   SCRIPT_RETURN(new_value);
 }
 
-SCRIPT_FUNCTION_DEPENDENCIES(combined_editor) {
-  // read 'field#' arguments
+static vector<FieldP> readDepFieldArguments(Context& ctx) {
   vector<FieldP> fields;
-  for (int i = 0 ; ; ++i) {
+  for (int i = 0; ; ++i) {
     String name = _("field"); if (i > 0) name = name << i;
     SCRIPT_OPTIONAL_PARAM_N(ValueP, name, value) {
       fields.push_back(value->fieldP);
-    } else if (i > 0) break;
+    }
+    else if (i > 0) break;
   }
-  // Find the target field
-  SCRIPT_PARAM_C(Set*, set);
-  GameP game = set->game;
-  FieldP target_field;
-  if      (dep.type == DEP_CARD_FIELD) target_field = game->card_fields[dep.index];
-  else if (dep.type == DEP_SET_FIELD)  target_field = game->set_fields[dep.index];
-  else if (dep.type == DEP_EXTRA_CARD_FIELD) {
+  return fields;
+}
+
+static FieldP resolveTargetField(Context& ctx, Dependency dep, GameP game) {
+  if (dep.type == DEP_CARD_FIELD) return game->card_fields[dep.index];
+  if (dep.type == DEP_SET_FIELD)  return game->set_fields[dep.index];
+  if (dep.type == DEP_EXTRA_CARD_FIELD) {
     SCRIPT_PARAM_C(StyleSheetP, stylesheet);
-    target_field = stylesheet->extra_card_fields[dep.index];
+    return stylesheet->extra_card_fields[dep.index];
   }
-  else                                 throw InternalError(_("Finding dependencies of combined error for non card/set field"));
-  // Add dependencies, from target_field on field#
-  // For card fields
+  throw InternalError(_("Finding dependencies of combined error for non card/set field"));
+}
+
+template <DependencyType T>
+static void addFieldDependencies(vector<FieldP> &fields, FieldP& target_field, vector<FieldP>& fieldArgs) {
   size_t j = 0;
-  FOR_EACH(f, game->card_fields) {
-    Dependency dep(DEP_CARD_COPY_DEP, j++);
-    FOR_EACH(fn, fields) {
-      if (f == fn) {
-        target_field->dependent_scripts.add(dep);
-        break;
-      }
+  FOR_EACH(f, fields) {
+    Dependency card_dep(T, j++);
+    FOR_EACH(fn, fieldArgs) {
+      if (f == fn) { target_field->dependent_scripts.add(card_dep); break; }
     }
   }
-  // For set fields
-  j = 0;
-  FOR_EACH(f, game->set_fields) {
-    Dependency dep(DEP_SET_COPY_DEP, j++);
-    FOR_EACH(fn, fields) {
-      if (f == fn) {
-        target_field->dependent_scripts.add(dep);
-        break;
-      }
+}
+
+SCRIPT_FUNCTION_DEPENDENCIES(combined_editor) {
+  vector<FieldP> fieldArgs = readDepFieldArguments(ctx);
+  SCRIPT_PARAM_C(Set*, set);
+  FieldP target_field = resolveTargetField(ctx, dep, set->game);
+  addFieldDependencies<DEP_CARD_COPY_DEP>(set->game->card_fields, target_field, fieldArgs);
+  addFieldDependencies<DEP_SET_COPY_DEP>(set->game->set_fields, target_field, fieldArgs);
+  return dependency_dummy;
+}
+
+// ----------------------------------------------------------------------------- : Array-based combined editor
+
+static vector<TextValue*> readFieldArray(Context& ctx) {
+  SCRIPT_PARAM(ScriptValueP, fields);
+  vector<TextValue*> values;
+  ScriptValueP it = fields->makeIterator();
+
+  while (ScriptValueP v = it->next()) {
+    ValueP base = from_script<ValueP>(v);
+    if (!base) {
+      throw ScriptError(_("combined_editor_array: invalid entry in 'fields' array (not a value)"));
+    }
+
+    // Ensure it's a TextValue
+    TextValue* text_value = dynamic_cast<TextValue*>(base.get());
+    if (!text_value) {
+      throw ScriptError(_("combined_editor_array: all elements of 'fields' must be text fields"));
+    }
+
+    values.push_back(text_value);
+  }
+
+  if (values.empty()) {
+    throw ScriptError(_("combined_editor_array: no fields provided in 'fields' array"));
+  }
+
+  return values;
+}
+
+vector<String> readRepeatedSeparators(Context& ctx, const vector<TextValue*>& values) {
+  SCRIPT_PARAM_DEFAULT(String, separator, _("<line>\n</line>"));
+  vector<String> separators(values.size() > 1 ? values.size() - 1 : 0, separator);
+  return separators;
+}
+
+static vector<double> readMinHeightsArray(Context& ctx) {
+  vector<double> result;
+
+  SCRIPT_OPTIONAL_PARAM(ScriptValueP, min_heights) {
+    if (min_heights->type() != SCRIPT_COLLECTION) {
+      throw ScriptError(_("combined_editor_array: 'min_heights' must be an array of numbers"));
+    }
+
+    ScriptValueP it = min_heights->makeIterator();
+    while (ScriptValueP v = it->next()) {
+      double val = v->toDouble();
+      result.push_back(val);
     }
   }
+
+  return result;
+}
+
+static String readAlignment(Context& ctx) {
+  String result = "middle left";
+  SCRIPT_OPTIONAL_PARAM(String, alignment) {
+    result = alignment;
+  }
+  return result;
+}
+
+// This version accepts:
+//   fields: [array of TextField]
+//   separator: string
+//   minHeights: [array of double]
+//   (optional) prefix, suffix, hide_when_empty, etc.
+
+SCRIPT_FUNCTION_WITH_DEP(combined_editor_array) {
+  vector<TextValue*> values = readFieldArray(ctx);
+  vector<String> separators = readRepeatedSeparators(ctx, values);
+  vector<double> minHeights = readMinHeightsArray(ctx);
+  String alignment = readAlignment(ctx);
+  String value = removePrefixSuffix(ctx);
+  vector<pair<String, bool>> value_parts = splitTheValue(value, values.size());
+  updateValuesIfInputNewer(ctx, values, value_parts);
+  String new_value = recombineParts(ctx, value_parts, separators, minHeights, alignment);
+  SCRIPT_RETURN(new_value);
+}
+
+static vector<FieldP> readFieldsArrayForDeps(Context& ctx) {
+  vector<FieldP> output;
+  SCRIPT_PARAM(ScriptValueP, fields);
+
+  ScriptValueP it = fields->makeIterator();
+  while (ScriptValueP v = it->next()) {
+    ValueP base = from_script<ValueP>(v);
+    if (base && base->fieldP) {
+      output.push_back(base->fieldP);
+    }
+  }
+
+  return output;
+}
+
+SCRIPT_FUNCTION_DEPENDENCIES(combined_editor_array) {
+  vector<FieldP> fields = readFieldsArrayForDeps(ctx);
+  SCRIPT_PARAM_C(Set*, set);
+  FieldP target_field = resolveTargetField(ctx, dep, set->game);
+  addFieldDependencies<DEP_CARD_COPY_DEP>(fields, target_field, set->game->card_fields);
+  addFieldDependencies<DEP_SET_COPY_DEP>(fields, target_field, set->game->set_fields);
   return dependency_dummy;
 }
 
@@ -389,6 +526,7 @@ SCRIPT_FUNCTION(count_chosen) {
 void init_script_editor_functions(Context& ctx) {
   ctx.setVariable(_("forward_editor"),           script_combined_editor); // compatability
   ctx.setVariable(_("combined_editor"),          script_combined_editor);
+  ctx.setVariable(_("combined_editor_array"),    script_combined_editor_array);
   ctx.setVariable(_("primary_choice"),           script_primary_choice);
   ctx.setVariable(_("chosen"),                   script_chosen);
   ctx.setVariable(_("count_chosen"),             script_count_chosen);

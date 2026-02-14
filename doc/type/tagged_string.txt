@@ -22,6 +22,7 @@ This is written as the character with code 1 in files.
 | @<font:???>@		The text inside the tag is rendered with the given font family.
 | @<align:???>@			The block inside the tag is aligned with the given horizontal [[type:alignment]]
 | @<margin:??:??>@			The block inside the tag has additional left, right (optional), and top (optional) margins of the specified size in pixels.
+| @<min-height:??:??>@			The block inside the tag is rendered at least the given pixel height. The given vertical alignment will apply to the text within the expanded block.
 | @<li>@			The text inside the tag is treated as a list marker, meaning that if the line wraps it will be indented to match the content of the @<li>@ tag.
 | @<line>@		Line breaks inside this tag use the [[prop:style:line height line]], and they show a horizontal line.
 | @<soft-line>@		Line breaks inside this tag use the [[prop:style:soft line height]].

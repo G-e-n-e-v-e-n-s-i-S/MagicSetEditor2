@@ -1,0 +1,58 @@
+Function: combined_editor
+
+--Usage--
+> forward_editor(field: some_text_value)
+> combined_editor(field1: some_text_value, field2: some_text_value, ..., separator1: some_string, ...)
+> combined_editor_array(fields: array_of_fields, separator: some_string, min_heights: array_of_ints, alignment: vertical_alignment)
+
+Use one text field to edit one or more others.
+
+This function must be used in the @script@ of a [[type:field#text|text field]].
+This field will then contain the combined values of the given fields, separated by the separators in @<sep>@ tags.
+When the field changes the underlying values are updated and vice versa.
+
+Note: @forward_editor@ and @combined_editor@ are the same function. @combined_editor_array@ has additional functionality.
+
+--Parameters--
+! Parameter	Type				Default	Description
+| @field@	[[type:value#text|text value]]	 	Text value to edit
+| @field1@	[[type:value#text|text value]]	 	Another text value to edit
+| @field2@	[[type:value#text|text value]]	 	''etc.''
+| @fields@	[[type:list]] of [[type:value#text|text values]]	 	Exclusive to combined_editor_array, the text values to edit
+| @separator@	[[type:string]]			 	Separator between field 1 and 2, or all fields on combined_editor_array
+| @separator1@	[[type:string]]			 	Multiple separators
+| @separator2@	[[type:string]]			 	Next separator, ''etc.''
+| @prefix@	[[type:string]]		''optional''	Prefix before the combined editor; like a separator between the start and the first field.
+| @suffix@	[[type:string]]		''optional''	Suffix after the combined editor; like a separator between the last field and the end.
+| @hide when empty@	[[type:boolean]]	@false@	Don't include separators if the entire value is empty.
+| @soft before empty@	[[type:boolean]]	@false@	Make separators 'soft' when the value following it is empty.
+			 			 	Soft separators are hidden by default and shown grayed when the field is selected.
+| @min_heights@	[[type:list]] of [[type:int]]		''optional''	Exclusive to combined_editor_array. For each block, applies a min-height [[type:tagged string|tag]] if the matching index is non-zero.
+| @alignment@	vertical [[type:alignment]]	"middle"	Exclusive to combined_editor_array. Relative alignment to apply to text when a block is made larger by the min-height tag.
+
+--Examples--
+>card field:
+>	...
+>	script:
+>>		combined_editor(
+>>			field1: card.first_part
+>>			separator: " - "
+>>			field2: card.second_part
+>>		)
+
+Forwarding just one field should be used in cases when two fields share a value, or when sometimes multiple fields are combined.
+For example the Magic uses:
+>> if set.include_automatic_card_numbers then
+>>   combined_editor(field1:    card.copyright,
+>>                   separator: "/",
+>>                   field2:    card.card_number)
+>> else
+>>   forward_editor(field: card.copyright)
+
+When combining numerous fields, consider using combined_editor_array. Only one kind of separator can be defined, but the fields may be collected and passed as a list instead of indivually.
+>> planeswalker_abilities := [card.level_1_text, card.level_2_text, card.level_3_text, card.level_4_text]
+>> combined_editor_array(
+>>   fields: planeswalker_abilities,
+>>   separator: "<line>\n</line>",
+>>   hide_when_empty: true
+>> )

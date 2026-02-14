@@ -42,6 +42,7 @@ struct TextElementsFromString {
   vector<double> sizes;
   vector<String> fonts;
   vector<Margins> margins;
+  vector<double> min_heights;
   vector<Alignment> aligns;
 
   const TextStyle& style;
@@ -199,6 +200,38 @@ private:
           }
         } else if (is_tag(text, tag_start, _("</margin"))) {
           if (!margins.empty()) margins.pop_back();
+        } else if (is_tag(text, tag_start, _("<min-height"))) {
+          size_t first_colon = text.find_first_of(_(">:"), tag_start);
+          if (first_colon < pos - 1 && text.GetChar(first_colon) == _(':')) {
+            String args = text.substr(first_colon + 1, pos - first_colon - 2);
+            args.Trim();
+
+            size_t second_colon = args.find(_(":"));
+            String height_str, valign_str;
+
+            if (second_colon != String::npos) {
+              height_str = args.substr(0, second_colon);
+              valign_str = args.substr(second_colon + 1);
+            } else {
+              height_str = args;
+              valign_str = _("middle");
+            }
+
+            double h = 0.0;
+            height_str.ToDouble(&h);
+            min_heights.push_back(h);
+
+            TextParagraph& para = paragraphs.back();
+            para.min_height = std::max(para.min_height, h);
+
+            Alignment parsed_align = alignment_from_string(valign_str);
+            para.internal_valign = parsed_align;
+          }
+        } else if (is_tag(text, tag_start, _("</min-height"))) {
+          if (!min_heights.empty()) {
+            TextParagraph& para = paragraphs.back();
+            para.min_height_closed = true;
+          }
         } else if (is_tag(text, tag_start, _("<align"))) {
           size_t colon = text.find_first_of(_(">:"), tag_start);
           if (colon < pos - 1 && text.GetChar(colon) == _(':')) {
