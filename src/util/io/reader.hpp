@@ -38,7 +38,7 @@ public:
   /** filename is used only for error messages
    *  package is used for looking up included files.
    */
-  Reader(wxInputStream& input, Packaged* package = nullptr, const String& filename = _(""), bool ignore_invalid = false);
+  Reader(wxInputStream& input, Packaged* package = nullptr, const String& filename = _(""), bool ignore_invalid = false, bool suppress_warnings = false);
   
   ~Reader() { showWarnings(); }
   
@@ -148,7 +148,9 @@ private:
   } state;
   /// Should all invalid keys be ignored?
   bool ignore_invalid;
-  
+  /// Should warnings be emitted?
+  bool suppress_warnings;
+
   /// Filename for error messages
   String filename;
   /// Package this file is from, if any

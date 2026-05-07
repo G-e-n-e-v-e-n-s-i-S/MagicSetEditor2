@@ -424,24 +424,34 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
     qm(String("parseData Native Found"));
     String id = ignore_cards_from_own_card_list ? drop_target->ignored_id : _("");
     size_t size = composite->GetDataSize(format);
-    if (size > 0) {
-      std::vector<char> buffer(size);
-      if (composite->GetDataHere(format, buffer.data())) {
-        qm(String("parseData Native Buffer Found"));
-        CardsDataObject card_data;
-        card_data.SetData(size, buffer.data());
-        card_data.getCards(set, id, new_cards);
-      }
+    if (size < 1) {
+      queue_message(MESSAGE_ERROR, _("DEBUG: CardsDataObject corrupted"));
+      return false;
+    }
+    if (size > 10000000) { // 10Mb
+      queue_message(MESSAGE_ERROR, _("Too much card data, paste less cards!"));
+      return false;
+    }
+    std::vector<char> buffer(size);
+    if (composite->GetDataHere(format, buffer.data())) {
+      qm(String("parseData Native Buffer"));
+      CardsDataObject card_data;
+      card_data.SetData(size, buffer.data());
+      card_data.getCards(set, id, new_cards);
     }
   }
   else {
     wxDataObject *data = composite->GetObject(format);
+    qm(String("parseData format GetType: ") << format.GetType());
+    qm(String("parseData format GetId: ") << format.GetId());
 
     switch (format.GetType())
     {
       case wxDF_FILENAME:
       {
+        qm(String("parseData wxDF_FILENAME"));
         wxFileDataObject* file_data = static_cast<wxFileDataObject*>(data);
+        qm(String("parseData wxDF_FILENAME static"));
         wxArrayString filenames = file_data->GetFilenames();
         parseFiles(filenames, new_cards);
       }
@@ -449,16 +459,52 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
 
       case wxDF_PNG:
       {
+        qm(String("parseData wxDF_PNG"));
         wxImageDataObject* image_data = static_cast<wxImageDataObject*>(data);
-        Image image = image_data->GetImage();
-        parseImage(image, new_cards);
+        qm(String("parseData wxDF_PNG static"));
+        size_t size = image_data->GetDataSize();
+        if (size < 1) {
+          queue_message(MESSAGE_ERROR, _("DEBUG: ImageDataObject corrupted"));
+          return false;
+        }
+        if (size > 50000000) { // 50Mb
+          queue_message(MESSAGE_ERROR, _("Image data too large or corrupted"));
+          return false;
+        }
+        try {
+          Image image = image_data->GetImage();
+          if (!image.IsOk() || image.GetWidth() > 20000 || image.GetHeight() > 20000) {
+            queue_message(MESSAGE_ERROR, _("Image too large or corrupted"));
+            return false;
+          }
+          parseImage(image, new_cards);
+        } catch (const std::bad_alloc&) {
+          queue_message(MESSAGE_ERROR, _("Image couldn't be allocated"));
+          return false;
+        }
       }
       break;
 
       case wxDF_BITMAP:
       {
+        qm(String("parseData wxDF_BITMAP"));
         wxBitmapDataObject* bitmap_data = static_cast<wxBitmapDataObject*>(data);
+        qm(String("parseData wxDF_BITMAP static"));
+        size_t size = bitmap_data->GetDataSize();
+        if (size < 1) {
+          queue_message(MESSAGE_ERROR, _("DEBUG: BitmapDataObject corrupted"));
+          return false;
+        }
+        if (size > 50000000) { // 50Mb
+          queue_message(MESSAGE_ERROR, _("Bitmap data too large or corrupted"));
+          return false;
+        }
         wxBitmap bitmap = bitmap_data->GetBitmap();
+        if (!bitmap.IsOk() || bitmap.GetWidth() > 20000 || bitmap.GetHeight() > 20000) {
+          queue_message(MESSAGE_ERROR, _("Bitmap too large or corrupted"));
+          return false;
+        }
+        qm(String("parseData wxDF_BITMAP bitmap"));
         Image image = bitmap.ConvertToImage();
         parseImage(image, new_cards);
       }
@@ -468,7 +514,18 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
       case wxDF_TEXT:
       case wxDF_HTML:
       {
+        qm(String("parseData wxDF_TEXT"));
         wxTextDataObject* text_data = static_cast<wxTextDataObject*>(data);
+        qm(String("parseData wxDF_TEXT static"));
+        size_t size = text_data->GetDataSize();
+        if (size < 1) {
+          queue_message(MESSAGE_ERROR, _("DEBUG: TextDataObject corrupted"));
+          return false;
+        }
+        if (size > 30000000) { // 30Mb
+          queue_message(MESSAGE_ERROR, _("Text too large or corrupted"));
+          return false;
+        }
         String text = text_data->GetText();
         if (!parseUrl(text, new_cards)) parseText(text, new_cards);
       }

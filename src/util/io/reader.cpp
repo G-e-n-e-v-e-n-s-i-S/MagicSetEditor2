@@ -18,9 +18,9 @@ using boost::tribool;
 
 // ----------------------------------------------------------------------------- : Reader
 
-Reader::Reader(wxInputStream& input, Packaged* package, const String& filename, bool ignore_invalid)
+Reader::Reader(wxInputStream& input, Packaged* package, const String& filename, bool ignore_invalid, bool suppress_warnings)
   : indent(0), expected_indent(0), state(OUTSIDE)
-  , ignore_invalid(ignore_invalid)
+  , ignore_invalid(ignore_invalid), suppress_warnings(suppress_warnings)
   , filename(filename), package(package), line_number(0), previous_line_number(0)
   , input(input)
 {
@@ -53,7 +53,7 @@ void Reader::warning(const String& msg, int line_number_delta, bool warn_on_prev
 }
 
 void Reader::showWarnings() {
-  if (!warnings.empty()) {
+  if (!suppress_warnings && !warnings.empty()) {
     queue_message(MESSAGE_WARNING, _("Warnings while reading file:\n") + filename + _("\n") + warnings);
     warnings.clear();
   }
