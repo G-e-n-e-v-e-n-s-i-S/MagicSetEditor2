@@ -13,6 +13,7 @@
 #include <boost/json.hpp>
 #include <wx/filename.h>
 #include <fstream>
+#include <filesystem>
 
 // ----------------------------------------------------------------------------- : Crop Rect Encoding
 
@@ -116,26 +117,29 @@ inline static const char Base64Alphabet[] =
   "abcdefghijklmnopqrstuvwxyz"
   "0123456789+/";
 
+inline static const std::vector<int> Base64ReverseAlphabet = [] {
+  std::vector<int> table(256, -1);
+  for (int i = 0; i < 64; i++) table[(uint8_t)Base64Alphabet[i]] = i;
+  return table;
+}();
+
 /// Encode a file in a string
 inline static std::string fileToUTF8(const std::string& filepath) {
   // Load file
+  size_t size = std::filesystem::file_size(filepath);
+  std::vector<uint8_t> data(size);
   std::ifstream file(filepath, std::ios::binary);
   if (!file)  {
     queue_message(MESSAGE_WARNING, _("Could not find file: ") + String(filepath));
     return "";
   }
-  file.unsetf(std::ios::skipws);
-  std::string string = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-  int size = string.size();
-  if (size < 2) {
-    queue_message(MESSAGE_WARNING, _("File too small to encode"));
-    return "";
-  }
+  file.read(reinterpret_cast<char*>(data.data()), size);
   // Base64 encode
   std::string out;
+  out.reserve(((size + 2) / 3) * 4);
   int val = 0;
   int valb = -6;
-  for (uint8_t c : string) {
+  for (uint8_t c : data) {
     val = (val << 8) | c;
     valb += 8;
     while (valb >= 0) {
@@ -155,31 +159,23 @@ inline static std::string fileToUTF8(const std::string& filepath) {
 
 /// Retreive a file encoded in a string, return true if successful
 inline static bool UTF8ToFile(const std::string& filepath, std::string& string) {
-  // Init
-  static std::vector<int> T(256, -1);
-  static bool initialized = false;
-  if (!initialized) {
-    for (int i = 0; i < 64; i++) {
-      T[Base64Alphabet[i]] = i;
-    }
-    initialized = true;
-  }
   // Base64 decode
   std::string out;
+  out.reserve(string.size() * 3 / 4);
   int val = 0;
   int valb = -8;
   for (uint8_t c : string) {
-    if (T[c] == -1) break;
-    val = (val << 6) | T[c];
+    if (c == '=') break; // padding, we're done
+    val = (val << 6) | Base64ReverseAlphabet[c];
     valb += 6;
     if (valb >= 0) {
-      out.push_back(char((val >> valb) & 0xFF));
+      out.push_back(static_cast<char>((val >> valb) & 0xFF));
       valb -= 8;
     }
   }
   // Save file
-  std::ofstream file(filepath, std::ios::out|std::ios::binary);
-  std::copy(out.cbegin(), out.cend(), std::ostream_iterator<unsigned char>(file));
+  std::ofstream file(filepath, std::ios::binary);
+  file.write(out.data(), out.size());
   return true;
 }
 
