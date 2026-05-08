@@ -307,20 +307,13 @@ bool CardListBase::parseUrl(String& url, vector<CardP>& out) {
   WebRequestWindow wnd(url);
   if (wnd.ShowModal() == wxID_OK) {
     qm(String("parseUrl Downloaded"));
-    const String& content_type = wnd.out.GetContentType();
-    if (content_type.StartsWith(_("image"))) {
+    if (wnd.content_type.StartsWith(_("image/"))) {
       qm(String("parseUrl Image Found"));
-      Image img(*wnd.out.GetStream());
-      if (img.IsOk()) {
-        parseImage(img, out);
-      }
-      else {
-        queue_message(MESSAGE_ERROR, _ERROR_("web request corrupted"));
-      }
+      parseImage(wnd.image_out, out);
     }
-    else if (content_type.StartsWith(_("text"))) {
+    else if (wnd.content_type.StartsWith(_("text/"))) {
       qm(String("parseUrl Text Found"));
-      String text = wnd.out.AsString();
+      String text = String(wnd.text_out.data(), wnd.text_out.size());
       parseText(text, out);
     }
     else {
@@ -366,6 +359,7 @@ bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
   size_t j = out.size();
   if (image.HasOption(wxIMAGE_OPTION_PNG_DESCRIPTION)) {
     auto text = image.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION);
+    qm(String("parseImage Description Size: ") << text.size());
     parseText(text, out);
 
     // crop image rects to populate image fields

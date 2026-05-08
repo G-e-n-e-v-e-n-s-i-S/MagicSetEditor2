@@ -850,14 +850,11 @@ DownloadedImage::DownloadedImage(Set* set, const String& url)
   }
 
   // is the data an image?
-  const String& content_type = wnd.out.GetContentType();
-  if (!content_type.StartsWith(_("image"))) throw ScriptError(_ERROR_1_("download not image", loadpath));
-  Image img(*wnd.out.GetStream());
-  if (!img.IsOk()) throw ScriptError(_ERROR_("web request corrupted"));
-
+  if (!wnd.content_type.StartsWith(_("image/"))) throw ScriptError(_ERROR_1_("download not image", loadpath));
+  
   // add the file to the set (or overwrite it if pre-existing), save set
   auto outStream = set->openOut(savename);
-  img.SaveFile(*outStream, wxBITMAP_TYPE_PNG);
+  wnd.image_out.SaveFile(*outStream, wxBITMAP_TYPE_PNG);
   if (!outStream->IsOk()) throw ScriptError(_ERROR_1_("can't write image to set", loadpath));
   outStream->Close();
   set->save(false);

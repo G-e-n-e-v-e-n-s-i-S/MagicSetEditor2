@@ -9,6 +9,7 @@
 #include <util/prec.hpp>
 #include <gui/web_request_window.hpp>
 #include <util/window_id.hpp>
+#include <wx/mstream.h>
 
 // ----------------------------------------------------------------------------- : WebRequestWindow
 
@@ -76,16 +77,51 @@ void WebRequestWindow::onUpdate(wxWebRequestEvent& evt) {
 }
 
 void WebRequestWindow::onComplete(wxWebRequestEvent& evt) {
-  out = evt.GetResponse();
-  if (out.IsOk()) {
-    EndModal(wxID_OK);
+  wxWebResponse response = evt.GetResponse();
+  if (!response.IsOk()) {
+    onFail(_ERROR_("web request corrupted"));
+    return;
+  }
+  qm(String("WebRequest Expected Bytes: ") << request.GetBytesExpectedToReceive());
+  wxInputStream* stream = response.GetStream();
+  if (!stream || !stream->IsOk()) {
+    onFail(_ERROR_("web request corrupted"));
+    return;
+  }
+
+  content_type = response.GetContentType();
+  if (content_type.StartsWith("image/")) {
+    image_out = Image(*stream);
+    if (!image_out.IsOk()) {
+      onFail(_ERROR_("web request corrupted"));
+      return;
+    }
+  }
+  else if (content_type.StartsWith("text/") || content_type.Contains("json")) {
+    wxMemoryOutputStream mem;
+    char buffer[8192];
+    while (true) {
+      stream->Read(buffer, sizeof(buffer));
+      size_t read = stream->LastRead();
+      if (read > 0) mem.Write(buffer, read);
+      if (stream->Eof()) break;
+      if (stream->GetLastError() != wxSTREAM_NO_ERROR) {
+        onFail(_ERROR_("web request corrupted"));
+        return;
+      }
+    }
+    text_out.resize(mem.GetSize());
+    mem.CopyTo(text_out.data(), mem.GetSize());
   }
   else {
-    onFail(_ERROR_("web request corrupted"));
+    onFail(_ERROR_("web request unsupported format"));
+    return;
   }
+  EndModal(wxID_OK);
 }
 
 void WebRequestWindow::onFail(const String& message) {
+  content_type.Clear();
   info->SetLabel(_ERROR_("web request failed"));
   address->SetLabel(message);
 }

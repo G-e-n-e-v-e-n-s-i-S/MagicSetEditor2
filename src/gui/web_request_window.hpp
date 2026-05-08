@@ -19,7 +19,9 @@ class WebRequestWindow : public wxDialog {
 public:
   WebRequestWindow(const String& url, bool sizer=true);
 
-  wxWebResponse   out;
+  String          content_type;
+  std::string     text_out;
+  Image           image_out;
 
 protected:
   DECLARE_EVENT_TABLE();
