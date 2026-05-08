@@ -123,9 +123,9 @@ String json_pretty_print(const boost::json::value& jv, std::string* indent) {
 }
 
 String json_ugly_print(const boost::json::value& jv) {
-  boost::json::string jstring = boost::json::serialize(jv);
-  const char* data = jstring.data();
-  size_t size = jstring.size();
+  std::string stdstring = boost::json::serialize(jv);
+  const char* data = stdstring.data();
+  size_t size = stdstring.size();
   String wxstring = String::FromUTF8(data, size);
   if (wxstring.empty() && size > 0) {
     wxstring = String(data, wxConvWhateverWorks, size);

@@ -379,12 +379,16 @@ bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
 
 bool CardListBase::parseText(String& text, vector<CardP>& out) {
   qm(String("parseText Start"));
+  qm(text);
+  if (text.size() == 0) {
+    qm(String("parseText No Text"));
+    return false;
+  }
   size_t j = out.size();
   size_t pos = text.find("<mse-card-data>");
   if (pos != wxString::npos) {
     text = text.substr(pos + 15, text.find("</mse-card-data>") - pos - 15);
-    qm(String("parseText Data Found:"));
-    qm(text);
+    qm(String("parseText Data Found"));
   }
   try {
     ScriptValueP sv = json_to_mse(text, set.get());
@@ -481,6 +485,9 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
         } catch (const std::bad_alloc&) {
           queue_message(MESSAGE_ERROR, _("Image couldn't be allocated"));
           return false;
+        } catch (...) {
+          queue_message(MESSAGE_ERROR, _("Image couldn't be processed"));
+          return false;
         }
       }
       break;
@@ -499,14 +506,22 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
           queue_message(MESSAGE_ERROR, _("Bitmap data too large or corrupted"));
           return false;
         }
-        wxBitmap bitmap = bitmap_data->GetBitmap();
-        if (!bitmap.IsOk() || bitmap.GetWidth() > 20000 || bitmap.GetHeight() > 20000) {
-          queue_message(MESSAGE_ERROR, _("Bitmap too large or corrupted"));
+        try {
+          wxBitmap bitmap = bitmap_data->GetBitmap();
+          if (!bitmap.IsOk() || bitmap.GetWidth() > 20000 || bitmap.GetHeight() > 20000) {
+            queue_message(MESSAGE_ERROR, _("Bitmap too large or corrupted"));
+            return false;
+          }
+          qm(String("parseData wxDF_BITMAP bitmap"));
+          Image image = bitmap.ConvertToImage();
+          parseImage(image, new_cards);
+        } catch (const std::bad_alloc&) {
+          queue_message(MESSAGE_ERROR, _("Bitmap or Image couldn't be allocated"));
+          return false;
+        } catch (...) {
+          queue_message(MESSAGE_ERROR, _("Bitmap or Image couldn't be processed"));
           return false;
         }
-        qm(String("parseData wxDF_BITMAP bitmap"));
-        Image image = bitmap.ConvertToImage();
-        parseImage(image, new_cards);
       }
       break;
 

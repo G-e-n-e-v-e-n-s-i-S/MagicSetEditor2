@@ -111,67 +111,75 @@ inline static String transformAllEncodedRects(const String& rectString, RectTran
 
 // ----------------------------------------------------------------------------- : File to UTF8 Encoding
 
+inline static const char Base64Alphabet[] =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  "abcdefghijklmnopqrstuvwxyz"
+  "0123456789+/";
+
 /// Encode a file in a string
 inline static std::string fileToUTF8(const std::string& filepath) {
-  // File to char
+  // Load file
   std::ifstream file(filepath, std::ios::binary);
+  if (!file)  {
+    queue_message(MESSAGE_WARNING, _("Could not find file: ") + String(filepath));
+    return "";
+  }
   file.unsetf(std::ios::skipws);
-  std::vector<unsigned char> buffer = std::vector<unsigned char>(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-  int size = buffer.size();
+  std::string string = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+  int size = string.size();
   if (size < 2) {
     queue_message(MESSAGE_WARNING, _("File too small to encode"));
     return "";
   }
-  // All bytes that have a highest bit of 0 are valid UTF8 characters, so:
-  // Reset the highest bit of each byte, store these bits in additional bytes at the end
-  const unsigned char highest_bit = 1 << 7;
-  unsigned char added_byte = 0;
-  for (int i = 0, b = 0 ; i < size ; ++i, ++b) {
-    if (b == 7) {                         // Never set the highest bit of the added byte
-      buffer.push_back(added_byte);
-      b = 0;
-    }
-    unsigned char bit = 1 << b;
-    if ((buffer[i] & highest_bit) != 0) { // The highest bit of the buffer is set
-      buffer[i] &= ~highest_bit;          // Reset the highest bit of the buffer
-      added_byte |= bit;                  // Set the bit of the added byte
-    } else {
-      added_byte &= ~bit;                 // Reset the bit of the added byte
+  // Base64 encode
+  std::string out;
+  int val = 0;
+  int valb = -6;
+  for (uint8_t c : string) {
+    val = (val << 8) | c;
+    valb += 8;
+    while (valb >= 0) {
+      out.push_back(Base64Alphabet[(val >> valb) & 0x3F]);
+      valb -= 6;
     }
   }
-  buffer.push_back(added_byte);
-  // Char to string
-  return std::string(buffer.begin(), buffer.end());
+  if (valb > -6) {
+    out.push_back(Base64Alphabet[((val << 8) >> (valb + 8)) & 0x3F]);
+  }
+  // Pad
+  while (out.size() % 4) {
+    out.push_back('=');
+  }
+  return out;
 }
 
 /// Retreive a file encoded in a string, return true if successful
 inline static bool UTF8ToFile(const std::string& filepath, std::string& string) {
-  // String to char
-  std::vector<unsigned char> buffer(string.begin(), string.end());
-  int size = buffer.size();
-  if (size < 2) {
-    queue_message(MESSAGE_WARNING, _("File too small to decode"));
-    return false;
-  }
-  // Restore the highest bit of each byte
-  size = (size * 7) / 8;
-  const unsigned char highest_bit = 1 << 7;
-  unsigned char added_byte = buffer[size];
-  for (int i = 0, j = size, b = 0 ; i < size ; ++i, ++b) {
-    if (b == 7) {
-      ++j;
-      added_byte = buffer[j];
-      b = 0;
+  // Init
+  static std::vector<int> T(256, -1);
+  static bool initialized = false;
+  if (!initialized) {
+    for (int i = 0; i < 64; i++) {
+      T[Base64Alphabet[i]] = i;
     }
-    unsigned char bit = 1 << b;
-    if ((added_byte & bit) != 0) { // The bit of the added byte is set
-      buffer[i] |= highest_bit;    // Set the highest bit of the buffer
+    initialized = true;
+  }
+  // Base64 decode
+  std::string out;
+  int val = 0;
+  int valb = -8;
+  for (uint8_t c : string) {
+    if (T[c] == -1) break;
+    val = (val << 6) | T[c];
+    valb += 6;
+    if (valb >= 0) {
+      out.push_back(char((val >> valb) & 0xFF));
+      valb -= 8;
     }
   }
-  buffer.resize(size);
-  // Char to file
+  // Save file
   std::ofstream file(filepath, std::ios::out|std::ios::binary);
-  std::copy(buffer.cbegin(), buffer.cend(), std::ostream_iterator<unsigned char>(file));
+  std::copy(out.cbegin(), out.cend(), std::ostream_iterator<unsigned char>(file));
   return true;
 }
 
