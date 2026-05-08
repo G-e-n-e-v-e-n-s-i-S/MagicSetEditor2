@@ -126,13 +126,13 @@ inline static const std::vector<int> Base64ReverseAlphabet = [] {
 /// Encode a file in a string
 inline static std::string fileToUTF8(const std::string& filepath) {
   // Load file
-  size_t size = std::filesystem::file_size(filepath);
-  std::vector<uint8_t> data(size);
   std::ifstream file(filepath, std::ios::binary);
   if (!file)  {
     queue_message(MESSAGE_WARNING, _("Could not find file: ") + String(filepath));
     return "";
   }
+  size_t size = std::filesystem::file_size(filepath);
+  std::vector<uint8_t> data(size);
   file.read(reinterpret_cast<char*>(data.data()), size);
   // Base64 encode
   std::string out;
