@@ -158,13 +158,13 @@ inline static std::string fileToUTF8(const std::string& filepath) {
 }
 
 /// Retreive a file encoded in a string, return true if successful
-inline static bool UTF8ToFile(const std::string& filepath, std::string& string) {
+inline static bool UTF8ToFile(const std::string& filepath, std::string& data) {
   // Base64 decode
   std::string out;
-  out.reserve(string.size() * 3 / 4);
+  out.reserve(data.size() * 3 / 4);
   int val = 0;
   int valb = -8;
-  for (uint8_t c : string) {
+  for (uint8_t c : data) {
     if (c == '=') break; // padding, we're done
     val = (val << 6) | Base64ReverseAlphabet[c];
     valb += 6;
