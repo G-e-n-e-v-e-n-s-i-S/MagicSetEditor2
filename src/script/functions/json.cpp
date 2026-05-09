@@ -404,6 +404,7 @@ ScriptValueP json_to_mse(const String& string, Set* set) {
     options.allow_invalid_utf8 = true;
     qm(String("json_to_mse wxstring length:") << string.length());
     qm(String("json_to_mse ToStdString length:") << string.ToStdString().length());
+    qm(String("json_to_mse utf8_string length:") << string.utf8_string().length());
     wxScopedCharBuffer buffer = string.ToUTF8();
     qm(String("json_to_mse buffer length:") << buffer.length());
     std::string stdstring(buffer.data(), buffer.length());
