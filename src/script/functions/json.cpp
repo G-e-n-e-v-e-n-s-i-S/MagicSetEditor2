@@ -402,7 +402,23 @@ ScriptValueP json_to_mse(const String& string, Set* set) {
     boost::system::error_code ec;
     boost::json::parse_options options;
     options.allow_invalid_utf8 = true;
-    boost::json::value jv = boost::json::parse(string.ToStdString(), ec, {}, options);
+    qm(String("json_to_mse wxstring length:") << string.length());
+    qm(String("json_to_mse ToStdString length:") << string.ToStdString().length());
+    wxScopedCharBuffer buffer = string.ToUTF8();
+    qm(String("json_to_mse buffer length:") << buffer.length());
+    std::string stdstring(buffer.data(), buffer.length());
+    qm(String("json_to_mse stdstring length:") << stdstring.length());
+    boost::json::string_view stringview(buffer.data(), buffer.length());
+    qm(String("json_to_mse stringview length:") << stringview.length());
+    for(size_t i = 0; i < stdstring.size(); ++i)
+    {
+      if(stdstring[i] == '\0')
+      {
+        qm(String("json_to_mse NUL in stdstring found"));
+        break;
+      }
+    }
+    boost::json::value jv = boost::json::parse(boost::json::string_view(buffer.data(), buffer.length()), ec, {}, options);
     if(ec) queue_message(MESSAGE_ERROR, _ERROR_("json cant parse") + _("\n\n") + ec.message());
     if(ec) return script_nil;
     return json_to_mse(jv, set);

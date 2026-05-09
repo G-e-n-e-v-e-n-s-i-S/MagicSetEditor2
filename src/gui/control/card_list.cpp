@@ -359,7 +359,6 @@ bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
   size_t j = out.size();
   if (image.HasOption(wxIMAGE_OPTION_PNG_DESCRIPTION)) {
     auto text = image.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION);
-    qm(String("parseImage Description Size: ") << text.size());
     parseText(text, out);
 
     // crop image rects to populate image fields
