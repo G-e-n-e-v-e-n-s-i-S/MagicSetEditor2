@@ -197,10 +197,8 @@ bool CardListBase::doCopyCardAndLinkedCards() {
 }
 
 bool CardListBase::doPaste() {
-  qm(String("doPaste Start"));
   if (!canPaste()) return false;
   if (!wxTheClipboard->Open()) return false;
-  qm(String("doPaste Clipboard Open"));
   bool ok = wxTheClipboard->GetData(*drop_target->data_object);
   wxTheClipboard->Close();
   if (ok) return parseData(false);
@@ -245,17 +243,14 @@ bool CardListBase::doBulkModification() {
 }
 
 void CardListBase::parseImageMetadata(CardP& card, const Image& image) {
-  qm(String("parseImageMetadata Crop Start"));
   for (IndexMap<FieldP, ValueP>::iterator it = card->data.begin(); it != card->data.end(); it++) {
     ImageValue* value = dynamic_cast<ImageValue*>(it->get());
     if (value && !value->filename.empty()) {
       RealRect rect(0.0, 0.0, 0.0, 0.0);
       int degrees = 0;
       if (decodeRectFromString(value->filename.toStringForKey(), rect, degrees)) {
-        qm(String("parseImageMetadata Crop Found"));
         rect = rect.intersect(RealRect(0.0, 0.0, image.GetWidth(), image.GetHeight()));
         if (rect.width > 0.0 && rect.height > 0.0) {
-          qm(String("parseImageMetadata Crop Decoded"));
           Image img = image.GetSubImage(rect);
           img = rotate_image(img, deg_to_rad(360 - degrees));
           LocalFileName filename = set->newFileName(_("cropped_image"), _(".png")); // a new unique name in the package
@@ -272,15 +267,12 @@ void CardListBase::parseImageMetadata(CardP& card, const Image& image) {
 }
 
 void CardListBase::parseImageMetadata(CardP& card) {
-  qm(String("parseImageMetadata Encode Start"));
   for (IndexMap<FieldP, ValueP>::iterator it = card->data.begin(); it != card->data.end(); it++) {
     ImageValue* value = dynamic_cast<ImageValue*>(it->get());
     if (value && !value->filename.empty()) {
       Image img;
       if (decodeImageFromString(value->filename.toStringForKey(), img)) {
-        qm(String("parseImageMetadata Encode Found"));
         if (img.IsOk()) {
-          qm(String("parseImageMetadata Encode Decoded"));
           LocalFileName filename = set->newFileName(_("decoded_image"), _(".png")); // a new unique name in the package
           img.SaveFile(set->nameOut(filename), wxBITMAP_TYPE_PNG);
           value->filename = filename;
@@ -295,24 +287,19 @@ void CardListBase::parseImageMetadata(CardP& card) {
 }
 
 bool CardListBase::parseUrl(String& url, vector<CardP>& out) {
-  qm(String("parseUrl Start"));
   size_t j = out.size();
   size_t pos = url.find("URL=");
   if (pos != std::string::npos) {
     url = url.substr(pos+4);
   }
   if (!url.StartsWith(_("http"))) return false;
-  qm(String("parseUrl Found"));
-
+  
   WebRequestWindow wnd(url);
   if (wnd.ShowModal() == wxID_OK) {
-    qm(String("parseUrl Downloaded"));
     if (wnd.content_type.StartsWith(_("image/"))) {
-      qm(String("parseUrl Image Found"));
       parseImage(wnd.image_out, out);
     }
     else if (wnd.content_type.StartsWith(_("text/"))) {
-      qm(String("parseUrl Text Found"));
       String text = String(wnd.text_out.data(), wnd.text_out.size());
       parseText(text, out);
     }
@@ -324,11 +311,9 @@ bool CardListBase::parseUrl(String& url, vector<CardP>& out) {
 }
 
 bool CardListBase::parseFiles(wxArrayString& filenames, vector<CardP>& out) {
-  qm(String("parseFiles Start"));
   size_t j = out.size();
   for (size_t i = 0; i < filenames.size(); i++) {
     if (wxImage::CanRead(filenames[i])) {
-      qm(String("parseFiles Image Found"));
       // if it's an image file, try to get meta_data
       Image image_file;
       image_file.SetLoadFlags(image_file.GetLoadFlags() & ~wxImage::Load_Verbose);
@@ -340,13 +325,11 @@ bool CardListBase::parseFiles(wxArrayString& filenames, vector<CardP>& out) {
       // if it's an url, request the data
       std::ifstream ifs(filenames[i].ToStdString());
       if (ifs.bad() || ifs.fail() || !ifs.good() || !ifs.is_open()) continue;
-      qm(String("parseFiles Stream Found"));
       std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
       bool looks_like_text = std::all_of(content.begin(), content.end(), [](char c) {
         return isprint(c) || isspace(c);
       });
       if (!looks_like_text) continue;
-      qm(String("parseFiles Text Found"));
       wxString text(content);
       if (!parseUrl(text, out)) parseText(text, out);
     }
@@ -355,7 +338,6 @@ bool CardListBase::parseFiles(wxArrayString& filenames, vector<CardP>& out) {
 }
 
 bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
-  qm(String("parseImage Start"));
   size_t j = out.size();
   if (image.HasOption(wxIMAGE_OPTION_PNG_DESCRIPTION)) {
     auto text = image.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION);
@@ -371,22 +353,17 @@ bool CardListBase::parseImage(Image& image, vector<CardP>& out) {
 }
 
 bool CardListBase::parseText(String& text, vector<CardP>& out) {
-  qm(String("parseText Start"));
-  qm(text);
   if (text.size() == 0) {
-    qm(String("parseText No Text"));
     return false;
   }
   size_t j = out.size();
   size_t pos = text.find("<mse-card-data>");
   if (pos != wxString::npos) {
     text = text.substr(pos + 15, text.find("</mse-card-data>") - pos - 15);
-    qm(String("parseText Data Found"));
   }
   try {
     ScriptValueP sv = json_to_mse(text, set.get());
     if (sv->type() == SCRIPT_COLLECTION) {
-      qm(String("parseText Collection Found"));
       if (ScriptCustomCollection* custom = dynamic_cast<ScriptCustomCollection*>(sv.get())) {
         for (size_t i = 0; i < custom->value.size(); i++) {
           if (ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(custom->value[i].get())) {
@@ -395,12 +372,10 @@ bool CardListBase::parseText(String& text, vector<CardP>& out) {
         }
       }
     } else if (ScriptObject<CardP>* c = dynamic_cast<ScriptObject<CardP>*>(sv.get())) {
-      qm(String("parseText Card Found"));
       out.push_back(make_intrusive<Card>(*c->getValue()));
     }
   } catch (...) {}
-  qm(String("parseText Decoded ") << (out.size() - j) << _(" Card(s)"));
-
+  
   // decode images to populate image fields
   for (int k = j; k < out.size(); k++) {
     CardP& card = out[k];
@@ -411,14 +386,12 @@ bool CardListBase::parseText(String& text, vector<CardP>& out) {
 }
 
 bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
-  qm(String("parseData Start"));
   wxBusyCursor wait;
   wxDataObjectComposite* composite = drop_target->data_object;
   wxDataFormat format = composite->GetReceivedFormat();
   vector<CardP> new_cards;
 
   if (format == CardsDataObject::format) {
-    qm(String("parseData Native Found"));
     String id = ignore_cards_from_own_card_list ? drop_target->ignored_id : _("");
     size_t size = composite->GetDataSize(format);
     if (size < 1) {
@@ -431,7 +404,6 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
     }
     std::vector<char> buffer(size);
     if (composite->GetDataHere(format, buffer.data())) {
-      qm(String("parseData Native Buffer"));
       CardsDataObject card_data;
       card_data.SetData(size, buffer.data());
       card_data.getCards(set, id, new_cards);
@@ -439,16 +411,12 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
   }
   else {
     wxDataObject *data = composite->GetObject(format);
-    qm(String("parseData format GetType: ") << format.GetType());
-    qm(String("parseData format GetId: ") << format.GetId());
-
+    
     switch (format.GetType())
     {
       case wxDF_FILENAME:
       {
-        qm(String("parseData wxDF_FILENAME"));
         wxFileDataObject* file_data = static_cast<wxFileDataObject*>(data);
-        qm(String("parseData wxDF_FILENAME static"));
         wxArrayString filenames = file_data->GetFilenames();
         parseFiles(filenames, new_cards);
       }
@@ -456,9 +424,7 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
 
       case wxDF_PNG:
       {
-        qm(String("parseData wxDF_PNG"));
         wxImageDataObject* image_data = static_cast<wxImageDataObject*>(data);
-        qm(String("parseData wxDF_PNG static"));
         size_t size = image_data->GetDataSize();
         if (size < 1) {
           queue_message(MESSAGE_ERROR, _("DEBUG: ImageDataObject corrupted"));
@@ -487,9 +453,7 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
 
       case wxDF_BITMAP:
       {
-        qm(String("parseData wxDF_BITMAP"));
         wxBitmapDataObject* bitmap_data = static_cast<wxBitmapDataObject*>(data);
-        qm(String("parseData wxDF_BITMAP static"));
         size_t size = bitmap_data->GetDataSize();
         if (size < 1) {
           queue_message(MESSAGE_ERROR, _("DEBUG: BitmapDataObject corrupted"));
@@ -505,7 +469,6 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
             queue_message(MESSAGE_ERROR, _("Bitmap too large or corrupted"));
             return false;
           }
-          qm(String("parseData wxDF_BITMAP bitmap"));
           Image image = bitmap.ConvertToImage();
           parseImage(image, new_cards);
         } catch (const std::bad_alloc&) {
@@ -522,9 +485,7 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
       case wxDF_TEXT:
       case wxDF_HTML:
       {
-        qm(String("parseData wxDF_TEXT"));
         wxTextDataObject* text_data = static_cast<wxTextDataObject*>(data);
-        qm(String("parseData wxDF_TEXT static"));
         size_t size = text_data->GetDataSize();
         if (size < 1) {
           queue_message(MESSAGE_ERROR, _("DEBUG: TextDataObject corrupted"));
@@ -857,7 +818,6 @@ CardListDropTarget::CardListDropTarget(CardListBase* card_list)
 CardListDropTarget::~CardListDropTarget() {}
 
 wxDragResult CardListDropTarget::OnData(wxCoord x, wxCoord y, wxDragResult defaultDragResult) {
-  qm(String("OnData Start"));
   if (!GetData()) return wxDragNone;
   if (!card_list->parseData(true)) return wxDragError;
   return wxDragCopy;

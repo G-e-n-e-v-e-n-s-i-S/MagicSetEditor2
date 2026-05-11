@@ -567,7 +567,6 @@ bool CardsPanel::canPaste() const {
 }
 void CardsPanel::doPaste() {
   if (card_list->doPaste()) return;
-  qm(String("CardsPanel Handling"));
   
   int id = focused_control(this);
   if      (id == ID_EDITOR)           editor->doPaste();

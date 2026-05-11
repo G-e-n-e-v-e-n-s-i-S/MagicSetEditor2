@@ -402,20 +402,13 @@ ScriptValueP json_to_mse(const String& string, Set* set) {
     boost::system::error_code ec;
     boost::json::parse_options options;
     options.allow_invalid_utf8 = true;
-    qm(String("json_to_mse wxstring length:") << string.length());
-    qm(String("json_to_mse ToStdString length:") << string.ToStdString().length());
-    qm(String("json_to_mse utf8_string length:") << string.utf8_string().length());
     wxScopedCharBuffer buffer = string.ToUTF8();
-    qm(String("json_to_mse buffer length:") << buffer.length());
     std::string stdstring(buffer.data(), buffer.length());
-    qm(String("json_to_mse stdstring length:") << stdstring.length());
     boost::json::string_view stringview(buffer.data(), buffer.length());
-    qm(String("json_to_mse stringview length:") << stringview.length());
     for(size_t i = 0; i < stdstring.size(); ++i)
     {
       if(stdstring[i] == '\0')
       {
-        qm(String("json_to_mse NUL in stdstring found"));
         break;
       }
     }

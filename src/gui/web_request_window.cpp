@@ -82,7 +82,6 @@ void WebRequestWindow::onComplete(wxWebRequestEvent& evt) {
     onFail(_ERROR_("web request corrupted"));
     return;
   }
-  qm(String("WebRequest Expected Bytes: ") << request.GetBytesExpectedToReceive());
   wxInputStream* stream = response.GetStream();
   if (!stream || !stream->IsOk()) {
     onFail(_ERROR_("web request corrupted"));
