@@ -442,7 +442,7 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
           }
           parseImage(image, new_cards);
         } catch (const std::bad_alloc&) {
-          queue_message(MESSAGE_ERROR, _("Image couldn't be allocated"));
+          //queue_message(MESSAGE_ERROR, _("Image couldn't be allocated"));
           return false;
         } catch (...) {
           queue_message(MESSAGE_ERROR, _("Image couldn't be processed"));
@@ -472,7 +472,7 @@ bool CardListBase::parseData(bool ignore_cards_from_own_card_list) {
           Image image = bitmap.ConvertToImage();
           parseImage(image, new_cards);
         } catch (const std::bad_alloc&) {
-          queue_message(MESSAGE_ERROR, _("Bitmap or Image couldn't be allocated"));
+          //queue_message(MESSAGE_ERROR, _("Bitmap or Image couldn't be allocated"));
           return false;
         } catch (...) {
           queue_message(MESSAGE_ERROR, _("Bitmap or Image couldn't be processed"));

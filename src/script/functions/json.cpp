@@ -403,17 +403,8 @@ ScriptValueP json_to_mse(const String& string, Set* set) {
     boost::json::parse_options options;
     options.allow_invalid_utf8 = true;
     wxScopedCharBuffer buffer = string.ToUTF8();
-    std::string stdstring(buffer.data(), buffer.length());
-    boost::json::string_view stringview(buffer.data(), buffer.length());
-    for(size_t i = 0; i < stdstring.size(); ++i)
-    {
-      if(stdstring[i] == '\0')
-      {
-        break;
-      }
-    }
     boost::json::value jv = boost::json::parse(boost::json::string_view(buffer.data(), buffer.length()), ec, {}, options);
-    if(ec) queue_message(MESSAGE_ERROR, _ERROR_("json cant parse") + _("\n\n") + ec.message());
+    if(ec && buffer.length() > 0) queue_message(MESSAGE_ERROR, _ERROR_("json cant parse") + _("\n\n") + ec.message());
     if(ec) return script_nil;
     return json_to_mse(jv, set);
   }
