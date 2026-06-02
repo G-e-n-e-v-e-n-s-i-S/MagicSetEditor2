@@ -705,6 +705,9 @@ void TextValueEditor::redrawSelection(size_t old_selection_start_i, size_t old_s
   if (isCurrent()) {
     showCaret();
   }
+#ifndef __WXMSW__
+  editor().RefreshRect(wxRect(0, 0, editor().GetClientSize().x, editor().GetClientSize().y), false);
+#endif
 }
 
 // ----------------------------------------------------------------------------- : Other overrides
