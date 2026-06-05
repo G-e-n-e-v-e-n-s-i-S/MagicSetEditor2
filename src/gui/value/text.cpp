@@ -671,6 +671,7 @@ void TextValueEditor::redrawSelection(size_t old_selection_start_i, size_t old_s
     wxCaret* caret = editor().GetCaret();
     if (caret->IsVisible()) caret->Hide();
   }
+#ifdef __WXMSW__
   // Destroy the clientDC before reshowing the caret, prevent flicker on MSW
   {
     // Move selection
@@ -702,12 +703,16 @@ void TextValueEditor::redrawSelection(size_t old_selection_start_i, size_t old_s
       drawWordListIndicators(dc, true);
     }
   }
+#else
+  scroll_with_cursor = true;
+  if (ensureCaretVisible()) {
+    updateScrollbar();
+  }
+  redraw();
+#endif
   if (isCurrent()) {
     showCaret();
   }
-#ifndef __WXMSW__
-  editor().RefreshRect(wxRect(0, 0, editor().GetClientSize().x, editor().GetClientSize().y), false);
-#endif
 }
 
 // ----------------------------------------------------------------------------- : Other overrides
