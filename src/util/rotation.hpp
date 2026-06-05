@@ -173,6 +173,7 @@ public:
   void DrawLine  (const RealPoint& p1,  const RealPoint& p2);
   void DrawRectangle(const RealRect& r);
   void DrawRoundedRectangle(const RealRect& r, double radius);
+  void DrawInvertRectangle(const RealRect& r);
   void DrawCircle(const RealPoint& center, double radius);
   void DrawEllipse(const RealPoint& center, const RealSize& size);
   /// Draw an arc of an ellipse, angles are in radians

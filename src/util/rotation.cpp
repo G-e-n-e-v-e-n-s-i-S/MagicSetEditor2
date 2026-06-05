@@ -10,6 +10,7 @@
 #include <util/rotation.hpp>
 #include <gfx/gfx.hpp>
 #include <data/font.hpp>
+#include <wx/rawbmp.h>
 
 // ----------------------------------------------------------------------------- : Rotation
 
@@ -274,6 +275,33 @@ void RotatedDC::DrawRoundedRectangle(const RealRect& r, double radius) {
     // TODO
     DrawRectangle(r);
   }
+}
+
+void RotatedDC::DrawInvertRectangle(const RealRect& r) {
+  wxRect r_ext = trRectToBB(r);
+
+  wxBitmap bmp(r_ext.width, r_ext.height, 24); 
+  wxMemoryDC memDC(bmp);
+  memDC.Blit(0, 0, r_ext.width, r_ext.height, &dc, r_ext.x, r_ext.y);
+  memDC.SelectObject(wxNullBitmap);
+
+  wxNativePixelData data(bmp);
+  if (!data) return; // Raw access not available on this platform/bitmap
+  wxNativePixelData::Iterator p(data);
+  for (int j = 0; j < r_ext.height; ++j) {
+    wxNativePixelData::Iterator rowStart = p;
+    for (int i = 0; i < r_ext.width; ++i) {
+      // Invert each channel
+      p.Red()   = 255 - p.Red();
+      p.Green() = 255 - p.Green();
+      p.Blue()  = 255 - p.Blue();
+      ++p; // Move to next pixel in the row
+    }
+    p = rowStart;
+    p.OffsetY(data, 1); // Move to the next row
+  }
+
+  dc.DrawBitmap(bmp, RealPoint(r_ext.x, r_ext.y));
 }
 
 void RotatedDC::DrawCircle(const RealPoint& center, double radius) {

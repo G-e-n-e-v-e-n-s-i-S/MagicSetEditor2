@@ -110,19 +110,35 @@ RealRect intersect(const RealRect& a, const RealRect& b) {
 void TextViewer::drawSelection(RotatedDC& dc, const TextStyle& style, size_t sel_start, size_t sel_end) {
   if (sel_start == sel_end) return;
   if (sel_end < sel_start) swap(sel_start, sel_end);
+#ifdef __WXMSW__
   dc.SetBrush(*wxWHITE_BRUSH);
   dc.SetPen(*wxWHITE_PEN);
   dc.SetLogicalFunction(wxXOR);
+#endif
   RealRect prev_rect(0,0,0,0);
   FOR_EACH(l, lines) {
     RealRect rect = l.selectionRectangle(dc, sel_start, sel_end);
-    if (rect.height > 0) dc.DrawRectangle(rect);
+    if (rect.height > 0) {
+#ifdef __WXMSW__
+      dc.DrawRectangle(rect);
+#else
+      dc.DrawInvertRectangle(rect);
+#endif
+    }
     // compensate for overlap between lines
     RealRect overlap = intersect(rect, prev_rect);
-    if (overlap.height > 0 && overlap.width > 0) dc.DrawRectangle(overlap);
+    if (overlap.height > 0 && overlap.width > 0) {
+#ifdef __WXMSW__
+      dc.DrawRectangle(overlap);
+#else
+      dc.DrawInvertRectangle(overlap);
+#endif
+    }
     prev_rect = rect;
   }
+#ifdef __WXMSW__
   dc.SetLogicalFunction(wxCOPY);
+#endif
 }
 
 RealRect TextViewer::Line::selectionRectangle(const Rotation& rot, size_t sel_start, size_t sel_end) {
