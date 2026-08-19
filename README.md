@@ -129,10 +129,8 @@ cmake --build .
 ```
 
  Use `CMAKE_BUILD_TYPE=Debug` for a debug build.
- * Finally, copy the resources to a SharedSupport directory and run the executable:
+ * Finally, run the application bundle:
 
 ```
-mkdir magicseteditor.app/Contents/SharedSupport
-cp -r ../resource magicseteditor.app/Contents/SharedSupport
 open ./magicseteditor.app
 ```

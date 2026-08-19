@@ -85,16 +85,26 @@ if(BUILD_APPLE_BUNDLE)
     add_custom_command(
         TARGET "magicseteditor"
         POST_BUILD
-        COMMAND mkdir ARGS -v "${CMAKE_BINARY_DIR}/magicseteditor.app/Contents/Resources"
+      COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/magicseteditor.app/Contents/Resources"
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${PROJECT_SOURCE_DIR}/mse.icns" "${CMAKE_BINARY_DIR}/magicseteditor.app/Contents/Resources/mse.icns"
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${PROJECT_SOURCE_DIR}/mse-set.icns" "${CMAKE_BINARY_DIR}/magicseteditor.app/Contents/Resources/mse-set.icns"
         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
         COMMENT "Copying icons…"
     )
     add_custom_command(
         TARGET "magicseteditor"
         POST_BUILD
-        COMMAND cp ARGS -v "${PROJECT_SOURCE_DIR}/*.icns" "${CMAKE_BINARY_DIR}/magicseteditor.app/Contents/Resources"
+      COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/magicseteditor.app/Contents/SharedSupport"
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/resource" "${CMAKE_BINARY_DIR}/magicseteditor.app/Contents/SharedSupport/resource"
         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-        COMMENT "Copying icons…"
+      COMMENT "Copying application resources…"
+    )
+    add_custom_command(
+      TARGET "magicseteditor"
+      POST_BUILD
+      COMMAND "${CMAKE_COMMAND}" -DBUNDLE_PATH="${CMAKE_BINARY_DIR}/magicseteditor.app" -P "${PROJECT_SOURCE_DIR}/cmake/SignAppleBundle.cmake"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+      COMMENT "Ad-hoc signing application bundle…"
     )
 endif()
 
