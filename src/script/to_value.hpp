@@ -263,9 +263,18 @@ public:
 
 // ----------------------------------------------------------------------------- : Collections : from script
 
+inline void appendFromCollection(class ScriptCustomCollection* dest, const ScriptValueP& coll);
+
 /// Script value containing a custom collection, returned from script functions
 class ScriptCustomCollection : public ScriptCollectionBase, public IntrusiveFromThis<ScriptCustomCollection>{
 public:
+  inline ScriptCustomCollection() {}
+  inline ScriptCustomCollection(ScriptValueP a, ScriptValueP b) {
+      const int total = a->itemCount() + b->itemCount();
+      if (total > 0) value.reserve((size_t)total);
+      appendFromCollection(this, a);
+      appendFromCollection(this, b);
+  }
   ScriptValueP getMember(const String& name) const override;
   ScriptValueP getIndex(int index) const override;
   ScriptValueP makeIterator() const override;
@@ -283,6 +292,21 @@ public:
   /// The collection as a map (contains only the values that have a key)
   map<String,ScriptValueP> key_value;
 };
+
+inline void appendFromCollection(ScriptCustomCollection* dest, const ScriptValueP& coll) {
+  ScriptValueP it = coll->makeIterator();
+  ScriptValueP keyV;
+  int index = -1;
+  while (ScriptValueP v = it->next(&keyV, &index)) {
+    if (index >= 0) {
+      dest->value.push_back(v);
+    } else {
+      String key = keyV->toString();
+      if (dest->key_value.find(key) == dest->key_value.end())
+        dest->key_value.emplace(std::move(key), v);
+    }
+  }
+}
 
 DECLARE_POINTER_TYPE(ScriptCustomCollection);
 

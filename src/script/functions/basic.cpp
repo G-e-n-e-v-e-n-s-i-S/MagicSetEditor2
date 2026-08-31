@@ -650,6 +650,141 @@ SCRIPT_FUNCTION(number_of_items) {
   SCRIPT_RETURN(script_length_of(ctx, in));
 }
 
+// mutation
+SCRIPT_FUNCTION(list_push) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM_C(ScriptValueP, value);
+
+  ScriptCustomCollection* c = dynamic_cast<ScriptCustomCollection*>(input.get());
+  if (!c) {
+    throw ScriptError(_("list_push: can only be used on script-created collections"));
+  }
+
+  c->value.push_back(value);
+
+  SCRIPT_RETURN(script_length_of(ctx, input));
+}
+
+SCRIPT_FUNCTION(list_set) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM(int, index);
+  SCRIPT_PARAM_C(ScriptValueP, value);
+
+  ScriptCustomCollection* c = dynamic_cast<ScriptCustomCollection*>(input.get());
+  if (!c) {
+    throw ScriptError(_("list_set: can only be used on script-created collections"));
+  }
+
+  if (index < 0 || index >= (int)c->value.size()) {
+    throw ScriptError(_("list_set: index out of range"));
+  }
+
+  c->value[index] = value;
+
+  SCRIPT_RETURN(script_length_of(ctx, input));
+}
+
+SCRIPT_FUNCTION(list_insert) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM(int, index);
+  SCRIPT_PARAM_C(ScriptValueP, value);
+
+  ScriptCustomCollection* c = dynamic_cast<ScriptCustomCollection*>(input.get());
+  if (!c) {
+    throw ScriptError(_("list_insert: can only be used on script-created collections"));
+  }
+
+  if (index < 0 || index >(int)c->value.size()) {
+    throw ScriptError(_("list_insert: index out of range"));
+  }
+
+  c->value.insert(c->value.begin() + index, value);
+
+  SCRIPT_RETURN(script_length_of(ctx, input));
+}
+
+SCRIPT_FUNCTION(list_remove) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM(int, index);
+
+  ScriptCustomCollection* c = dynamic_cast<ScriptCustomCollection*>(input.get());
+  if (!c) {
+    throw ScriptError(_("list_remove: can only be used on script-created collections"));
+  }
+
+  if (index < 0 || index >= (int)c->value.size()) {
+    throw ScriptError(_("list_remove: index out of range"));
+  }
+
+  ScriptValueP removedItem = c->value[index];
+  c->value.erase(c->value.begin() + index);
+
+  return removedItem;
+}
+
+SCRIPT_FUNCTION(list_pop) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+
+  ScriptCustomCollection* c = dynamic_cast<ScriptCustomCollection*>(input.get());
+  if (!c) {
+    throw ScriptError(_("list_pop: can only be used on script-created collections"));
+  }
+
+  ScriptValueP removedItem = c->value.back();
+  if (c->value.empty()) {
+    throw ScriptError(_("list_pop: cannot pop from an empty collection"));
+  }
+
+  c->value.pop_back();
+
+  return removedItem;
+}
+
+// map mutation
+SCRIPT_FUNCTION(add_key) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM(String, key);
+  SCRIPT_PARAM_C(ScriptValueP, value);
+
+  ScriptCustomCollection* c = dynamic_cast<ScriptCustomCollection*>(input.get());
+  if (!c) {
+    throw ScriptError(_("add_key: can only be used on script-created collections"));
+  }
+
+
+  if (c->key_value.find(key) != c->key_value.end()) {
+    throw ScriptError(_("add_key: key already present"));
+  }
+
+  c->key_value.emplace(std::move(key), value);
+  return input;
+}
+
+SCRIPT_FUNCTION(remove_key) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM(String, key);
+
+  ScriptCustomCollection* c = dynamic_cast<ScriptCustomCollection*>(input.get());
+  if (!c)
+    throw ScriptError(_("remove_key: can only be used on script-created collections"));
+
+  c->key_value.erase(key);
+  return input;
+}
+
+SCRIPT_FUNCTION(set_key) {
+  SCRIPT_PARAM_C(ScriptValueP, input);
+  SCRIPT_PARAM(String, key);
+  SCRIPT_PARAM_C(ScriptValueP, value);
+
+  ScriptCustomCollection* c = dynamic_cast<ScriptCustomCollection*>(input.get());
+  if (!c)
+    throw ScriptError(_("remove_key: can only be used on script-created collections"));
+
+  c->key_value[key] = value;
+  return input;
+}
+
 // filtering items from a list
 SCRIPT_FUNCTION(filter_list) {
   SCRIPT_PARAM_C(ScriptValueP, input);
@@ -1113,6 +1248,25 @@ void init_script_basic_functions(Context& ctx) {
   ctx.setVariable(_("tag_contents_rule"),         make_intrusive<ScriptRule>(script_tag_contents));
   ctx.setVariable(_("tag_remove_rule"),           make_intrusive<ScriptRule>(script_remove_tag));
   // collection
+  ctx.setVariable(_("position"),                  script_position_of);
+  ctx.setVariable(_("length"),                    script_length);
+  ctx.setVariable(_("number_of_items"),           script_number_of_items); // deprecated
+  ctx.setVariable(_("list_push"),                 script_list_push);
+  ctx.setVariable(_("list_set"),                  script_list_set);
+  ctx.setVariable(_("list_remove"),               script_list_remove);
+  ctx.setVariable(_("list_insert"),               script_list_insert);
+  ctx.setVariable(_("list_pop"),                  script_list_pop);
+  ctx.setVariable(_("add_key"),                   script_add_key);
+  ctx.setVariable(_("remove_key"),                script_remove_key);
+  ctx.setVariable(_("set_key"),                   script_set_key);
+  ctx.setVariable(_("filter_list"),               script_filter_list);
+  ctx.setVariable(_("sort_list"),                 script_sort_list);
+  ctx.setVariable(_("random_shuffle"),            script_random_shuffle);
+  ctx.setVariable(_("random_select"),             script_random_select);
+  ctx.setVariable(_("random_select_many"),        script_random_select_many);
+  ctx.setVariable(_("get_card_from_uid"),         script_get_card_from_uid);
+  ctx.setVariable(_("get_card_from_link"),        script_get_card_from_link);
+  ctx.setVariable(_("has_link"),                  script_has_link);
   ctx.setVariable(_("position"),                  script_position_of);
   ctx.setVariable(_("length"),                    script_length);
   ctx.setVariable(_("number_of_items"),           script_number_of_items); // deprecated
