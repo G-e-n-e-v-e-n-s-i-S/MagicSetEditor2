@@ -97,8 +97,11 @@ void PackTotalsPanel::draw(DC& dc) {
   int total = 0;
   FOR_EACH(pack, game->pack_types) {
     PackInstance& i = generator.get(pack);
-    if (pack->summary && (show_all || i.has_cards())) {
-      drawItem(dc, y, tr(*game, pack->name, capitalize), i.get_card_copies());
+    size_t total_value = i.get_card_copies();
+    if (total_value == 0)
+      total_value = i.get_category_copies();
+    if (pack->summary && (show_all || i.has_cards() || total_value > 0)) {
+      drawItem(dc, y, tr(*game, pack->name, capitalize), total_value);
       total += (int)i.get_card_copies();
     }
   }
