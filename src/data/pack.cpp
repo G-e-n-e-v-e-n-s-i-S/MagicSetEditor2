@@ -106,6 +106,7 @@ PackInstance::PackInstance(const PackType& pack_type, PackGenerator& parent)
   , requested_copies(0)
   , card_copies(0)
   , expected_copies(0)
+  , category_copies(0)
 {
   // Filter cards
   if (pack_type.filter) {
@@ -170,8 +171,14 @@ void PackInstance::expect_copy(double copies) {
   }
 }
 
-void PackInstance::request_copy(size_t copies) {
+void PackInstance::request_copy(size_t copies, boost::logic::tribool top_level) {
   requested_copies += copies;
+  if (top_level)
+    category_copies += copies;
+}
+
+void PackInstance::reset_category_copies() {
+  category_copies = 0;
 }
 
 struct WeightedItem {
@@ -274,7 +281,7 @@ void PackInstance::generate(vector<CardP>* out) {
       for (size_t j = 0 ; j < pack_type.items.size() ; ++j) {
         const PackItem& item = *pack_type.items[j];
         PackInstance& i = parent.get(item.name);
-        i.request_copy(item.amount * weighted_items[j].count);
+        i.request_copy(item.amount * weighted_items[j].count, pack_type.selectable);
       }
       // 3b. pick some cards
       int new_card_copies = weighted_items.back().count;
@@ -304,7 +311,7 @@ void PackInstance::generate(vector<CardP>* out) {
       FOR_EACH_CONST(item, pack_type.items) {
         PackInstance& i = parent.get(item->name);
         if (i.total_weight > 0) {
-          i.request_copy(requested_copies * item->amount);
+          i.request_copy(requested_copies * item->amount, pack_type.selectable);
           break;
         }
       }
@@ -323,7 +330,7 @@ void PackInstance::generate_all(vector<CardP>* out, size_t copies) {
   // and all items
   FOR_EACH_CONST(item, pack_type.items) {
     PackInstance& i = parent.get(item->name);
-    i.request_copy(copies * item->amount);
+    i.request_copy(copies * item->amount, pack_type.selectable);
   }
 }
 
@@ -350,7 +357,7 @@ void PackInstance::generate_one_random(vector<CardP>* out) {
       }
       // have we reached the item we were looking for?
       if (r < 0) {
-        i.request_copy(item->amount);
+        i.request_copy(item->amount, pack_type.selectable);
         break;
       }
     }
@@ -367,6 +374,9 @@ void PackGenerator::reset(const SetP& set, int seed) {
 }
 void PackGenerator::reset(int seed) {
   gen.seed((unsigned)seed);
+  FOR_EACH_CONST(i, instances) {
+    i.second->reset_category_copies();
+  }
 }
 
 PackInstance& PackGenerator::get(const String& name) {

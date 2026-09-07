@@ -90,8 +90,9 @@ public:
   /// Expect to pick this many copies from this pack, updates expected_copies
   void expect_copy(double copies = 1);
   /// Request some copies of this pack
-  void request_copy(size_t copies = 1);
-  
+  void request_copy(size_t copies = 1, boost::logic::tribool top_level = false);
+  /// Reset category copies, because it can't clear where card_copies or requested_copies do
+  void reset_category_copies();
   /// Generate cards if depth == at_depth
   /** Some cards are (optionally) added to out and card_copies
     * And also the copies of referenced items might be incremented
@@ -103,6 +104,7 @@ public:
   inline bool   has_cards()           const { return !cards.empty(); }
   inline size_t get_card_copies()     const { return card_copies; }
   inline double get_expected_copies() const { return expected_copies; }
+  inline size_t get_category_copies() const { return category_copies; }
   
 private:
   const PackType& pack_type;
@@ -113,6 +115,7 @@ private:
   size_t          requested_copies;  //< The requested number of copies of this pack
   size_t          card_copies;       //< The number of cards that were chosen to come from this pack
   double          expected_copies;
+  size_t          category_copies;   //< The number of times this was invoked from the top level
   
   /// Generate some copies of all cards and items
   void generate_all(vector<CardP>* out, size_t copies);
