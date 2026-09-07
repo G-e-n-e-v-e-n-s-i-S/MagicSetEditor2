@@ -129,7 +129,7 @@ wxSize PackTotalsPanel::DoGetBestSize() const {
     if (game && generator.set) {
     FOR_EACH(pack, game->pack_types) {
       PackInstance& i = generator.get(pack);
-      if (pack->summary && (show_all || i.has_cards())) {
+      if (pack->summary && (show_all || i.has_cards() || i.get_category_copies() > 0)) {
         lines++;
       }
     }
