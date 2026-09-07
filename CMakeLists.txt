@@ -29,7 +29,7 @@ endif()
 
 # You will most likely get a message about being unable to open hunspell-1.7.lib because pkgconf forgets to add the actual path to HUNSPELL_LIBRARIES.
 # If so, uncomment the below line and point it to the correct vcpkg root folder/library. (For debug builds, add "debug\\" just before "lib\\")
-set(HUNSPELL_LIBRARIES "C:\\dev\\vcpkg\\vcpkg\\installed\\${VCPKG_TARGET_TRIPLET}\\lib\\hunspell-1.7.lib")
+#set(HUNSPELL_LIBRARIES "C:\\PATH\\TO\\ROOT\\vcpkg\\installed\\${VCPKG_TARGET_TRIPLET}\\lib\\hunspell-1.7.lib")
 
 include_directories("${PROJECT_BINARY_DIR}/src")
 include_directories("${PROJECT_SOURCE_DIR}/src")
