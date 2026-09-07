@@ -209,8 +209,11 @@ void SymbolWindow::onFileNew(wxCommandEvent& ev) {
 }
 
 void SymbolWindow::onFileOpen(wxCommandEvent& ev) {
-  String name = wxFileSelector(_("Open symbol"),settings.default_symbol_dir,_(""),_(""),_("All files|*.mse-symbol;*.bmp;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.tif;*.tiff|MSE2 symbol files (*.mse-symbol)|*.mse-symbol|Images/MSE1 symbol files|*.bmp;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.tif;*.tiff"),wxFD_OPEN|wxFD_FILE_MUST_EXIST, this);
-  if (!name.empty()) {
+  wxFileDialog dlg(this, _TITLE_("open symbol file"), settings.default_symbol_dir, _(""),
+    _("All files|*.mse-symbol;*.bmp;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.tif;*.tiff|MSE2 symbol files (*.mse-symbol)|*.mse-symbol|Images/MSE1 symbol files|*.bmp;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.tif;*.tiff"),
+    wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+  if (dlg.ShowModal() == wxID_OK) {
+    String name = dlg.GetPath();
     settings.default_symbol_dir = wxPathOnly(name);
     wxFileName n(name);
     String ext = n.GetExt();
