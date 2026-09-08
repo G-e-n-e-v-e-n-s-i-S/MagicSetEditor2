@@ -60,8 +60,8 @@ Image export_image(const SetP& set, const CardP& card, bool write_metadata, doub
 
   /// add print bleed edge
   int width = img.GetWidth(), height = img.GetHeight();
-  bleed = max(0, min(width-1, min(height-1, bleed)));
-  if (size.width < bleed + 2 || size.height < bleed + 2) {
+  bleed = max(0, min((width-1)/2, min((height-1)/2, bleed)));
+  if (width < 2*bleed + 2 || height < 2*bleed + 2) {
     queue_message(MESSAGE_ERROR, _("Image too small to add bleed edge"));
   }
   else {
@@ -135,11 +135,11 @@ Image export_image(const SetP& set, const CardP& card, bool write_metadata, doub
   if (write_metadata) {
     bool rotated = is_rad90(angle_radians) || is_rad270(angle_radians); // we stored width and height after rotation, but export_metadata expects them before rotation
     String metadata = _("<mse-card-data>[")
-                    + export_metadata(set, card, zoom, angle_radians, rotated ? height : width, rotated ? width : height, bleed_pixels, bleed_pixels)
-                    + _("]</mse-card-data>");
+      + export_metadata(set, card, zoom, angle_radians, rotated ? height : width, rotated ? width : height, bleed_pixels, bleed_pixels)
+      + _("]</mse-card-data>");
     img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, metadata);
   }
-
+  
   return img;
 }
 
@@ -294,7 +294,6 @@ void export_image(const SetP& set, const vector<CardP>& cards, const String& pat
 String export_metadata(const SetP& set, const CardP& card, double zoom, Radians angle_radians, int width, int height, double offset_x, double offset_y) {
   IndexMap<FieldP, ValueP>& card_data = card->data;
   boost::json::object cardv = mse_to_json(card, set.get());
-  boost::json::object& cardv_data = cardv["data"].as_object();
   StyleSheetP stylesheet = set->stylesheetForP(card);
   if (!settings.stylesheetSettingsFor(*stylesheet).card_notes_export()) cardv["notes"] = "";
   RealRect bounds_rect = RealRect(0, 0, width, height);
@@ -302,6 +301,12 @@ String export_metadata(const SetP& set, const CardP& card, double zoom, Radians 
   RealRect::rotate(bounds_rect, bounds_degrees, width, height, lround(rad_to_deg(angle_radians)));
   RealRect::translate(bounds_rect, bounds_degrees, offset_x, offset_y);
   cardv.emplace("bounds", encodeRectInStdString(bounds_rect, bounds_degrees));
+  if (!cardv.contains("data")) {
+    cardv["data"] = boost::json::object();
+  }
+  // cardv.emplace may trigger a re-allocation, so only take a reference
+  // to an object inside the map AFTER we're done emplacing
+  boost::json::object& cardv_data = cardv["data"].as_object();
   // iterate over all image fields
   for (IndexMap<FieldP, ValueP>::iterator it = card_data.begin(); it != card_data.end(); ++it) {
     ImageValue* value = dynamic_cast<ImageValue*>(it->get());

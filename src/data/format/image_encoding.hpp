@@ -200,7 +200,7 @@ inline static bool decodeImageFromString(const String& string, Image& img_out) {
 
   const std::string& temppath = (wxFileName::CreateTempFileName(_("mse")) + _(".png")).ToStdString();
   UTF8ToFile(temppath, s);
-  img_out.LoadFile(temppath, wxBITMAP_TYPE_PNG);
+  img_out.LoadFile(temppath, wxBITMAP_TYPE_ANY);
   wxRemoveFile(temppath);
   wxRemoveFile(temppath.substr(0, temppath.size() - 4));
   return true;
