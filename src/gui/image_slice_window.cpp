@@ -16,7 +16,7 @@
 #include <wx/dcbuffer.h>
 
 map<String, String> ImageSliceWindow::previously_used_settings_path;
-map<pair<String, String>, pair<wxRect, int>> ImageSliceWindow::previously_used_settings_value;
+map<pair<String, String>, PreviouslyUsedSliceSettings> ImageSliceWindow::previously_used_settings_value;
 
 // ----------------------------------------------------------------------------- : ImageSlice
 
@@ -103,10 +103,11 @@ ImageSliceWindow::ImageSliceWindow(Window* parent, const Image& source, const St
   // init slice
   pair<String, String> settings_entry = { filename, cardname };
   if (previously_used_settings_value.find(settings_entry) != previously_used_settings_value.end()) {
-    slice.aspect_fixed = false;
+    const PreviouslyUsedSliceSettings& previous_settings = previously_used_settings_value[settings_entry];
+    slice.aspect_fixed = previous_settings.aspect_fixed;
     slice.sharpen = true;
-    slice.sharpen_amount = previously_used_settings_value[settings_entry].second;
-    slice.selection = previously_used_settings_value[settings_entry].first;
+    slice.sharpen_amount = previous_settings.sharpen_amount;
+    slice.selection = previous_settings.selection;
     slice.constrain();
   }
   else {
@@ -243,7 +244,7 @@ void ImageSliceWindow::onOk(wxCommandEvent&) {
 Image ImageSliceWindow::getImage() const {
   Image img = slice.getSlice();
   previously_used_settings_path[slice.card_name] = slice.source_path;
-  previously_used_settings_value[{ slice.source_path, slice.card_name }] = { slice.selection, slice.sharpen_amount };
+  previously_used_settings_value[{ slice.source_path, slice.card_name }] = { slice.selection, slice.sharpen_amount, slice.aspect_fixed };
   return img;
 }
 

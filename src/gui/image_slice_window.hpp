@@ -62,6 +62,13 @@ public:
 
 // ----------------------------------------------------------------------------- : ImageSliceWindow
 
+/// Settings for a slice that are remembered between uses, for a given image+card
+struct PreviouslyUsedSliceSettings {
+  wxRect selection;
+  int    sharpen_amount;
+  bool   aspect_fixed;
+};
+
 /// Dialog for selecting a slice of an image
 class ImageSliceWindow : public wxDialog {
 public:
@@ -73,7 +80,7 @@ public:
   // --------------------------------------------------- : Previously Used Settings
 
   static map<String, String> previously_used_settings_path;  // map from cardname to filename
-  static map<pair<String, String>, pair<wxRect, int>> previously_used_settings_value; // map from filename+cardname pair to settings
+  static map<pair<String, String>, PreviouslyUsedSliceSettings> previously_used_settings_value; // map from filename+cardname pair to settings
 
   // --------------------------------------------------- : Data
 private:
