@@ -182,7 +182,7 @@ inline static bool UTF8ToFile(const std::string& filepath, std::string& data) {
 /// Encode an image in a string
 inline static std::string encodeImageInString(const Image& img) {
   String temppath = wxFileName::CreateTempFileName(_("mse")) + _(".png");
-  img.SaveFile(temppath);
+  img.SaveFile(temppath, wxBITMAP_TYPE_PNG);
   std::string s = "<mse-image-data>" + fileToUTF8(temppath.ToStdString()) + "</mse-image-data>";
   wxRemoveFile(temppath);
   wxRemoveFile(temppath.substr(0, temppath.size() - 4));
@@ -200,7 +200,7 @@ inline static bool decodeImageFromString(const String& string, Image& img_out) {
 
   const std::string& temppath = (wxFileName::CreateTempFileName(_("mse")) + _(".png")).ToStdString();
   UTF8ToFile(temppath, s);
-  img_out.LoadFile(temppath, wxBITMAP_TYPE_ANY);
+  img_out.LoadFile(temppath, wxBITMAP_TYPE_PNG);
   wxRemoveFile(temppath);
   wxRemoveFile(temppath.substr(0, temppath.size() - 4));
   return true;

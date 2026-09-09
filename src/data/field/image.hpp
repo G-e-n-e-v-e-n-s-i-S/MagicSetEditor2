@@ -13,6 +13,7 @@
 #include <data/set.hpp>
 #include <script/scriptable.hpp>
 #include <script/image.hpp>
+#include <gui/util.hpp>
 #include <util/io/package.hpp>
 
 // ----------------------------------------------------------------------------- : ImageField
@@ -41,8 +42,9 @@ public:
 
   inline Image getImage(const SetP& set) {
     auto imageInputStream = set->openIn(filename);
-    Image img(*imageInputStream, wxBITMAP_TYPE_ANY);
-    if (!img.IsOk()) throw ScriptError(_ERROR_2_("file not found", filename.toStringForKey(), set));
+    Image img;
+    image_load_file(img, *imageInputStream);
+    if (!img.IsOk()) throw ScriptError(_ERROR_2_("file not found", filename.toStringForKey(), set->relativeFilename()));
     return img;
   }
 

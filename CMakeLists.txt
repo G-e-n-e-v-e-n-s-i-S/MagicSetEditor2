@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(magicseteditor VERSION 2.6.2)
+project(magicseteditor VERSION 2.6.3)
 
 add_definitions(-DUNOFFICIAL_BUILD)
 
