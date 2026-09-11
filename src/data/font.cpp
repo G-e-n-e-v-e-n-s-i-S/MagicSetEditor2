@@ -163,6 +163,20 @@ FontRefP FontRef::make(int add_flags, bool add_underline, bool add_strikethrough
 }
 
 static const String BOLD_STRING   = _(" Bold");
+
+// Construct a wxFont without going through the legacy 6-argument wxFont(...)
+// That constructor silently treats a pointSize of exactly 70 as a request for wxDEFAULT
+static wxFont make_font(int point_size, wxFontFamily family, wxFontStyle style, wxFontWeight weight, bool underlined, const String& face) {
+  wxFont font;
+  font.SetFamily(family);
+  font.SetStyle(style);
+  font.SetWeight(weight);
+  font.SetUnderlined(underlined);
+  if (!face.empty()) font.SetFaceName(face);
+  font.SetPointSize(point_size);
+  return font;
+}
+
 wxFont FontRef::toWxFont(double scale) const {
   int size_i = to_int(scale * size);
   wxFontWeight weight_i = flags & FONT_BOLD   ? wxFONTWEIGHT_BOLD  : wxFONTWEIGHT_NORMAL;
@@ -172,11 +186,11 @@ wxFont FontRef::toWxFont(double scale) const {
 
   if (flags & FONT_CODE) {
     if (size_i < 2) {
-      font = wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, weight_i, underline(), _("Courier New"));
+      font = make_font(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, weight_i, underline(), _("Courier New"));
       if (strikethrough()) font.MakeStrikethrough();
       return font;
     } else {
-      font = wxFont(size_i, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, weight_i, underline(), _("Courier New"));
+      font = make_font(size_i, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, weight_i, underline(), _("Courier New"));
     }
   } else if (name().empty()) {
     font = *wxNORMAL_FONT;
@@ -184,21 +198,21 @@ wxFont FontRef::toWxFont(double scale) const {
     if (strikethrough()) font.MakeStrikethrough();
     return font;
   } else if (!(flags & FONT_FROM_TAG) && (flags & FONT_ITALIC) && !italic_name().empty()) {
-    font = wxFont(size_i, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, weight_i, underline(), italic_name());
+    font = make_font(size_i, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, weight_i, underline(), italic_name());
   } else {
     String familyName = name();
     if(familyName.EndsWith(BOLD_STRING)) {
       familyName = familyName.Left(familyName.length() - BOLD_STRING.length());
       weight_i = wxFONTWEIGHT_BOLD;
     }
-    font = wxFont(size_i, wxFONTFAMILY_DEFAULT, style_i, weight_i, underline(), familyName);
+    font = make_font(size_i, wxFONTFAMILY_DEFAULT, style_i, weight_i, underline(), familyName);
   }
   // fix size
-  #ifdef __WXMSW__
-    // make it independent of screen dpi, always use 96 dpi
-    // TODO: do something more sensible, and more portable
-    font.SetPixelSize(wxSize(0, -(int)(scale*size*96.0/72.0 + 0.5) ));
-  #endif
+#if defined(__WXMSW__) || defined(__WXGTK__)
+  // make it independent of screen dpi, always use 96 dpi
+  // TODO: do something more sensible, and more portable
+  font.SetPixelSize(wxSize(0, -(int)(scale*size*96.0/72.0 + 0.5) ));
+#endif
   if (strikethrough()) font.MakeStrikethrough();
   return font;
 }
