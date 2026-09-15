@@ -617,7 +617,7 @@ boost::json::object mse_to_json(const StyleP& style) {
     stylev.emplace("always_symbol",                                    s->always_symbol);
     stylev.emplace("allow_formating",                                  s->allow_formating);
     stylev.emplace("alignment",            alignment_to_string(        s->alignment()));
-    stylev.emplace("direction",            direction_to_string(        s->direction));
+    stylev.emplace("direction",            direction_to_string(        s->direction()));
     stylev.emplace("padding_left",         String::Format(wxT("%.2f"), s->padding_left()));
     stylev.emplace("padding_right",        String::Format(wxT("%.2f"), s->padding_right()));
     stylev.emplace("padding_top",          String::Format(wxT("%.2f"), s->padding_top()));
