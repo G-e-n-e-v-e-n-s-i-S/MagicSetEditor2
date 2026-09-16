@@ -53,7 +53,7 @@ time_t file_modified_time(const String& name);
 struct RetryOptions {
   int max_attempts;
   int initial_delay_ms;
-  inline RetryOptions(int max_attempts = 4, int initial_delay_ms = 40)
+  inline RetryOptions(int max_attempts = 5, int initial_delay_ms = 40)
     : max_attempts(max_attempts), initial_delay_ms(initial_delay_ms)
   {}
 };
