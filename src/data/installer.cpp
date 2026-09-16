@@ -195,8 +195,17 @@ void Installer::addPackage(Packaged& package) {
   for (FileInfos::const_iterator it = file_infos.begin() ; it != file_infos.end() ; ++it) {
     String file = it->first;
     auto in_stream = package.openIn(file);
-    auto out_stream = openOut(name + _("/") + file);
-    out_stream->Write(*in_stream);
+    unique_ptr<wxOutputStream> out_stream;
+    retry_io([&]{
+      out_stream = openOut(name + _("/") + file);
+      return out_stream->IsOk();
+    });
+    if (out_stream->IsOk()) {
+      out_stream->Write(*in_stream);
+    }
+    if (!out_stream->IsOk() || (!in_stream->Eof() && in_stream->GetLastError() != wxSTREAM_NO_ERROR)) {
+      throw PackageError(_("Unable to add file '") + file + _("' to installer: the file could not be written."));
+    }
   }
 }
 
@@ -337,10 +346,22 @@ bool InstallablePackage::ensureIsDownloaded() {
     throw Error(_ERROR_2_("can't download installer", description->name, installer->installer_url));
   } 
   wxInputStream* is(request.GetResponse().GetStream());
-  installer->installer_file = wxFileName::CreateTempFileName(_("mse-installer"));
-  wxFileOutputStream os(installer->installer_file);
-  os.Write(*is);
-  os.Close();
+  String installer_file = wxFileName::CreateTempFileName(_("mse-installer"));
+  unique_ptr<wxFileOutputStream> os;
+  retry_io([&]{
+    os = make_unique<wxFileOutputStream>(installer_file);
+    return os->IsOk();
+  });
+  if (os->IsOk()) {
+    os->Write(*is);
+  }
+  if (!os->IsOk() || (!is->Eof() && is->GetLastError() != wxSTREAM_NO_ERROR)) {
+    os.reset();
+    remove_file(installer_file);
+    throw Error(_ERROR_2_("can't download installer", description->name, installer->installer_url));
+  }
+  os.reset();
+  installer->installer_file = installer_file;
   // open installer
   installer->installer = make_intrusive<Installer>();
   installer->installer->open(installer->installer_file);

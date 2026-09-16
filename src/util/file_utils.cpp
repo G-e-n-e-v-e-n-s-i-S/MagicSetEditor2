@@ -203,7 +203,11 @@ private:
 
 bool remove_file(const String& filename) {
   // Based on wxRemoveFile
-  return wxRemove(filename.fn_str()) == 0;
+  if (!wxFileExists(filename)) {
+    // nothing there to remove, just call this once as cleanup
+    return wxRemove(filename.fn_str()) == 0;
+  }
+  return retry_io([&]{ return wxRemove(filename.fn_str()) == 0; });
 }
 
 bool remove_file_or_dir(const String& name) {
@@ -224,9 +228,20 @@ bool remove_file_or_dir(const String& name) {
 
 // ----------------------------------------------------------------------------- : Renaming
 
+bool copy_file(const String& from, const String& to) {
+  return retry_io([&]{ return wxCopyFile(from, to); });
+}
+
 bool rename_file_or_dir(const String& from, const String& to) {
   create_parent_dirs(to);
-  return wxRenameFile(from, to);
+  return retry_io([&]{
+    if (wxRenameFile(from, to)) return true;
+    // wxRenameFile can't move a file across volumes, so copy+delete
+    if (wxFileExists(from) && wxCopyFile(from, to)) {
+      return remove_file(from);
+    }
+    return false;
+  });
 }
 
 // ----------------------------------------------------------------------------- : Moving

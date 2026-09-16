@@ -816,9 +816,12 @@ ScriptedImage::ScriptedImage(Set* set, const GeneratedImageP& image) {
 
   // add the file to the set
   LocalFileName new_image_file = set->newFileName(_("scripted_image"), _(".png"));
+  String out_path = set->nameOut(new_image_file);
+  if (!retry_io([&]{ return img.SaveFile(out_path, wxBITMAP_TYPE_PNG); })) {
+    throw ScriptError(_ERROR_1_("can't write image to set", out_path));
+  }
   savename = new_image_file.toStringForWriting();
   loadpath = savename;
-  img.SaveFile(set->nameOut(new_image_file), wxBITMAP_TYPE_PNG);
 }
 
 Image ScriptedImage::generate(const Options& opt) {
@@ -854,13 +857,15 @@ ImportedImage::ImportedImage(Set* set, const String& filepath) {
 
   // is the file an image?
   Image img;
-  img.LoadFile(loadpath);
-  if (!img.IsOk()) throw ScriptError(_ERROR_1_("import not image", loadpath));
+  if (!image_load_file(img, loadpath) || !img.IsOk()) throw ScriptError(_ERROR_1_("import not image", loadpath));
 
   // add the file to the set
   LocalFileName new_image_file = set->newFileName(savename, _(".png"));
+  String out_path = set->nameOut(new_image_file);
+  if (!retry_io([&]{ return img.SaveFile(out_path, wxBITMAP_TYPE_PNG); })) {
+    throw ScriptError(_ERROR_1_("can't write image to set", out_path));
+  }
   savename = new_image_file.toStringForWriting();
-  img.SaveFile(set->nameOut(new_image_file), wxBITMAP_TYPE_PNG);
 }
 
 Image ImportedImage::generate(const Options& opt) {
@@ -899,8 +904,11 @@ DownloadedImage::DownloadedImage(Set* set, const String& url) {
   
   // add the file to the set
   LocalFileName new_image_file = set->newFileName(savename, _(".png"));
+  String out_path = set->nameOut(new_image_file);
+  if (!retry_io([&]{ return wnd.image_out.SaveFile(out_path, wxBITMAP_TYPE_PNG); })) {
+    throw ScriptError(_ERROR_1_("can't write image to set", out_path));
+  }
   savename = new_image_file.toStringForWriting();
-  wnd.image_out.SaveFile(set->nameOut(new_image_file), wxBITMAP_TYPE_PNG);
 }
 
 Image DownloadedImage::generate(const Options& opt) {

@@ -228,12 +228,16 @@ void export_image(const SetP& set, const CardP& card, const String& filename) {
   if (faces.first && faces.second) {
     vector<CardP> combo{faces.first, faces.second};
     Image img = export_image(set, combo);
-    img.SaveFile(filename);
+    if (!retry_io([&]{ return img.SaveFile(filename); })) {
+      throw Error(_("Unable to write image file '") + filename + _("'"));
+    }
     return;
   }
   Settings::ExportSettings export_settings = settings.exportSettingsFor(stylesheet);
   Image img = export_image(set, card, true, export_settings.zoom, export_settings.angle_radians, export_settings.bleed_pixels);
-  img.SaveFile(filename);
+  if (!retry_io([&]{ return img.SaveFile(filename); })) {
+    throw Error(_("Unable to write image file '") + filename + _("'"));
+  }
 }
 
 void export_image(const SetP& set, const vector<CardP>& cards, const String& path, const String& filename_template, FilenameConflicts conflicts) {
@@ -272,7 +276,9 @@ void export_image(const SetP& set, const vector<CardP>& cards, const String& pat
       used.insert(filename);
       vector<CardP> combo{faces.first, faces.second};
       Image img = export_image(set, combo);
-      img.SaveFile(filename);
+      if (!retry_io([&]{ return img.SaveFile(filename); })) {
+        throw Error(_("Unable to write image file '") + filename + _("'"));
+      }
       processed.insert((faces.first == card ? faces.second : faces.first).get());
     } else {
       // filename for this card

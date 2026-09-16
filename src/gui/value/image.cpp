@@ -40,11 +40,7 @@ bool ImageValueEditor::onLeftDClick(const RealPoint&, wxMouseEvent&) {
     filename = dlg.GetPath();
     settings.default_image_dir = wxPathOnly(filename);
     wxImage image;
-    {
-      wxLogNull noLog;
-      image = wxImage(filename);
-    }
-    if (!image.Ok()) queue_message(MESSAGE_ERROR, _ERROR_("can't load image"));
+    if (!image_load_file(image, filename)) queue_message(MESSAGE_ERROR, _ERROR_("can't load image"));
     else sliceImage(image, filename, cardname);
   }
   return true;
@@ -70,7 +66,12 @@ void ImageValueEditor::sliceImage(const Image& image, const String& filename, co
     // store the image into the set
     LocalFileName new_image_file = getLocalPackage().newFileName(field().name, _(".png")); // a new unique name in the package
     Image img = s.getImage();
-    img.SaveFile(getLocalPackage().nameOut(new_image_file), wxBITMAP_TYPE_PNG); // always use PNG images, see #69. Disk space is cheap anyway.
+    String out_path = getLocalPackage().nameOut(new_image_file);
+    // always use PNG images, see #69. Disk space is cheap anyway.
+    if (!retry_io([&]{ return img.SaveFile(out_path, wxBITMAP_TYPE_PNG); })) {
+      queue_message(MESSAGE_ERROR, _ERROR_1_("can't write image to set", out_path));
+      return;
+    }
     addAction(value_action(valueP(), new_image_file));
   }
 }

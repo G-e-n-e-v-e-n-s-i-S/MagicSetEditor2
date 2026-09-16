@@ -128,6 +128,7 @@ private:
         // ignore all errors, we don't want problems if update checking fails
         downloadable_installers.download_status = DONE;
         downloadable_installers.check_status = FAILED;
+        return 0;
       }
     }
   };
