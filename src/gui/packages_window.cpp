@@ -11,6 +11,7 @@
 #include <gui/package_update_list.hpp>
 #include <gui/downloadable_installers.hpp>
 #include <gui/util.hpp>
+#include <gui/set/window.hpp>
 #include <util/io/package_manager.hpp>
 #include <util/window_id.hpp>
 #include <data/installer.hpp>
@@ -352,6 +353,12 @@ void PackagesWindow::onOk(wxCommandEvent& ev) {
                                                _ERROR_1_("change packages successful", String()<<success);
   wxMessageDialog report = wxMessageDialog(this, report_message, _TITLE_("packages window"), wxICON_INFORMATION | wxOK | wxSTAY_ON_TOP);
   report.ShowModal();
+  // Update the cards otherwise they will be saved with the new versions of the stylesheets without ever having been updated
+  if (SetWindow* set_window = dynamic_cast<SetWindow*>(GetParent())) {
+    if (SetP set = set_window->getSet()) {
+      set->updateCardsScripts();
+    }
+  }
   // Launch exe updater if necessary
   if (app_change) {
     // Hard code the only updater, for now

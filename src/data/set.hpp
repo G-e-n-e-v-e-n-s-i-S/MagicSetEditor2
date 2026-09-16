@@ -78,6 +78,8 @@ public:
   void updateDelayed();
   /// Update scripts that depend on card links
   void updateLinkScripts(const CardP& card);
+  /// Update cards by applying update_cards_scripts from the game/stylesheets
+  void updateCardsScripts();
   /// Update uid map
   void buildUIDMap();
   /// A context for performing scripts
