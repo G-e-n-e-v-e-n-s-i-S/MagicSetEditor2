@@ -315,7 +315,7 @@ void PackagesWindow::onOk(wxCommandEvent& ev) {
   wxProgressDialog progress(
     _TITLE_("installing updates"),
     String::Format(_ERROR_("downloading updates"), 0, to_download),
-    to_change + to_download,
+    to_change + to_download + 1,
     this,
     wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_CAN_ABORT | wxPD_SMOOTH | wxSTAY_ON_TOP
   );
@@ -346,6 +346,15 @@ void PackagesWindow::onOk(wxCommandEvent& ev) {
       success += 1;
     }
   }
+  // Update the cards otherwise they will be saved with the new versions of the stylesheets without ever having been updated
+  if (!progress.Update(step++, String::Format(_ERROR_("updating cards")))) {
+    // don't allow abort.
+  }
+  if (SetWindow* set_window = dynamic_cast<SetWindow*>(GetParent())) {
+    if (SetP set = set_window->getSet()) {
+      set->updateCardsScripts();
+    }
+  }
   // Report on package status
   progress.Update(step++);
   String report_message = install == success ? _ERROR_1_("install packages successful",String()<<success):
@@ -353,12 +362,6 @@ void PackagesWindow::onOk(wxCommandEvent& ev) {
                                                _ERROR_1_("change packages successful", String()<<success);
   wxMessageDialog report = wxMessageDialog(this, report_message, _TITLE_("packages window"), wxICON_INFORMATION | wxOK | wxSTAY_ON_TOP);
   report.ShowModal();
-  // Update the cards otherwise they will be saved with the new versions of the stylesheets without ever having been updated
-  if (SetWindow* set_window = dynamic_cast<SetWindow*>(GetParent())) {
-    if (SetP set = set_window->getSet()) {
-      set->updateCardsScripts();
-    }
-  }
   // Launch exe updater if necessary
   if (app_change) {
     // Hard code the only updater, for now
