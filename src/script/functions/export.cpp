@@ -57,7 +57,9 @@ String get_export_full_path(String& rel_name) {
 void ensure_dir_valid(String& path) {
   if (!wxDirExists(path)) {
     wxFileName filename = path;
-    filename.Mkdir(wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL);
+    if (!retry_io([&]{ return filename.Mkdir(wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL); })) {
+      throw Error(_("Unable to create export folder for '") + path + _("'"));
+    }
   }
 }
 
@@ -202,7 +204,10 @@ String symbols_to_html(const String& str, SymbolFont& symbol_font, double size) 
       wxFileName fn;
       fn.SetPath(ei.directory_absolute);
       fn.SetFullName(filename);
-      img.SaveFile(fn.GetFullPath());
+      String out_path = fn.GetFullPath();
+      if (!retry_io([&]{ return img.SaveFile(out_path); })) {
+        throw Error(_("Unable to write symbol image file '") + out_path + _("'"));
+      }
       it = ei.exported_images.insert(make_pair(filename, wxSize(img.GetWidth(), img.GetHeight()))).first;
     }
     html += _("<img src='") + filename + _("' alt='") + html_escape(sym.text)
@@ -404,9 +409,16 @@ SCRIPT_FUNCTION(copy_file) {
   ExportInfo& ei = *export_info();
   auto in = ei.export_template->openIn(input);
   ensure_dir_valid(out_path);
-  wxFileOutputStream out(out_path);
-  if (!out.Ok()) throw Error(_("Unable to open file '") + out_path + _("' for output"));
-  out.Write(*in);
+  unique_ptr<wxFileOutputStream> out;
+  retry_io([&]{
+    out = make_unique<wxFileOutputStream>(out_path);
+    return out->Ok();
+  });
+  if (!out->Ok()) throw Error(_("Unable to open file '") + out_path + _("' for output"));
+  out->Write(*in);
+  if (!out->Ok() || (!in->Eof() && in->GetLastError() != wxSTREAM_NO_ERROR)) {
+    throw Error(_("Unable to write file '") + out_path + _("'"));
+  }
   SCRIPT_RETURN(out_name);
 }
 
@@ -419,11 +431,16 @@ SCRIPT_FUNCTION(write_text_file) {
   String out_path = get_export_full_path(file);
   // write
   ensure_dir_valid(out_path);
-  wxFileOutputStream out(out_path);
-  if (!out.Ok()) throw Error(_("Unable to open file '") + out_path + _("' for output"));
-  wxTextOutputStream tout(out);
+  unique_ptr<wxFileOutputStream> out;
+  retry_io([&]{
+    out = make_unique<wxFileOutputStream>(out_path);
+    return out->Ok();
+  });
+  if (!out->Ok()) throw Error(_("Unable to open file '") + out_path + _("' for output"));
+  wxTextOutputStream tout(*out);
   tout.WriteString(BYTE_ORDER_MARK);
   tout.WriteString(input);
+  if (!out->Ok()) throw Error(_("Unable to write file '") + out_path + _("'"));
   SCRIPT_RETURN(file);
 }
 
@@ -468,7 +485,9 @@ SCRIPT_FUNCTION(write_image_file) {
   if (!img.Ok()) throw Error(_("Unable to generate image for file ") + file);
   // write
   ensure_dir_valid(out_path);
-  img.SaveFile(out_path);
+  if (!retry_io([&]{ return img.SaveFile(out_path); })) {
+    throw Error(_("Unable to write image file '") + out_path + _("'"));
+  }
   ei.exported_images.insert(make_pair(file, wxSize(img.GetWidth(), img.GetHeight())));
   SCRIPT_RETURN(file);
 }

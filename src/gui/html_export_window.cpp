@@ -67,7 +67,9 @@ ScriptValueP export_set(SetP const& set, vector<CardP> const& cards, ExportTempl
     fn.SetFullName(info.directory_relative);
     info.directory_absolute = fn.GetFullPath();
     if (!wxDirExists(info.directory_absolute)) {
-      wxMkdir(info.directory_absolute);
+      if (!retry_io([&]{ return wxMkdir(info.directory_absolute); })) {
+        throw Error(_("Unable to create export folder '") + info.directory_absolute + _("'"));
+      }
     }
   }
   // run export script
@@ -80,10 +82,26 @@ ScriptValueP export_set(SetP const& set, vector<CardP> const& cards, ExportTempl
   // Save to file
   if (!outname.empty()) {
     // TODO: write as image?
-    // write as string
-    wxFileOutputStream file(outname);
-    wxTextOutputStream stream(file);
-    stream.WriteString(result->toString());
+    // write as string. build in a local temp file first, then move to a potentially cloud-synced drive
+    String temp_file = wxFileName::CreateTempFileName(_("mse-export"));
+    bool ok;
+    {
+      unique_ptr<wxFileOutputStream> file;
+      retry_io([&]{
+        file = make_unique<wxFileOutputStream>(temp_file);
+        return file->IsOk();
+      });
+      ok = file->IsOk();
+      if (ok) {
+        wxTextOutputStream stream(*file);
+        stream.WriteString(result->toString());
+        ok = file->IsOk();
+      }
+    }
+    if (!ok || !rename_file_or_dir(temp_file, outname)) {
+      remove_file(temp_file);
+      throw Error(_("Unable to write export to '") + outname + _("'"));
+    }
   }
   return result;
 }

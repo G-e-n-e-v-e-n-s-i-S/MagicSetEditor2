@@ -90,7 +90,7 @@ public:
       line_height_hard_max,                   ///< Maximum line height
       line_height_line_max,                   ///< Maximum line height
       paragraph_height;                       ///< Fixed height of paragraphs
-  Direction direction;                        ///< In what direction is text layed out?
+  Scriptable<Direction> direction;            ///< In what direction is text layed out?
   // information from text rendering
   TextLayoutP layout;
   

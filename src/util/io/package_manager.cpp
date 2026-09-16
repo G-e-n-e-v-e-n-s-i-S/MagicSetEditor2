@@ -272,7 +272,7 @@ void PackageDirectory::deleteEmptyFolders() {
     if (!wxDir::Exists(file)) continue;
     wxDir outerDir(file);
     if (!outerDir.HasFiles() && !outerDir.HasSubDirs()) {
-      wxRmdir(file);
+      retry_io([&]{ return wxRmdir(file); });
     }
   }
 }
@@ -457,12 +457,20 @@ bool PackageDirectory::actual_install(const InstallablePackage& package, const S
     create_parent_dirs(local_file);
     // copy file
     auto in_stream = installer.openIn(file);
-    wxFileOutputStream out_stream(local_file);
-    if (!out_stream.IsOk()) {
+    unique_ptr<wxFileOutputStream> out_stream;
+    retry_io([&]{
+      out_stream = make_unique<wxFileOutputStream>(local_file);
+      return out_stream->IsOk();
+    });
+    if (out_stream->IsOk()) {
+      out_stream->Write(*in_stream);
+    }
+    if (!out_stream->IsOk() || (!in_stream->Eof() && in_stream->GetLastError() != wxSTREAM_NO_ERROR)) {
+      out_stream.reset();
+      remove_file(local_file);
       int act = wxMessageBox(_ERROR_1_("cannot create file", file), _TITLE_("cannot create file"), wxICON_ERROR | wxYES_NO);
       if (act == wxNO) return false;
     }
-    out_stream.Write(*in_stream);
   }
   // update package database
   // TODO: bless the package?

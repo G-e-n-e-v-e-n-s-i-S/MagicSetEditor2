@@ -35,8 +35,12 @@ SymbolWindow::SymbolWindow(Window* parent, const String& filename)
   : performer(nullptr)
 {
   // open file
-  wxFileInputStream stream(filename);
-  Reader reader(stream, nullptr, filename);
+  unique_ptr<wxFileInputStream> stream;
+  retry_io([&]{
+    stream = make_unique<wxFileInputStream>(filename);
+    return stream->IsOk();
+  });
+  Reader reader(*stream, nullptr, filename);
   SymbolP symbol;
   reader.handle_greedy(symbol);
   init(parent, symbol);
@@ -219,13 +223,17 @@ void SymbolWindow::onFileOpen(wxCommandEvent& ev) {
     String ext = n.GetExt();
     SymbolP symbol;
     if (ext.Lower() == _("mse-symbol")) {
-      wxFileInputStream stream(name);
-      Reader reader(stream, nullptr, name);
+      unique_ptr<wxFileInputStream> stream;
+      retry_io([&]{
+        stream = make_unique<wxFileInputStream>(name);
+        return stream->IsOk();
+      });
+      Reader reader(*stream, nullptr, name);
       reader.handle_greedy(symbol);
     } else {
       wxBusyCursor busy;
-      Image image(name);
-      if (!image.Ok()) {
+      Image image;
+      if (!image_load_file(image, name)) {
         queue_message(MESSAGE_ERROR, _ERROR_("can't load image"));
         return;
       }
@@ -246,9 +254,26 @@ void SymbolWindow::onFileSaveAs(wxCommandEvent& ev) {
   String name = wxFileSelector(_("Save symbol"),settings.default_set_dir,_(""),_(""),_("Symbol files (*.mse-symbol)|*.mse-symbol"),wxFD_SAVE, this);
   if (!name.empty()) {
     settings.default_set_dir = wxPathOnly(name);
-    wxFileOutputStream stream(name);
-    Writer writer(stream, file_version_symbol);
-    writer.handle(control->getSymbol());
+    // build the file locally first, then move it (to a potentially cloud-synced drive)
+    String temp_file = wxFileName::CreateTempFileName(_("mse-symbol"));
+    bool ok;
+    {
+      unique_ptr<wxFileOutputStream> stream;
+      retry_io([&]{
+        stream = make_unique<wxFileOutputStream>(temp_file);
+        return stream->IsOk();
+      });
+      ok = stream->IsOk();
+      if (ok) {
+        Writer writer(*stream, file_version_symbol);
+        writer.handle(control->getSymbol());
+        ok = stream->IsOk();
+      }
+    }
+    if (!ok || !rename_file_or_dir(temp_file, name)) {
+      remove_file(temp_file);
+      queue_message(MESSAGE_ERROR, _ERROR_1_("can't save symbol", name));
+    }
   }
 }
 
@@ -257,9 +282,19 @@ void SymbolWindow::onFileStore(wxCommandEvent& ev) {
     SymbolValueP value = static_pointer_cast<SymbolValue>(performer->value);
     Package& package = performer->getLocalPackage();
     LocalFileName new_filename = package.newFileName(value->field().name,_(".mse-symbol")); // a new unique name in the package
-    auto stream = package.openOut(new_filename);
-    Writer writer(*stream, file_version_symbol);
-    writer.handle(control->getSymbol());
+    unique_ptr<wxOutputStream> stream;
+    retry_io([&]{
+      stream = package.openOut(new_filename);
+      return stream->IsOk();
+    });
+    if (stream->IsOk()) {
+      Writer writer(*stream, file_version_symbol);
+      writer.handle(control->getSymbol());
+    }
+    if (!stream->IsOk()) {
+      queue_message(MESSAGE_ERROR, _ERROR_1_("can't write symbol", new_filename));
+      return;
+    }
     performer->addAction(value_action(value, new_filename));
   }
 }

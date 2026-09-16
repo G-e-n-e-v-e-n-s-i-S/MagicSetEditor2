@@ -90,6 +90,7 @@ int TextStyle::update(Context& ctx) {
   changes |= font       .update(ctx) * CHANGE_OTHER;
   changes |= symbol_font.update(ctx) * CHANGE_OTHER;
   changes |= alignment  .update(ctx) * CHANGE_OTHER;
+  changes |= direction  .update(ctx) * CHANGE_OTHER;
   changes |= padding_left        .update(ctx) * CHANGE_OTHER;
   changes |= padding_left_min    .update(ctx) * CHANGE_OTHER;
   changes |= padding_right       .update(ctx) * CHANGE_OTHER;
@@ -114,6 +115,7 @@ void TextStyle::initDependencies(Context& ctx, const Dependency& dep) const {
 void TextStyle::checkContentDependencies(Context& ctx, const Dependency& dep) const {
   Style   ::checkContentDependencies(ctx, dep);
   alignment.initDependencies(ctx, dep);
+  direction.initDependencies(ctx, dep);
 }
 
 template <typename T> void reflect_layout(T& handler,         const TextLayoutP& layout) {}

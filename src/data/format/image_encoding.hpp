@@ -10,6 +10,7 @@
 
 #include <util/prec.hpp>
 #include <util/real_point.hpp>
+#include <util/file_utils.hpp>
 #include <boost/json.hpp>
 #include <wx/filename.h>
 #include <fstream>
@@ -125,18 +126,26 @@ inline static const std::vector<int> Base64ReverseAlphabet = [] {
 
 /// Encode a file in a string
 inline static std::string fileToUTF8(const std::string& filepath) {
-  // Load file
-  std::ifstream file(filepath, std::ios::binary);
-  if (!file)  {
+  std::vector<uint8_t> data;
+  bool ok = retry_io([&]{
+    std::ifstream file(filepath, std::ios::binary);
+    if (!file) return false;
+    try {
+      size_t size = std::filesystem::file_size(filepath);
+      data.resize(size);
+      file.read(reinterpret_cast<char*>(data.data()), size);
+      return !file.fail();
+    } catch (const std::filesystem::filesystem_error&) {
+      return false;
+    }
+  });
+  if (!ok) {
     queue_message(MESSAGE_WARNING, _("Could not find file: ") + String(filepath));
     return "";
   }
-  size_t size = std::filesystem::file_size(filepath);
-  std::vector<uint8_t> data(size);
-  file.read(reinterpret_cast<char*>(data.data()), size);
   // Base64 encode
   std::string out;
-  out.reserve(((size + 2) / 3) * 4);
+  out.reserve(((data.size() + 2) / 3) * 4);
   int val = 0;
   int valb = -6;
   for (uint8_t c : data) {
@@ -174,18 +183,22 @@ inline static bool UTF8ToFile(const std::string& filepath, std::string& data) {
     }
   }
   // Save file
-  std::ofstream file(filepath, std::ios::binary);
-  file.write(out.data(), out.size());
-  return true;
+  return retry_io([&]{
+    std::ofstream file(filepath, std::ios::binary);
+    if (!file) return false;
+    file.write(out.data(), out.size());
+    return !file.fail();
+  });
 }
 
 /// Encode an image in a string
 inline static std::string encodeImageInString(const Image& img) {
+  wxLogNull noLog; // suppress popups from cleaning up a possibly-missing temp file below
   String temppath = wxFileName::CreateTempFileName(_("mse")) + _(".png");
-  img.SaveFile(temppath, wxBITMAP_TYPE_PNG);
+  retry_io([&]{ return img.SaveFile(temppath, wxBITMAP_TYPE_PNG); });
   std::string s = "<mse-image-data>" + fileToUTF8(temppath.ToStdString()) + "</mse-image-data>";
-  wxRemoveFile(temppath);
-  wxRemoveFile(temppath.substr(0, temppath.size() - 4));
+  retry_io([&]{ return wxRemoveFile(temppath); });
+  retry_io([&]{ return wxRemoveFile(temppath.substr(0, temppath.size() - 4)); });
   return s;
 }
 
@@ -198,11 +211,13 @@ inline static bool decodeImageFromString(const String& string, Image& img_out) {
   std::string s = string.substr(first + 16, last - (first + 16)).ToStdString();
   if (s.empty()) return true;
 
+  wxLogNull noLog; // suppress popups from cleaning up a possibly-missing temp file below
   const std::string& temppath = (wxFileName::CreateTempFileName(_("mse")) + _(".png")).ToStdString();
-  UTF8ToFile(temppath, s);
-  img_out.LoadFile(temppath, wxBITMAP_TYPE_PNG);
-  wxRemoveFile(temppath);
-  wxRemoveFile(temppath.substr(0, temppath.size() - 4));
+  if (UTF8ToFile(temppath, s)) {
+    retry_io([&]{ return img_out.LoadFile(temppath, wxBITMAP_TYPE_PNG); });
+  }
+  retry_io([&]{ return wxRemoveFile(temppath); });
+  retry_io([&]{ return wxRemoveFile(temppath.substr(0, temppath.size() - 4)); });
   return true;
 }
 

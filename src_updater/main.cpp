@@ -67,6 +67,21 @@ wxDEFINE_EVENT(wxEVT_EXTRACTION, wxThreadEvent);
 wxDEFINE_EVENT(wxEVT_FAIL,       wxThreadEvent);
 wxDEFINE_EVENT(wxEVT_SUCCESS,    wxThreadEvent);
 
+// ----------------------------------------------------------------------------- : Utility
+
+// Retry a filesystem operation a few times with exponential backoff.
+template <typename Op>
+bool retry_io(Op op, int max_attempts = 6, int initial_delay_ms = 50) {
+  int delay = initial_delay_ms;
+  for (int attempt = 1; attempt <= max_attempts; ++attempt) {
+    if (op()) return true;
+    if (attempt == max_attempts) return false;
+    wxMilliSleep(delay);
+    delay *= 2;
+  }
+  return false;
+}
+
 // ----------------------------------------------------------------------------- : Classes
 
 class MSEUpdater : public wxApp {
@@ -287,27 +302,45 @@ wxThread::ExitCode Thread::Entry() {
       wxString target_path = app_folder + entry->GetName();
       int nPermBits = entry->GetMode();
       if (entry->IsDir()) {
-        if (!wxDirExists(target_path)) wxFileName::Mkdir(target_path, nPermBits, wxPATH_MKDIR_FULL);
+        if (!wxDirExists(target_path) &&
+            !retry_io([&]{ return wxFileName::Mkdir(target_path, nPermBits, wxPATH_MKDIR_FULL); })) {
+          NotifyFail("Could Not Create Folder. Magic Set Editor may still be open.");
+          return (ExitCode)-1;
+        }
         continue;
       }
 
       NotifyExtraction(target_path);
       wxFileName fn;
       fn.Assign(target_path);
-      if (!wxDirExists(fn.GetPath())) wxFileName::Mkdir(fn.GetPath(), nPermBits, wxPATH_MKDIR_FULL);
+      if (!wxDirExists(fn.GetPath()) &&
+          !retry_io([&]{ return wxFileName::Mkdir(fn.GetPath(), nPermBits, wxPATH_MKDIR_FULL); })) {
+        NotifyFail("Could Not Create Folder. Magic Set Editor may still be open.");
+        return (ExitCode)-1;
+      }
       if (!zis.CanRead()) {
         NotifyFail("Extraction Failed.");
         return (ExitCode)-1;
       }
 
-      wxFileOutputStream fos(target_path);
-      if (!fos.IsOk()) {
+      std::unique_ptr<wxFileOutputStream> fos;
+      retry_io([&]{
+        fos = std::make_unique<wxFileOutputStream>(target_path);
+        return fos->IsOk();
+      });
+      if (!fos->IsOk()) {
         NotifyFail("Writing Failed. Magic Set Editor may still be open.");
         return (ExitCode)-1;
       }
 
-      zis.Read(fos);
-      fos.Close();
+      zis.Read(*fos);
+      if (!fos->IsOk() || (!zis.Eof() && zis.GetLastError() != wxSTREAM_NO_ERROR)) {
+        fos.reset();
+        retry_io([&]{ return wxRemove(target_path.fn_str()) == 0; });
+        NotifyFail("Writing Failed. Magic Set Editor may still be open.");
+        return (ExitCode)-1;
+      }
+      fos->Close();
       zis.CloseEntry();
     }
 
