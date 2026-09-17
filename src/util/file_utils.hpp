@@ -53,8 +53,9 @@ time_t file_modified_time(const String& name);
 struct RetryOptions {
   int max_attempts;
   int initial_delay_ms;
-  inline RetryOptions(int max_attempts = 5, int initial_delay_ms = 40)
-    : max_attempts(max_attempts), initial_delay_ms(initial_delay_ms)
+  int max_delay_ms;
+  inline RetryOptions(int max_attempts = 7, int initial_delay_ms = 40, int max_delay_ms = 600)
+    : max_attempts(max_attempts), initial_delay_ms(initial_delay_ms), max_delay_ms(max_delay_ms)
   {}
 };
 
@@ -70,7 +71,7 @@ bool retry_io(Op op, RetryOptions const& opts = RetryOptions()) {
       if (last_attempt) throw;
     }
     wxMilliSleep(delay);
-    delay *= 3;
+    delay = std::min(delay * 2, opts.max_delay_ms);
   }
   return false; // unreachable
 }

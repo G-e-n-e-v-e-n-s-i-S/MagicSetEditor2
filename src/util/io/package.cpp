@@ -566,7 +566,7 @@ void Package::saveToZipfile(const String& saveAs, bool remove_unused, bool is_co
   }
   // replace the old file with the new file, in effect commiting the changes
   {
-    wxLogNull no_log;
+    wxLogNull noLog;
     // move .bak to .bak.temp
     bool bak_temp_created = false;
     if (wxFileExists(bakFile)) {

@@ -185,7 +185,7 @@ public:
   }
   
   wxDirTraverseResult OnFile(const String& filename) override {
-    if (!remove_file(filename)) {
+    if (wxRemove(filename.fn_str()) != 0) {
       ok = false;
       handle_error(_("Cannot delete ") + filename + _("\n")
         _("The remainder of the package has still been removed, if possible.\n")
@@ -202,7 +202,7 @@ private:
 };
 
 bool remove_file(const String& filename) {
-  // Based on wxRemoveFile
+  // Based on wxRemoveFile (wxRemove is just wxRemoveFile with no logging)
   if (!wxFileExists(filename)) {
     // nothing there to remove, just call this once as cleanup
     return wxRemove(filename.fn_str()) == 0;
@@ -210,9 +210,10 @@ bool remove_file(const String& filename) {
   return retry_io([&]{ return wxRemove(filename.fn_str()) == 0; });
 }
 
-bool remove_file_or_dir(const String& name) {
+static bool remove_file_or_dir_once(const String& name) {
+  wxLogNull noLog;
   if (wxFileExists(name)) {
-    return remove_file(name);
+    return wxRemove(name.fn_str()) == 0;
   } else if (wxDirExists(name)) {
     RecursiveDeleter rd(name);
     {
@@ -226,22 +227,41 @@ bool remove_file_or_dir(const String& name) {
   }
 }
 
+bool remove_file_or_dir(const String& name) {
+  return retry_io([&]{ return remove_file_or_dir_once(name); });
+}
+
 // ----------------------------------------------------------------------------- : Renaming
 
 bool copy_file(const String& from, const String& to) {
-  return retry_io([&]{ return wxCopyFile(from, to); });
+  return retry_io([&]{ wxLogNull noLog; return wxCopyFile(from, to); });
+}
+
+static bool rename_file_or_dir_once(const String& from, const String& to) {
+  wxLogNull noLog;
+  create_parent_dirs(to);
+  if (wxRename(from, to) == 0) return true;
+  // wxRename can't move across volumes or if something inside a directory is locked, fall back to copy + delete
+  if (wxDirExists(from)) {
+    if (!wxFileName::Mkdir(to, wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL)) return false;
+    wxDir dir(from);
+    if (!dir.IsOpened()) return false;
+    wxString filename;
+    bool cont = dir.GetFirst(&filename);
+    bool ok = true;
+    while (cont) {
+      ok &= rename_file_or_dir_once(from + wxFILE_SEP_PATH + filename, to + wxFILE_SEP_PATH + filename);
+      cont = dir.GetNext(&filename);
+    }
+    return ok && remove_file_or_dir_once(from);
+  } else if (wxFileExists(from) && wxCopyFile(from, to)) {
+    return wxRemove(from.fn_str()) == 0;
+  }
+  return false;
 }
 
 bool rename_file_or_dir(const String& from, const String& to) {
-  create_parent_dirs(to);
-  return retry_io([&]{
-    if (wxRenameFile(from, to)) return true;
-    // wxRenameFile can't move a file across volumes, so copy+delete
-    if (wxFileExists(from) && wxCopyFile(from, to)) {
-      return remove_file(from);
-    }
-    return false;
-  });
+  return retry_io([&]{ return rename_file_or_dir_once(from, to); });
 }
 
 // ----------------------------------------------------------------------------- : Moving
