@@ -83,7 +83,8 @@ bool ImageValueEditor::canCopy() const {
 }
 
 bool ImageValueEditor::canPaste() const {
-  return wxTheClipboard->IsSupported(wxDF_BITMAP) &&
+  return (wxTheClipboard->IsSupported(wxImageDataObject().GetFormat()) ||
+          wxTheClipboard->IsSupported(wxDF_BITMAP)) &&
         !wxTheClipboard->IsSupported(CardsDataObject::format); // we don't want to (accidentally) paste card images
 }
 
@@ -94,24 +95,35 @@ bool ImageValueEditor::doCopy() {
   if (!image_load_file(image, *image_file)) return false;
   // set data
   if (!wxTheClipboard->Open()) return false;
-  bool ok = wxTheClipboard->SetData(new wxBitmapDataObject(image));
+  wxDataObjectComposite* composite = new wxDataObjectComposite();
+  composite->Add(new wxImageDataObject(image), true);
+  composite->Add(new wxBitmapDataObject(image));
+  bool ok = wxTheClipboard->SetData(composite);
   wxTheClipboard->Flush();
   wxTheClipboard->Close();
   return ok;
 }
 
 bool ImageValueEditor::doPaste() {
-  // get bitmap
   if (!wxTheClipboard->Open()) return false;
-  wxBitmapDataObject data;
-  bool ok = wxTheClipboard->GetData(data);
+  // Prefer wxImageDataObject because wxBitmapDataObjectdoes not support transparency
+  Image image;
+  wxImageDataObject image_data;
+  if (wxTheClipboard->IsSupported(image_data.GetFormat()) && wxTheClipboard->GetData(image_data)) {
+    image = image_data.GetImage();
+  } else {
+    wxBitmapDataObject bitmap_data;
+    if (wxTheClipboard->GetData(bitmap_data)) {
+      image = bitmap_data.GetBitmap().ConvertToImage();
+    }
+  }
   wxTheClipboard->Flush();
   wxTheClipboard->Close();
-  if (!ok)  return false;
+  if (!image.Ok()) return false;
   // slice
   CardP card = parent.getCard();
   String cardname = card ? card->identification() : _("clipboard");
-  sliceImage(data.GetBitmap().ConvertToImage(), _("clipboard"), cardname);
+  sliceImage(image, _("clipboard"), cardname);
   return true;
 }
 
