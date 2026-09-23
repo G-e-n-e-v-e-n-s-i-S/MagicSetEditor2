@@ -22,32 +22,33 @@
 
 class ZoomedUnrotatedDataViewer : public DataViewer {
 public:
-  ZoomedUnrotatedDataViewer(double zoom) : zoom(zoom) {};
+  ZoomedUnrotatedDataViewer(double zoom, double bleed = 0.0) : zoom(zoom), bleed(bleed) {};
   virtual ~ZoomedUnrotatedDataViewer() {};
   Rotation getRotation() const override;
 private:
-  double zoom;
+  double zoom, bleed;
 };
 
 Rotation ZoomedUnrotatedDataViewer::getRotation() const {
-  return Rotation(0.0, stylesheet->getCardRect(), zoom);
+  RealRect card_rect = stylesheet->getCardRect();
+  RealRect bled_rect(card_rect.x + bleed, card_rect.y + bleed, card_rect.width, card_rect.height);
+  return Rotation(0.0, bled_rect, zoom);
 }
 
 // ----------------------------------------------------------------------------- : wxImage export
 
 Image export_image(const SetP& set, const CardP& card, bool write_metadata, double zoom, Radians angle_radians, double bleed_pixels, Bitmap* out_bitmap) {
   if (!set) throw Error(_("no set"));
-  /// create and zoom
-  ZoomedUnrotatedDataViewer viewer = ZoomedUnrotatedDataViewer(zoom);
+  /// create, offset by bleed, and zoom
+  int bleed = lround(bleed_pixels);
+  ZoomedUnrotatedDataViewer viewer = ZoomedUnrotatedDataViewer(zoom, bleed);
   viewer.setSet(set);
   viewer.setCard(card);
   RealSize size = viewer.getRotation().getExternalSize();
-  int bleed = lround(bleed_pixels);
   Bitmap bitmap((int)size.width + 2 * bleed, (int)size.height + 2 * bleed);
   if (!bitmap.Ok()) throw InternalError(_("Unable to create bitmap"));
   wxMemoryDC dc;
   dc.SelectObject(bitmap);
-  dc.SetDeviceOrigin(bleed, bleed);
   viewer.draw(dc);
   dc.SelectObject(wxNullBitmap);
   Image img = bitmap.ConvertToImage();
