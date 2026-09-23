@@ -115,7 +115,7 @@ CardsPanel::CardsPanel(Window* parent, int id)
     menuCard->AppendSeparator();
     add_menu_item_tr(menuCard, ID_CARD_ADD, "card_add", "add_card");
     add_menu_item_tr(menuCard, ID_CARD_ADD_DOUBLE, "card_add_double", "add_card_double");
-    insertManyCardsMenu = add_menu_item_tr(menuCard, ID_CARD_ADD_MULT, "card_add_multiple", "add cards");
+    insertManyCardsMenu = add_menu_item_tr(menuCard, ID_CARD_ADD_MULT, "card_add_multiple", "add cards", wxITEM_NORMAL, new wxMenu());
     // NOTE: space after "Del" prevents wx from making del an accellerator
     // otherwise we delete a card when delete is pressed inside the editor
     // Adding a space never hurts, please keep it just to be safe.
@@ -241,12 +241,20 @@ void CardsPanel::onChangeSet() {
   card_list->setSet(set);
   updateLinkScrollerCap();
   
-  // change insertManyCardsMenu
-  delete insertManyCardsMenu->GetSubMenu();
-  insertManyCardsMenu->SetSubMenu(makeAddCardsSubmenu(false));
-  // re-add the menu
-  menuCard->Remove(ID_CARD_ADD_MULT);
-  ((wxMenu*)menuCard)->Insert(6,insertManyCardsMenu); // HACK: the position is hardcoded
+  // change insertManyCardsMenu. it seems Remove()ing and re-Insert()ing a wxMenuItem into
+  // menuCard mid-list is buggy, so instead empty the submenu and rebuild it
+  {
+    wxMenu* add_cards_menu = insertManyCardsMenu->GetSubMenu();
+    while (add_cards_menu->GetMenuItemCount() > 0) {
+      add_cards_menu->Destroy(add_cards_menu->FindItemByPosition(0));
+    }
+    if (set && set->game && !set->game->add_cards_scripts.empty()) {
+      int id = ID_ADD_CARDS_MENU_MIN;
+      FOR_EACH(script, set->game->add_cards_scripts) {
+        add_cards_menu->Append(id++, script->name, script->description);
+      }
+    }
+  }
   // also for the toolbar dropdown menu
   if (toolAddCard) {
     // Originally this was using the menu directly, but there are compatibility issues apparently.
@@ -375,7 +383,8 @@ void CardsPanel::onUpdateUI(wxUpdateUIEvent& ev) {
       break;
     }
     case ID_CARD_ADD_MULT: {
-      ev.Enable(insertManyCardsMenu->GetSubMenu() != nullptr);
+      wxMenu* add_cards_menu = insertManyCardsMenu->GetSubMenu();
+      ev.Enable(add_cards_menu && add_cards_menu->GetMenuItemCount() > 0);
       break;
     }
     case ID_CARD_REMOVE:        ev.Enable(card_list->canDelete());      break;
