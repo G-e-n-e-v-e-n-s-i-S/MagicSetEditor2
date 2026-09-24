@@ -670,10 +670,10 @@ bool CardsPanel::doReplaceAll(wxFindReplaceData& what) {
 
 bool CardsPanel::search(FindInfo& find, bool from_start) {
   CardP current = card_list->getCard();
-  bool include = from_start || card_list->findGivenItemPos(current) == -1;
-  long count = card_list->GetItemCount();
-  for (long i = 0 ; i < count ; ++i) {
-    CardP card = card_list->getCard( find.forward() ? i : count - i - 1 );
+  bool include = from_start || !current;
+  size_t count = set->cards.size();
+  for (size_t i = 0 ; i < count ; ++i) {
+    CardP card = set->cards[ find.forward() ? i : count - i - 1 ];
     if (card == current) include = true;
     if (include) {
       editor->setCard(card);
