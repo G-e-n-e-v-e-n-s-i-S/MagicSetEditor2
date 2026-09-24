@@ -17,18 +17,32 @@
 #include <wx/print.h>
 #include <wx/valnum.h>
 #include <unordered_set>
+#include <cstdio>
 
 DECLARE_POINTER_TYPE(PageLayout);
+
+// ----------------------------------------------------------------------------- : Temporary debug logging
+// Writes to stderr (run MSE from a terminal to see it). Remove once the crash is found.
+#define PRINT_LOG(...) do { fprintf(stderr, "[print] " __VA_ARGS__); fputc('\n', stderr); fflush(stderr); } while (0)
 
 // ----------------------------------------------------------------------------- : Layout
 
 void PrintJob::init(const RealSize& page_size) {
+  PRINT_LOG("PrintJob::init job=%p page=%.2f x %.2f mm, cards=%d, card_layouts(before)=%d, page_layouts(before)=%d, page_margins(before)=%d",
+            (void*)this, page_size.width, page_size.height, (int)cards.size(), (int)card_layouts.size(), (int)page_layouts.size(), (int)page_margins.size());
+  if (!card_layouts.empty() || !page_margins.empty()) {
+    PRINT_LOG("WARNING: init on a job that already holds layouts/margins -> entries will be duplicated");
+  }
   this->page_size = page_size;
-  if (cards.empty()) return;
+  if (cards.empty()) { PRINT_LOG("init: no cards, returning"); return; }
   measure_cards();
   layout_cards();
   align_cards();
   center_cards();
+  PRINT_LOG("PrintJob::init done: card_layouts=%d, pages=%d, page_margins=%d", (int)card_layouts.size(), (int)page_layouts.size(), (int)page_margins.size());
+  for (size_t p = 0; p < page_layouts.size(); ++p) {
+    PRINT_LOG("  page %d: %d cards", (int)(p + 1), (int)page_layouts[p].size());
+  }
 }
 
 void PrintJob::measure_cards() {
@@ -248,22 +262,32 @@ CardsPrintout::CardsPrintout(PrintJobP const& job)
 void CardsPrintout::GetPageInfo(int* page_min, int* page_max, int* page_from, int* page_to) {
   *page_from = *page_min = 1;
   *page_to   = *page_max = pageCount();
+  PRINT_LOG("GetPageInfo this=%p -> min=%d max=%d from=%d to=%d (job->empty()=%d)", (void*)this, *page_min, *page_max, *page_from, *page_to, (int)job->empty());
 }
 
 bool CardsPrintout::HasPage(int page) {
-  return page <= pageCount(); // page number is 1 based
+  bool result = page <= pageCount(); // page number is 1 based
+  PRINT_LOG("HasPage(%d) pageCount=%d -> %d%s", page, pageCount(), (int)result, page < 1 ? "  <-- page < 1 is accepted!" : "");
+  return result;
 }
 
 void CardsPrintout::OnPreparePrinting() {
+  int pw_mm = -1, ph_mm = -1;
+  GetPageSizeMM(&pw_mm, &ph_mm);
+  PRINT_LOG("OnPreparePrinting this=%p job=%p IsPreview=%d GetPageSizeMM=%d x %d, job->empty()=%d", (void*)this, (void*)job.get(), (int)IsPreview(), pw_mm, ph_mm, (int)job->empty());
   if (job->empty()) {
-    int pw_mm, ph_mm;
-    GetPageSizeMM(&pw_mm, &ph_mm);
     job->init(RealSize(pw_mm, ph_mm));
   }
+  PRINT_LOG("OnPreparePrinting done: pageCount=%d", pageCount());
 }
 
 
 bool CardsPrintout::OnPrintPage(int page) {
+  PRINT_LOG("OnPrintPage(%d) this=%p IsPreview=%d GetDC()=%p pageCount=%d page_layouts=%d page_margins=%d",
+            page, (void*)this, (int)IsPreview(), (void*)GetDC(), pageCount(), (int)job->page_layouts.size(), (int)job->page_margins.size());
+  if (page < 1 || page > pageCount()) {
+    PRINT_LOG("ERROR: OnPrintPage called with page=%d, valid range is 1..%d", page, pageCount());
+  }
   DC& dc = *GetDC();
   // page size in millimeters
   int page_width_mm, page_height_mm;
@@ -273,16 +297,28 @@ bool CardsPrintout::OnPrintPage(int page) {
   dc.GetSize(&page_width_px, &page_height_px);
   // scale factor (pixels per mm)
   printer_px_per_mm = RealSize((double)page_width_px / page_width_mm, (double)page_height_px / page_height_mm);
+  PRINT_LOG("OnPrintPage: dc.IsOk=%d page=%d x %d mm, dc=%d x %d px, px_per_mm=%.3f x %.3f, job->page_size=%.2f x %.2f mm",
+            (int)dc.IsOk(), page_width_mm, page_height_mm, page_width_px, page_height_px,
+            printer_px_per_mm.width, printer_px_per_mm.height, job->page_size.width, job->page_size.height);
+  PRINT_LOG("OnPrintPage: settings cutter_lines=%d bleed=%.3f spacing=%.3f", (int)settings.print_cutter_lines, (double)settings.print_bleed, (double)settings.print_spacing);
   // print the cards that belong on this page
   if (settings.print_cutter_lines != CUTTER_NONE) drawCutterLines(dc, job, page);
+  PRINT_LOG("OnPrintPage(%d): cutter lines step finished", page);
   drawCards(dc, job, page);
+  PRINT_LOG("OnPrintPage(%d): done", page);
   return true;
 }
 
 void CardsPrintout::drawCards(DC& dc, PrintJobP& job, int page) {
+  PRINT_LOG("drawCards: page=%d page_layouts=%d", page, (int)job->page_layouts.size());
+  if (page < 1 || page > (int)job->page_layouts.size()) {
+    PRINT_LOG("ERROR: drawCards page %d out of range, about to index out of bounds", page);
+  }
   FOR_EACH(card_layout, job->page_layouts[page - 1]) {
+    PRINT_LOG("drawCards: card at (%.2f, %.2f) mm size %.2f x %.2f mm", card_layout.pos.width, card_layout.pos.height, card_layout.size_mm.width, card_layout.size_mm.height);
     drawCard(dc, card_layout);
   }
+  PRINT_LOG("drawCards: page=%d finished", page);
   dc.SetDeviceOrigin(0, 0);
 }
 void CardsPrintout::drawCard(DC& dc, PrintJob::CardLayout& card_layout) {
@@ -324,10 +360,20 @@ void CardsPrintout::drawCard(DC& dc, PrintJob::CardLayout& card_layout) {
 }
 
 void CardsPrintout::drawCutterLines(DC& dc, PrintJobP& job, int page) {
+  PRINT_LOG("drawCutterLines: page=%d job->page_layouts.size()=%d job->page_margins.size()=%d", page, (int)job->page_layouts.size(), (int)job->page_margins.size());
+  if (page < 1 || page > (int)job->page_layouts.size()) {
+    PRINT_LOG("ERROR: drawCutterLines page %d is out of range for page_layouts, indexing it is undefined behaviour", page);
+  } else {
+    PRINT_LOG("drawCutterLines: %d cards on this page", (int)job->page_layouts[page - 1].size());
+  }
+  if (page < 1 || page > (int)job->page_margins.size()) {
+    PRINT_LOG("WARNING: page %d is out of range for page_margins (size %d)", page, (int)job->page_margins.size());
+  }
   const vector<PrintJob::CardLayout>& page_layouts = job->page_layouts[page - 1];
   const RealSize& page_margin = job->page_margins[page - 1];
   int page_width, page_height;
   GetPageSizeMM(&page_width, &page_height);
+  PRINT_LOG("drawCutterLines: page_mm=%d x %d, px_per_mm=%.3f x %.3f", page_width, page_height, printer_px_per_mm.width, printer_px_per_mm.height);
   wxPen pen(wxColour(0, 0, 0), 2, wxPENSTYLE_SOLID);
   pen.SetQuality(wxPEN_QUALITY_HIGH);
   dc.SetPen(pen);
@@ -336,6 +382,7 @@ void CardsPrintout::drawCutterLines(DC& dc, PrintJobP& job, int page) {
   for (size_t i = 0; i < page_layouts.size(); ++i) {
     double left_line  = page_layouts[i].pos.width;
     double right_line = left_line + page_layouts[i].size_mm.width;
+    PRINT_LOG("cutter vertical card %d/%d: left=%.3f right=%.3f", (int)i, (int)page_layouts.size(), left_line, right_line);
     bool draw_left_line  = true;
     bool draw_right_line = true;
     if (settings.print_cutter_lines == CUTTER_NO_INTERSECTION) {
@@ -369,11 +416,13 @@ void CardsPrintout::drawCutterLines(DC& dc, PrintJobP& job, int page) {
                   wxPoint(right - v_bleed, printer_px_per_mm.height * (page_height - CUTTER_LINE_SIZE_MM)));
     }
   }
+  PRINT_LOG("drawCutterLines: vertical lines done");
   // horizontal
   int h_bleed = printer_px_per_mm.height * settings.print_bleed;
   for (size_t i = 0; i < page_layouts.size(); ++i) {
     double top_line  = page_layouts[i].pos.height;
     double bottom_line = top_line + page_layouts[i].size_mm.height;
+    PRINT_LOG("cutter horizontal card %d/%d: top=%.3f bottom=%.3f", (int)i, (int)page_layouts.size(), top_line, bottom_line);
     bool draw_top_line  = true;
     bool draw_bottom_line = true;
     if (settings.print_cutter_lines == CUTTER_NO_INTERSECTION) {
@@ -407,6 +456,7 @@ void CardsPrintout::drawCutterLines(DC& dc, PrintJobP& job, int page) {
                   wxPoint(printer_px_per_mm.width * (page_width - CUTTER_LINE_SIZE_MM), bottom - h_bleed));
     }
   }
+  PRINT_LOG("drawCutterLines: horizontal lines done");
 }
 
 // ----------------------------------------------------------------------------- : PrintWindow
@@ -462,6 +512,7 @@ PrintJobP make_print_job(Window* parent, const SetP& set, const ExportCardSelect
 
 void print_preview(Window* parent, const PrintJobP& job) {
   if (!job) return;
+  PRINT_LOG("print_preview: starting, job=%p", (void*)job.get());
   // Show the print preview
   wxPreviewFrame* frame = new wxPreviewFrame(
     new wxPrintPreview(
@@ -476,9 +527,12 @@ void print_preview(Window* parent, const PrintJobP& job) {
 void print_set(Window* parent, const PrintJobP& job) {
   if (!job) return;
   // Print the cards
+  PRINT_LOG("print_set: starting, job=%p", (void*)job.get());
   wxPrinter p;
   CardsPrintout pout(job);
-  p.Print(parent, &pout, true);
+  bool ok = p.Print(parent, &pout, true);
+  PRINT_LOG("print_set: wxPrinter::Print returned %d, GetLastError=%d (wxPRINTER_NO_ERROR=%d, CANCELLED=%d, ERROR=%d)",
+            (int)ok, (int)wxPrinter::GetLastError(), (int)wxPRINTER_NO_ERROR, (int)wxPRINTER_CANCELLED, (int)wxPRINTER_ERROR);
 }
 
 void print_preview(Window* parent, const SetP& set, const ExportCardSelectionChoices& choices) {
