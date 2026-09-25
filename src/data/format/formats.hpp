@@ -96,7 +96,7 @@ enum class ExportImageMode {
 };
 
 /// Generate a wxImage of one or more cards
-Image export_image(const SetP& set, const CardP& card, bool write_metadata = true, double zoom = 1.0, Radians angle_radians = 0.0, double bleed_pixels = 0.0, Bitmap* out_bitmap = nullptr);
+Image export_image(const SetP& set, const CardP& card, bool write_metadata = true, const Settings::ExportSettings& card_settings = Settings::ExportSettings());
 Image export_image(const SetP& set, const vector<CardP>& cards, int padding = 2, ExportImageMode mode = ExportImageMode::EXPORT);
 
 /// Export the image of one or more cards to a given filename, using the app's zoom, rotation and bleed settings, and including metadata

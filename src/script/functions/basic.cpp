@@ -800,6 +800,7 @@ SCRIPT_FUNCTION(get_card_export_settings) {
     ret->value.push_back(to_script(lround(card_settings.zoom * 100)));
     ret->value.push_back(to_script(lround(rad_to_deg(card_settings.angle_radians))));
     ret->value.push_back(to_script(lround(card_settings.bleed_pixels)));
+    ret->value.push_back(to_script(card_settings.dfc_export));
     return ret;
   }
   throw ScriptError(_("invalid set or card argument"));

@@ -409,10 +409,6 @@ Image BleedEdgedImage::generate(const Options& opt) {
   // create enlarged image
   Image base_img = base_image->generate(opt);
   int w = base_img.GetWidth(), h = base_img.GetHeight();
-  if (w <= 3 || h <= 3) {
-    queue_message(MESSAGE_ERROR, _("Image too small to add bleed edge"));
-    return base_img;
-  }
   bool is_landscape = w > h;
   int dw = int(w * (horizontal_size > 0.0 ? horizontal_size : is_landscape ? 0.037 : 0.048));
   int dh = int(h * (vertical_size   > 0.0 ? vertical_size   : is_landscape ? 0.048 : 0.037));
@@ -436,67 +432,8 @@ Image BleedEdgedImage::generate(const Options& opt) {
   }
   // paste original image
   img.Paste(base_img, dw, dh, wxIMAGE_ALPHA_BLEND_COMPOSE);
-  int pixel, mirror, x_start, y_start, x_size, y_size;
-  // fill left border
-  x_start = 0;
-  y_start = dh;
-  x_size = dw;
-  y_size = height - dh - dh;
-  for (int y = 0; y < y_size; ++y) {
-    for (int x = 0; x < x_size; ++x) {
-      pixel = x_start + x + (y_start + y) * width;
-      mirror = 2 * dw - x + (y_start + y) * width;
-      pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
-      pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
-      pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
-      alpha[pixel] = alpha[mirror];
-    }
-  }
-  // fill right border
-  x_start = width - dw;
-  y_start = dh;
-  x_size = dw;
-  y_size = height - dh - dh;
-  for (int y = 0; y < y_size; ++y) {
-    for (int x = 0; x < x_size; ++x) {
-      pixel =        x_start + x + (y_start + y) * width;
-      mirror = - 2 + x_start - x + (y_start + y) * width;
-      pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
-      pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
-      pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
-      alpha[pixel] = alpha[mirror];
-    }
-  }
-  // fill top border
-  x_start = 0;
-  y_start = 0;
-  x_size = width;
-  y_size = dh;
-  for (int y = 0; y < y_size; ++y) {
-    for (int x = 0; x < x_size; ++x) {
-      pixel =  x_start + x + (y_start + y) * width;
-      mirror = x_start + x + ( 2 * dh - y) * width;
-      pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
-      pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
-      pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
-      alpha[pixel] = alpha[mirror];
-    }
-  }
-  // fill bottom border
-  x_start = 0;
-  y_start = height - dh;
-  x_size = width;
-  y_size = dh;
-  for (int y = 0; y < y_size; ++y) {
-    for (int x = 0; x < x_size; ++x) {
-      pixel =  x_start + x + (      y_start + y) * width;
-      mirror = x_start + x + (- 2 + y_start - y) * width;
-      pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
-      pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
-      pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
-      alpha[pixel] = alpha[mirror];
-    }
-  }
+  // add bleed edge
+  if (!mirror_bleed_edge(img, dw, dh)) return base_img; // too small, error already reported
   // transfer metadata
   if (base_img.HasOption(wxIMAGE_OPTION_PNG_DESCRIPTION)) {
     String metadata = transformAllEncodedRects(base_img.GetOption(wxIMAGE_OPTION_PNG_DESCRIPTION), RealRect::translate, dw, dh);

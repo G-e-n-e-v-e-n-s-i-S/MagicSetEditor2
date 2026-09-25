@@ -20,6 +20,10 @@
 #include <gui/util.hpp>
 #include <render/card/viewer.hpp>
 
+static const int DEFAULT_FACE_PADDING = 2;
+
+// ----------------------------------------------------------------------------- : Viewer
+
 class ZoomedUnrotatedDataViewer : public DataViewer {
 public:
   ZoomedUnrotatedDataViewer(double zoom, double bleed = 0.0) : zoom(zoom), bleed(bleed) {};
@@ -35,15 +39,66 @@ Rotation ZoomedUnrotatedDataViewer::getRotation() const {
   return Rotation(0.0, bled_rect, zoom);
 }
 
-// ----------------------------------------------------------------------------- : wxImage export
+// ----------------------------------------------------------------------------- : Export groups
 
-Image export_image(const SetP& set, const CardP& card, bool write_metadata, double zoom, Radians angle_radians, double bleed_pixels, Bitmap* out_bitmap) {
-  if (!set) throw Error(_("no set"));
-  /// create, offset by bleed, and zoom
-  int bleed = lround(bleed_pixels);
-  ZoomedUnrotatedDataViewer viewer = ZoomedUnrotatedDataViewer(zoom, bleed);
+/// A card together with the settings to export it with
+struct ExportPart {
+  CardP card;
+  Settings::ExportSettings settings;
+};
+
+/// A single card, or a front/back pair
+using ExportGroup = vector<ExportPart>;
+
+/// How to find the export settings for a card
+using SettingsFor = std::function<Settings::ExportSettings(const CardP&)>;
+
+/// Settings lookup for an ExportImageMode
+static SettingsFor settings_for_mode(const SetP& set, ExportImageMode mode) {
+  return [set, mode](const CardP& card) -> Settings::ExportSettings {
+    switch (mode) {
+      case ExportImageMode::DEFAULT:   return Settings::ExportSettings();
+      case ExportImageMode::CLIPBOARD: return settings.clipboardSettingsFor(set->stylesheetFor(card));
+      default:                         return settings.exportSettingsFor(set->stylesheetFor(card));
+    }
+  };
+}
+
+/// Group cards into single cards and front/back pairs
+static vector<ExportGroup> group_faces(const SetP& set, const vector<CardP>& cards, const SettingsFor& settings_for) {
+  vector<ExportGroup> groups;
+  std::unordered_set<const Card*> already_added;
+  for (const CardP& card : cards) {
+    if (already_added.count(card.get())) continue;
+    Settings::ExportSettings card_settings = settings_for(card);
+    if (card_settings.dfc_export) {
+      pair<CardP, CardP> faces = card->getFrontFaceBackFacePair(*set);
+      if (faces.first && faces.second) {
+        bool card_is_front = faces.first == card;
+        const CardP& other = card_is_front ? faces.second : faces.first;
+        ExportPart self{card, card_settings};
+        ExportPart other_part{other, settings_for(other)};
+        groups.push_back(card_is_front ? ExportGroup{self, other_part} : ExportGroup{other_part, self});
+        already_added.insert(faces.first.get());
+        already_added.insert(faces.second.get());
+        continue;
+      }
+    }
+    groups.push_back(ExportGroup{ExportPart{card, card_settings}});
+  }
+  return groups;
+}
+
+// ----------------------------------------------------------------------------- : Drawing one face
+
+/// Render a single face: draw it, zoom, rotate and add the bleed edge.
+static Image render_face(const SetP& set, const ExportPart& part) {
+  const Settings::ExportSettings& face_settings = part.settings;
+  // create, offset by bleed, and zoom
+  int bleed = lround(face_settings.bleed_pixels);
+  ZoomedUnrotatedDataViewer viewer(face_settings.zoom, bleed);
   viewer.setSet(set);
-  viewer.setCard(card);
+  viewer.setCard(part.card);
   RealSize size = viewer.getRotation().getExternalSize();
   Bitmap bitmap((int)size.width + 2 * bleed, (int)size.height + 2 * bleed);
   if (!bitmap.Ok()) throw InternalError(_("Unable to create bitmap"));
@@ -52,144 +107,30 @@ Image export_image(const SetP& set, const CardP& card, bool write_metadata, doub
   viewer.draw(dc);
   dc.SelectObject(wxNullBitmap);
   Image img = bitmap.ConvertToImage();
-
-  /// return bitmap if needed
-  if (out_bitmap) *out_bitmap = std::move(bitmap);
-
-  /// rotate
-  img = rotate_image(img, angle_radians);
-
-  /// add print bleed edge
-  int width = img.GetWidth(), height = img.GetHeight();
-  bleed = max(0, min((width-1)/2, min((height-1)/2, bleed)));
-  if (width < 2*bleed + 2 || height < 2*bleed + 2) {
-    queue_message(MESSAGE_ERROR, _("Image too small to add bleed edge"));
-  }
-  else {
-    if (!img.HasAlpha()) img.InitAlpha();
-    Byte* pixels = img.GetData();
-    Byte* alpha = img.GetAlpha();
-    int pixel, mirror, x_start, y_start, x_size, y_size;
-    // fill left border
-    x_start = 0;
-    y_start = bleed;
-    x_size = bleed;
-    y_size = height - bleed - bleed;
-    for (int y = 0; y < y_size; ++y) {
-      for (int x = 0; x < x_size; ++x) {
-        pixel =    x_start + x + (y_start + y) * width;
-        mirror = 2 * bleed - x + (y_start + y) * width;
-        pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
-        pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
-        pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
-        alpha[pixel] = alpha[mirror];
-      }
-    }
-    // fill right border
-    x_start = width - bleed;
-    y_start = bleed;
-    x_size = bleed;
-    y_size = height - bleed - bleed;
-    for (int y = 0; y < y_size; ++y) {
-      for (int x = 0; x < x_size; ++x) {
-        pixel =        x_start + x + (y_start + y) * width;
-        mirror = - 2 + x_start - x + (y_start + y) * width;
-        pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
-        pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
-        pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
-        alpha[pixel] = alpha[mirror];
-      }
-    }
-    // fill top border
-    x_start = 0;
-    y_start = 0;
-    x_size = width;
-    y_size = bleed;
-    for (int y = 0; y < y_size; ++y) {
-      for (int x = 0; x < x_size; ++x) {
-        pixel =  x_start + x + (  y_start + y) * width;
-        mirror = x_start + x + (2 * bleed - y) * width;
-        pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
-        pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
-        pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
-        alpha[pixel] = alpha[mirror];
-      }
-    }
-    // fill bottom border
-    x_start = 0;
-    y_start = height - bleed;
-    x_size = width;
-    y_size = bleed;
-    for (int y = 0; y < y_size; ++y) {
-      for (int x = 0; x < x_size; ++x) {
-        pixel =  x_start + x + (      y_start + y) * width;
-        mirror = x_start + x + (- 2 + y_start - y) * width;
-        pixels[3 * pixel + 0] = pixels[3 * mirror + 0];
-        pixels[3 * pixel + 1] = pixels[3 * mirror + 1];
-        pixels[3 * pixel + 2] = pixels[3 * mirror + 2];
-        alpha[pixel] = alpha[mirror];
-      }
-    }
-  }
-
-  /// add metadata
-  if (write_metadata) {
-    bool rotated = is_rad90(angle_radians) || is_rad270(angle_radians); // we stored width and height after rotation, but export_metadata expects them before rotation
-    String metadata = _("<mse-card-data>[")
-      + export_metadata(set, card, zoom, angle_radians, rotated ? height : width, rotated ? width : height, bleed_pixels, bleed_pixels)
-      + _("]</mse-card-data>");
-    img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, metadata);
-  }
-  
+  // rotate
+  img = rotate_image(img, face_settings.angle_radians);
+  // add print bleed edge (reports an error and leaves the image as is if it is too small)
+  mirror_bleed_edge(img, bleed, bleed);
   return img;
 }
 
-Image export_image(const SetP& set,
-                   const vector<CardP>& cards,
-                   int padding,
-                   ExportImageMode mode) {
-  if (!set) throw Error(_("no set"));
-  if (cards.size() == 0) throw Error(_("no cards"));
-  vector<Image> imgs;
-  vector<int> offsets;
-  vector<double> zooms;
-  vector<double> angles;
-  vector<double> bleeds;
-  // Draw card images
-  FOR_EACH(card, cards) {
-    double zoom, angle, bleed;
-    if (mode == ExportImageMode::DEFAULT) {
-      zoom = 1.0;
-      angle = 0.0;
-      bleed = 0.0;
-    } else {
-      Settings::ExportSettings card_settings = mode == ExportImageMode::CLIPBOARD ?
-        settings.clipboardSettingsFor(set->stylesheetFor(card)) :
-        settings.exportSettingsFor(set->stylesheetFor(card));
-      zoom = card_settings.zoom;
-      angle = card_settings.angle_radians;
-      bleed = card_settings.bleed_pixels;
-    }
-    imgs.push_back(export_image(set, card, false, zoom, angle, bleed));
-    zooms.push_back(zoom);
-    angles.push_back(angle);
-    bleeds.push_back(bleed);
+// ----------------------------------------------------------------------------- : Stitching faces
+
+/// Paste images side by side onto one transparent canvas, and report the x offset of each.
+static Image stitch_row(const vector<Image>& imgs, int padding, vector<int>& offsets) {
+  offsets.clear();
+  if (imgs.size() == 1) {
+    offsets.push_back(0);
+    return imgs[0];
   }
   int global_width = 0;
   int global_height = 0;
-  vector<int> widths;
-  vector<int> heights;
-  FOR_EACH(img, imgs) {
-    int width = img.GetWidth();
-    int height = img.GetHeight();
-    widths.push_back(width);
-    heights.push_back(height);
+  for (const Image& img : imgs) {
     offsets.push_back(global_width);
-    global_width += padding + width;
-    global_height = max(global_height, height);
+    global_width += padding + img.GetWidth();
+    global_height = max(global_height, img.GetHeight());
   }
   global_width -= padding;
-  // Draw global image
   Image global_img = Image(global_width, global_height);
   if (!global_img.Ok()) throw InternalError(_("Unable to create image"));
   global_img.InitAlpha();
@@ -202,43 +143,93 @@ Image export_image(const SetP& set,
     pixels[3 * i + 2] = 0;
     alpha[i] = 0;
   }
-  // Paste card images
-  FOR_EACH_2(img, imgs, offset, offsets) {
-    global_img.Paste(img, offset, 0);
+  // paste card images
+  for (size_t i = 0; i < imgs.size(); ++i) {
+    global_img.Paste(imgs[i], offsets[i], 0);
   }
-  // Write metadata
+  return global_img;
+}
+
+/// The metadata describing all faces in a row, as stored in a png description
+static String row_metadata(const SetP& set, const vector<ExportPart>& parts, const vector<Image>& imgs, const vector<int>& offsets) {
   String metadata = _("<mse-card-data>[");
-  for (size_t i = 0; i < cards.size(); ++i) {
+  for (size_t i = 0; i < parts.size(); ++i) {
     if (i > 0) metadata += _(",");
-    CardP card = cards[i];
-    bool rotated = is_rad90(angles[i]) || is_rad270(angles[i]); // we stored width and height after rotation, but export_metadata expects them before rotation
-    metadata += export_metadata(set, card, zooms[i], angles[i], rotated ? heights[i] : widths[i], rotated ? widths[i] : heights[i], bleeds[i] + offsets[i], bleeds[i]);
+    const Settings::ExportSettings& face_settings = parts[i].settings;
+    int width = imgs[i].GetWidth(), height = imgs[i].GetHeight();
+    bool rotated = is_rad90(face_settings.angle_radians) || is_rad270(face_settings.angle_radians); // we stored width and height after rotation, but export_metadata expects them before rotation
+    metadata += export_metadata(set, parts[i].card, face_settings.zoom, face_settings.angle_radians, rotated ? height : width, rotated ? width : height, face_settings.bleed_pixels + offsets[i], face_settings.bleed_pixels);
   }
   metadata += _("]</mse-card-data>");
-  global_img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, metadata);
+  return metadata;
+}
 
-  return global_img;
+/// Render faces side by side in one image, optionally with metadata.
+static Image render_row(const SetP& set, const vector<ExportPart>& parts, int padding, bool write_metadata) {
+  if (!set) throw Error(_("no set"));
+  if (parts.empty()) throw Error(_("no cards"));
+  vector<Image> imgs;
+  for (const ExportPart& part : parts) {
+    imgs.push_back(render_face(set, part));
+  }
+  vector<int> offsets;
+  Image img = stitch_row(imgs, padding, offsets);
+  if (write_metadata) {
+    img.SetOption(wxIMAGE_OPTION_PNG_DESCRIPTION, row_metadata(set, parts, imgs, offsets));
+  }
+  return img;
+}
+
+// ----------------------------------------------------------------------------- : wxImage export
+
+Image export_image(const SetP& set, const CardP& card, bool write_metadata, const Settings::ExportSettings& card_settings) {
+  if (!set) throw Error(_("no set"));
+  // this card, plus its other face if card_settings ask for it
+  vector<CardP> cards{card};
+  SettingsFor settings_for = [&](const CardP& c) -> Settings::ExportSettings {
+    return c == card ? card_settings : settings.exportSettingsFor(set->stylesheetFor(c));
+  };
+  ExportGroup group = group_faces(set, cards, settings_for).front();
+  return render_row(set, group, DEFAULT_FACE_PADDING, write_metadata);
+}
+
+Image export_image(const SetP& set, const vector<CardP>& cards, int padding, ExportImageMode mode) {
+  if (!set) throw Error(_("no set"));
+  if (cards.size() == 0) throw Error(_("no cards"));
+  // front and back faces next to each other, missing faces added
+  vector<ExportPart> parts;
+  for (const ExportGroup& group : group_faces(set, cards, settings_for_mode(set, mode))) {
+    parts.insert(parts.end(), group.begin(), group.end());
+  }
+  return render_row(set, parts, padding, true);
+}
+
+// ----------------------------------------------------------------------------- : File export
+
+static void save_image(const Image& img, const String& filename) {
+  if (!retry_io([&]{ return img.SaveFile(filename); })) {
+    throw Error(_("Unable to write image file '") + filename + _("'"));
+  }
 }
 
 void export_image(const SetP& set, const CardP& card, const String& filename) {
   const StyleSheet& stylesheet = set->stylesheetFor(card);
-  // is this card part of a front/back pair that should be combined?
-  pair<CardP, CardP> faces = settings.stylesheetSettingsFor(stylesheet).card_dfc_export() ?
-                             card->getFrontFaceBackFacePair(*set) :
-                             make_pair(CardP(), CardP());
-  if (faces.first && faces.second) {
-    vector<CardP> combo{faces.first, faces.second};
-    Image img = export_image(set, combo);
-    if (!retry_io([&]{ return img.SaveFile(filename); })) {
-      throw Error(_("Unable to write image file '") + filename + _("'"));
-    }
-    return;
-  }
   Settings::ExportSettings export_settings = settings.exportSettingsFor(stylesheet);
-  Image img = export_image(set, card, true, export_settings.zoom, export_settings.angle_radians, export_settings.bleed_pixels);
-  if (!retry_io([&]{ return img.SaveFile(filename); })) {
-    throw Error(_("Unable to write image file '") + filename + _("'"));
+  save_image(export_image(set, card, true, export_settings), filename);
+}
+
+static String export_filename(const SetP& set, const ExportGroup& group, const Script& filename_script) {
+  String result, ext;
+  for (size_t i = 0; i < group.size(); ++i) {
+    Context& ctx = set->getContext(group[i].card);
+    String name = clean_filename(untag(ctx.eval(filename_script)->toString()));
+    if (!name) return String(); // no filename -> no saving
+    wxFileName part(name);
+    if (i == 0) ext = part.GetExt(); else result += _(" -- ");
+    result += part.GetName();
   }
+  if (!ext.empty()) result += _(".") + ext;
+  return result;
 }
 
 void export_image(const SetP& set, const vector<CardP>& cards, const String& path, const String& filename_template, FilenameConflicts conflicts) {
@@ -247,56 +238,24 @@ void export_image(const SetP& set, const vector<CardP>& cards, const String& pat
   ScriptP filename_script = parse(filename_template, nullptr, true);
   // Path
   wxFileName fn(path);
-  // Export
+  // Export, one file per card or front/back pair
   std::set<String> used; // for CONFLICT_NUMBER_OVERWRITE
-  std::set<Card*> processed; // cards already written as part of a front/back pair, skip if hit again
-  FOR_EACH_CONST(card, cards) {
-    if (processed.count(card.get())) continue;
-    // is this card part of a front/back pair that should be combined?
-    const StyleSheet& stylesheet = set->stylesheetFor(card);
-    pair<CardP, CardP> faces = settings.stylesheetSettingsFor(stylesheet).card_dfc_export() ?
-                               card->getFrontFaceBackFacePair(*set) :
-                               make_pair(CardP(), CardP());
-    if (faces.first && faces.second) {
-      // filename is "<front name> -- <back name>"
-      Context& ctx_front = set->getContext(faces.first);
-      String front_name = clean_filename(untag(ctx_front.eval(*filename_script)->toString()));
-      Context& ctx_back = set->getContext(faces.second);
-      String back_name  = clean_filename(untag(ctx_back.eval(*filename_script)->toString()));
-      if (!front_name || !back_name) continue; // no filename -> no saving
-      wxFileName front_fn(front_name);
-      String combined_name = front_fn.GetName() + _(" -- ") + wxFileName(back_name).GetName();
-      String ext = front_fn.GetExt();
-      if (!ext.empty()) combined_name += _(".") + ext;
-      // full path
-      fn.SetFullName(combined_name);
-      // does the file exist?
-      if (!resolve_filename_conflicts(fn, conflicts, used)) continue;
-      // write image
-      String filename = fn.GetFullPath();
-      used.insert(filename);
-      vector<CardP> combo{faces.first, faces.second};
-      Image img = export_image(set, combo);
-      if (!retry_io([&]{ return img.SaveFile(filename); })) {
-        throw Error(_("Unable to write image file '") + filename + _("'"));
-      }
-      processed.insert((faces.first == card ? faces.second : faces.first).get());
-    } else {
-      // filename for this card
-      Context& ctx = set->getContext(card);
-      String filename = clean_filename(untag(ctx.eval(*filename_script)->toString()));
-      if (!filename) continue; // no filename -> no saving
-      // full path
-      fn.SetFullName(filename);
-      // does the file exist?
-      if (!resolve_filename_conflicts(fn, conflicts, used)) continue;
-      // write image
-      filename = fn.GetFullPath();
-      used.insert(filename);
-      export_image(set, card, filename);
-    }
+  for (const ExportGroup& group : group_faces(set, cards, settings_for_mode(set, ExportImageMode::EXPORT))) {
+    // filename for this group
+    String name = export_filename(set, group, *filename_script);
+    if (!name) continue; // no filename -> no saving
+    // full path
+    fn.SetFullName(name);
+    // does the file exist?
+    if (!resolve_filename_conflicts(fn, conflicts, used)) continue;
+    // write image
+    String filename = fn.GetFullPath();
+    used.insert(filename);
+    save_image(render_row(set, group, DEFAULT_FACE_PADDING, true), filename);
   }
 }
+
+// ----------------------------------------------------------------------------- : Metadata
 
 String export_metadata(const SetP& set, const CardP& card, double zoom, Radians angle_radians, int width, int height, double offset_x, double offset_y) {
   IndexMap<FieldP, ValueP>& card_data = card->data;

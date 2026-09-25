@@ -463,19 +463,21 @@ SCRIPT_FUNCTION(write_image_file) {
     SCRIPT_PARAM_DEFAULT(double, zoom, 100.0);
     SCRIPT_PARAM_DEFAULT(Degrees, angle, 0.0);
     SCRIPT_PARAM_DEFAULT(double, bleed, 0.0);
+    SCRIPT_PARAM_DEFAULT(bool, dfc, false);
     SCRIPT_PARAM_DEFAULT(bool, use_user_settings, false);
     if (use_user_settings) {
-      // Use the User's Preferences for Export Zoom, Angle and Bleed settings.
+      // Use the User's Preferences for Export Zoom, Angle, Bleed and DFC settings.
       Settings::ExportSettings card_settings = settings.exportSettingsFor(set->stylesheetFor(card->getValue()));
       zoom =  card_settings.zoom;
       angle = card_settings.angle_radians;
       bleed = card_settings.bleed_pixels;
+      dfc = card_settings.dfc_export;
     } else {
-      // Use the provided (or defaulted) Zoom, Angle and Bleed.
+      // Use the provided (or defaulted) Zoom, Angle, Bleed and DFC.
       zoom = zoom / 100.0;
       angle = deg_to_rad(angle);
     }
-    img = export_image(set, card->getValue(), true, zoom, angle, bleed);
+    img = export_image(set, card->getValue(), true, Settings::ExportSettings{zoom, angle, bleed, dfc});
   } else {
     SCRIPT_OPTIONAL_PARAM_(int, width)
     SCRIPT_OPTIONAL_PARAM_(int, height)

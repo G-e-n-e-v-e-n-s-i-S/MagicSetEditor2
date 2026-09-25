@@ -127,6 +127,9 @@ Image make_stroke_image(Image& img, Color stroke_color, int stroke_radius, int b
 // Create a mask that encodes which pixels are or neighbor transparent pixels
 Image make_visibility_mask(Image& img, int threshold, int radius);
 
+/// Extend an image by mirroring the pixels on its edges
+bool mirror_bleed_edge(Image& img, int bleed_x, int bleed_y);
+
 // ----------------------------------------------------------------------------- : Combining
 
 /// Ways in which images can be combined, similair to what Photoshop supports

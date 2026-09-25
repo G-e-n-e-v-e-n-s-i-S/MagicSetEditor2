@@ -136,6 +136,43 @@ Image make_visibility_mask(Image& img, int threshold, int radius) {
   return mask;
 }
 
+// ----------------------------------------------------------------------------- : Bleed edge
+
+bool mirror_bleed_edge(Image& img, int bleed_x, int bleed_y) {
+  int width = img.GetWidth(), height = img.GetHeight();
+  bleed_x = max(0, bleed_x);
+  bleed_y = max(0, bleed_y);
+  if (3 * bleed_x >= width || 3 * bleed_y >= height) {
+    queue_message(MESSAGE_ERROR, _("Image too small to add bleed edge"));
+    return false;
+  }
+  if (!img.HasAlpha()) img.InitAlpha();
+  Byte* pixels = img.GetData();
+  Byte* alpha = img.GetAlpha();
+  auto copy_pixel = [&](int dst, int src) {
+    pixels[3 * dst + 0] = pixels[3 * src + 0];
+    pixels[3 * dst + 1] = pixels[3 * src + 1];
+    pixels[3 * dst + 2] = pixels[3 * src + 2];
+    alpha[dst] = alpha[src];
+  };
+  // fill left and right borders
+  for (int y = bleed_y; y < height - bleed_y; ++y) {
+    int row = y * width;
+    for (int x = 0; x < bleed_x; ++x) {
+      copy_pixel(row + x,                   row + 2 * bleed_x - x);
+      copy_pixel(row + width - bleed_x + x, row + width - bleed_x - 2 - x);
+    }
+  }
+  // fill top and bottom borders (full width, so this also fills the corners)
+  for (int y = 0; y < bleed_y; ++y) {
+    for (int x = 0; x < width; ++x) {
+      copy_pixel(x + y * width,                      x + (2 * bleed_y - y) * width);
+      copy_pixel(x + (height - bleed_y + y) * width, x + (height - bleed_y - 2 - y) * width);
+    }
+  }
+  return true;
+}
+
 // ----------------------------------------------------------------------------- : Blurring
 
 Byte blur_pixel_alpha(Byte* in, int x, int y, int width, int height, int center_weight) {

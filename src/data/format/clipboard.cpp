@@ -188,16 +188,7 @@ CardsOnClipboard::CardsOnClipboard(const SetP& set, const String id, vector<Card
   }
   // Conversion to image file
   if (cards.size() < 6) {
-    Bitmap bmp;
-    Image img;
-    if (cards.size() == 1) {
-      Settings::ExportSettings card_settings = settings.clipboardSettingsFor(set->stylesheetFor(cards[0]));
-      img = export_image(set, cards[0], true, card_settings.zoom, card_settings.angle_radians, card_settings.bleed_pixels, &bmp);
-    }
-    else {
-      img = export_image(set, cards, 2, ExportImageMode::CLIPBOARD);
-      bmp = Bitmap(img);
-    }
+    Image img = export_image(set, cards, 2, ExportImageMode::CLIPBOARD);
     //wxFileDataObject* fileData = new wxFileDataObject(); // needed for pasting on desktop, but slow
     //String temp_path = wxFileName::CreateTempFileName(_("mse")) + _(".png");
     //img.SaveFile(temp_path, wxBITMAP_TYPE_PNG);
@@ -207,9 +198,9 @@ CardsOnClipboard::CardsOnClipboard(const SetP& set, const String id, vector<Card
     imgData->SetImage(img);
     Add(imgData);
     wxBitmapDataObject* bmpData = new wxBitmapDataObject(); // needed for pasting in MSPaint
-    bmpData->SetBitmap(bmp);
+    bmpData->SetBitmap(Bitmap(img));
     Add(bmpData);
   }
-  // Conversion to serialized card format
+  // Conversion to serialized card format (preferred)
   Add(new CardsDataObject(set, id, cards), true);
 }

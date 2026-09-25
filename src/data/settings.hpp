@@ -186,7 +186,10 @@ public:
   // --------------------------------------------------- : Game/stylesheet specific
 
   struct ExportSettings {
+    ExportSettings(double zoom, double angle_radians, double bleed_pixels, bool dfc_export): zoom(zoom), angle_radians(angle_radians), bleed_pixels(bleed_pixels), dfc_export(dfc_export) { }
+    ExportSettings(): zoom(1.0),angle_radians(0.0), bleed_pixels(0.0), dfc_export(false) { }
     double zoom, angle_radians, bleed_pixels;
+    bool dfc_export;
   };
 
   /// Get the settings object for a specific game
