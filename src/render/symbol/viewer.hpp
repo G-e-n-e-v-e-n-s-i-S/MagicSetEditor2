@@ -15,6 +15,14 @@
 
 // ----------------------------------------------------------------------------- : Simple rendering
 
+/// How the regions of a symbol are encoded in a rendered image, before it is filtered
+/**  outside:         (0,128,0)
+ *   border:          (255,255,255)
+ *   inside (fill):   (0,0,0)
+ *   accent:          (160,0,160)
+ *   Pixels with red != blue are editing hints.
+ */
+
 /// Render a Symbol to an Image
 Image render_symbol(const SymbolP& symbol, double border_radius = 0.05, int width = 100, int height = 100, bool editing_hints = false, bool allow_smaller = false);
 
@@ -63,11 +71,32 @@ public:
   
 private:
   typedef shared_ptr<wxMemoryDC> MemoryDCP;
+  
+  /// The temporary masks that are used while drawing. They are white where something is, and black elsewhere.
+  struct Buffers {
+    MemoryDCP border;        ///< border of the fill region, null if we are drawing it directly to the dc
+    MemoryDCP interior;      ///< the fill region
+    MemoryDCP accent_border; ///< border of the accent region
+    MemoryDCP accent;        ///< the accent region (completely independent of the fill region)
+    MemoryDCP accent_top;    ///< where the accent is on top of the fill, in case both are set
+    MemoryDCP extra_border;  ///< border that was added by shapes that act on the border region
+  };
+  
   /// Inside a reflection?
   int in_symmetry;
   
   /// Combine a symbol part with the dc
-  void combineSymbolPart(DC& dc, const SymbolPart& part, bool& paintedSomething, bool& buffersFilled, bool allow_overlap, MemoryDCP& borderDC, MemoryDCP& interiorDC);
+  void combineSymbolPart(DC& dc, const SymbolPart& part, bool& paintedSomething, bool& buffersFilled, bool allow_overlap, Buffers& buffers);
+  
+  /// Write the buffers to the dc
+  void combineBuffers(DC& dc, Buffers& buffers);
+  
+  /// Combines a shape that acts on the border with the borders in the buffers
+  /** The combine mode works on the border as a whole: the border of the fill, of the accent and the extra border.
+   *  border and accent_border can be null if they do not exist (yet).
+   *  Subtract, intersection and difference need to read or clear border, so that can not be the dc itself.
+   */
+  void combineBorderShape(const SymbolShape& shape, DC* border, DC* accent_border, DC& extra_border);
   
   /// Combines a symbol part with what is currently drawn, the border and interior are drawn separatly
   /** directB/directI are true if the border/interior is the screen dc, false if it

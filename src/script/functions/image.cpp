@@ -358,6 +358,8 @@ SCRIPT_FUNCTION(symbol_variation) {
     } else {
       throw ScriptError(_("Unknown fill type for symbol_variation: ") + fill_type);
     }
+    SCRIPT_PARAM_DEFAULT(Color, accent_color, Color(255,255,255));
+    var->filter->accent_color = accent_color;
     return make_intrusive<SymbolToImage>(value, filename, value ? value->last_update : Age(0), var);
   }
 }

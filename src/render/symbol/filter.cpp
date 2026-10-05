@@ -29,10 +29,14 @@ void filter_symbol(Image& symbol, const SymbolFilter& filter) {
       // Determine set
       //  green           -> border or outside
       //  green+red=white -> border
+      //  red+blue        -> accent
+      //  black           -> inside
       if (data[0] != data[2]) {
         // yellow/blue = editing hint, leave alone
       } else {
-        SymbolSet point = data[1] ? (data[0] ? SYMBOL_BORDER : SYMBOL_OUTSIDE) : SYMBOL_INSIDE;
+        SymbolSet point;
+        if (data[1]) point = data[0] ? SYMBOL_BORDER : SYMBOL_OUTSIDE;
+        else         point = data[0] ? SYMBOL_ACCENT : SYMBOL_INSIDE;
         // Call filter
         Color result = filter.color((double)x / width, (double)y / height, point);
         // Store color
@@ -61,6 +65,7 @@ IMPLEMENT_REFLECTION_NO_SCRIPT(SymbolFilter) {
     String fill_type = fillType();
     REFLECT(fill_type);
   }
+  REFLECT(accent_color);
 }
 template <> void GetMember::handle(const intrusive_ptr<SymbolFilter>& f) {
   handle(*f);
@@ -90,13 +95,15 @@ String SolidFillSymbolFilter::fillType() const { return _("solid"); }
 Color SolidFillSymbolFilter::color(double x, double y, SymbolSet point) const {
   if      (point == SYMBOL_INSIDE) return fill_color;
   else if (point == SYMBOL_BORDER) return border_color;
+  else if (point == SYMBOL_ACCENT) return accent_color;
   else                             return Color(0,0,0,0);
 }
 
 bool SolidFillSymbolFilter::operator == (const SymbolFilter& that) const {
   const SolidFillSymbolFilter* that2 = dynamic_cast<const SolidFillSymbolFilter*>(&that);
   return that2 && fill_color   == that2->fill_color
-               && border_color == that2->border_color;
+               && border_color == that2->border_color
+               && accent_color == that2->accent_color;
 }
 
 IMPLEMENT_REFLECTION(SolidFillSymbolFilter) {
@@ -111,6 +118,7 @@ template <typename T>
 Color GradientSymbolFilter::color(double x, double y, SymbolSet point, const T* t) const {
   if      (point == SYMBOL_INSIDE) return lerp(fill_color_1,   fill_color_2,   t->t(x,y));
   else if (point == SYMBOL_BORDER) return lerp(border_color_1, border_color_2, t->t(x,y));
+  else if (point == SYMBOL_ACCENT) return accent_color; // no gradient for the accent
   else                             return Color(0,0,0,0);
 }
 
@@ -118,7 +126,8 @@ bool GradientSymbolFilter::equal(const GradientSymbolFilter& that) const {
   return fill_color_1   == that.fill_color_1
       && fill_color_2   == that.fill_color_2
       && border_color_1 == that.border_color_1
-      && border_color_2 == that.border_color_2;
+      && border_color_2 == that.border_color_2
+      && accent_color   == that.accent_color;
 }
 
 IMPLEMENT_REFLECTION(GradientSymbolFilter) {

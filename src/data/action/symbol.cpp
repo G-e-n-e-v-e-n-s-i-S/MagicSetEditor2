@@ -311,6 +311,33 @@ void CombiningModeAction::perform(bool to_undo) {
   }
 }
 
+// ----------------------------------------------------------------------------- : Change region
+
+SymbolRegionAction::SymbolRegionAction(const set<SymbolPartP>& parts, SymbolShapeRegion region)
+  : SymbolPartsAction(parts)
+{
+  FOR_EACH(p, parts) {
+    add(p, region);
+  }
+}
+void SymbolRegionAction::add(const SymbolPartP& part, SymbolShapeRegion region) {
+  if (part->isSymbolShape()) {
+    this->shapes.push_back(make_pair(static_pointer_cast<SymbolShape>(part), region));
+  } else if (SymbolGroup* g = part->isSymbolGroup()) {
+    FOR_EACH(p, g->parts) add(p, region);
+  }
+}
+
+String SymbolRegionAction::getName(bool to_undo) const {
+  return _ACTION_("change region");
+}
+
+void SymbolRegionAction::perform(bool to_undo) {
+  FOR_EACH(sa, shapes) {
+    swap(sa.first->region, sa.second);
+  }
+}
+
 // ----------------------------------------------------------------------------- : Change name
 
 SymbolPartNameAction::SymbolPartNameAction(const SymbolPartP& part, const String& name, size_t old_cursor, size_t new_cursor)

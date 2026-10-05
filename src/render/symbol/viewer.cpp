@@ -77,62 +77,99 @@ MemoryDCP getTempDC(DC& dc) {
   return newDC;
 }
 
-// Combine the temporary DCs used in the drawing with the main dc
-void combineBuffers(DC& dc, DC* borders, DC* interior) {
-  if (!borders && !interior) return;
+// Copy a DC into an image
+static Image dc_to_image(DC& from) {
+  wxSize size = from.GetSize();
+  Bitmap bmp(size.GetWidth(), size.GetHeight(), 24);
+  wxMemoryDC tmpDC;
+  tmpDC.SelectObject(bmp);
+  tmpDC.Blit(0, 0, size.GetWidth(), size.GetHeight(), &from, 0, 0, wxCOPY);
+  tmpDC.SelectObject(wxNullBitmap);
+  return bmp.ConvertToImage();
+}
+
+// Combine all the temporary DCs with the main DC.
+// The borders (of the fill, of the accent, and the extra border) are OR-ed together,
+// then hidden below the interiors (fill and accent).
+// Finally the accent is painted where it is set and there is no fill, or where it is on top of the fill.
+void SymbolViewer::combineBuffers(DC& dc, Buffers& b) {
+  DC* borders[]   = {b.border.get(), b.accent_border.get(), b.extra_border.get()};
+  DC* interiors[] = {b.interior.get(), b.accent.get()};
+  bool any = false;
+  for (DC* d : borders)   if (d) any = true;
+  for (DC* d : interiors) if (d) any = true;
+  if (!any) return;
 
   wxSize size = dc.GetSize();
-  int width = size.GetWidth();
-  int height = size.GetHeight();
+  size_t count = (size_t)size.GetWidth() * (size_t)size.GetHeight();
 
 #ifdef __WXMSW__
-  if (borders)  dc.Blit(0, 0, width, height, borders,  0, 0, wxOR);
-  if (interior) dc.Blit(0, 0, width, height, interior, 0, 0, wxAND_INVERT);
+  for (DC* d : borders)   if (d) dc.Blit(0, 0, size.GetWidth(), size.GetHeight(), d, 0, 0, wxOR);
+  for (DC* d : interiors) if (d) dc.Blit(0, 0, size.GetWidth(), size.GetHeight(), d, 0, 0, wxAND_INVERT);
+  if (!b.accent) return;
+  // the accent is painted by hand
+  Image out = dc_to_image(dc);
+  Byte* outData = out.GetData();
 #else
   // wxOR and wxAND_INVERT are currently only implemented on Windows, so we have to do them manually
-  size_t count = (size_t)width * (size_t)height * 3;
-
-  // Copy base DC into an image
-  Bitmap outBmp(width, height, 24);
-  wxMemoryDC outDC;
-  outDC.SelectObject(outBmp);
-  outDC.Blit(0, 0, width, height, &dc, 0, 0, wxCOPY);
-  outDC.SelectObject(wxNullBitmap);
-  Image outImg = outBmp.ConvertToImage();
-  Byte* outData = outImg.GetData();
-
-  // wxOR border
-  if (borders) {
-    Bitmap borderBmp(width, height, 24);
-    wxMemoryDC borderDC;
-    borderDC.SelectObject(borderBmp);
-    borderDC.Blit(0, 0, width, height, borders, 0, 0, wxCOPY);
-    borderDC.SelectObject(wxNullBitmap);
-    Image borderImg = borderBmp.ConvertToImage();
-    Byte* borderData = borderImg.GetData();
-    for (size_t i = 0; i < count; ++i) {
-      outData[i] = outData[i] | borderData[i];
+  Image out = dc_to_image(dc);
+  Byte* outData = out.GetData();
+  for (DC* d : borders) {
+    if (!d) continue;
+    Image img = dc_to_image(*d);
+    Byte* data = img.GetData();
+    for (size_t i = 0; i < 3 * count; ++i) {
+      outData[i] = outData[i] | data[i];
     }
   }
-
-  // wxAND_INVERT interior
-  if (interior) {
-    Bitmap interiorBmp(width, height, 24);
-    wxMemoryDC interiorDC;
-    interiorDC.SelectObject(interiorBmp);
-    interiorDC.Blit(0, 0, width, height, interior, 0, 0, wxCOPY);
-    interiorDC.SelectObject(wxNullBitmap);
-    Image interiorImg = interiorBmp.ConvertToImage();
-    Byte* interiorData = interiorImg.GetData();
-    for (size_t i = 0; i < count; ++i) {
-      outData[i] = outData[i] & (Byte)~interiorData[i];
+  for (DC* d : interiors) {
+    if (!d) continue;
+    Image img = dc_to_image(*d);
+    Byte* data = img.GetData();
+    for (size_t i = 0; i < 3 * count; ++i) {
+      outData[i] = outData[i] & (Byte)~data[i];
     }
   }
-
-  Bitmap finalBmp(outImg);
-  dc.DrawBitmap(finalBmp, 0, 0, false);
 #endif
-  
+
+  if (b.accent) {
+    Image accentImg = dc_to_image(*b.accent);
+    Image interiorImg, topImg;
+    if (b.interior)   interiorImg = dc_to_image(*b.interior);
+    if (b.accent_top) topImg      = dc_to_image(*b.accent_top);
+    Byte* accentData   = accentImg.GetData();
+    Byte* interiorData = b.interior   ? interiorImg.GetData() : nullptr;
+    Byte* topData      = b.accent_top ? topImg.GetData()      : nullptr;
+    for (size_t i = 0; i < count; ++i) {
+      // The extra copies of a symmetry are drawn with a lower value when editing, those are only a hint, don't color them
+      if (accentData[3 * i] < 248) continue;
+      bool has_fill = interiorData && interiorData[3 * i] >= 128;
+      bool on_top   = topData      && topData[3 * i]      >= 128;
+      if (!has_fill || on_top) {
+        outData[3 * i + 0] = 160;
+        outData[3 * i + 1] = 0;
+        outData[3 * i + 2] = 160;
+      }
+    }
+  }
+
+  Bitmap finalBmp(out);
+  dc.DrawBitmap(finalBmp, 0, 0, false);
+}
+
+// Is there a shape that can not be drawn directly to the dc?
+// Using the dc itself as the border of the fill only works if nothing has to combine with that border (intersection),
+// or clear it or read it (shapes that act on the border and subtract or toggle).
+static bool needs_buffering(const SymbolGroup& group) {
+  FOR_EACH_CONST(p, group.parts) {
+    if (const SymbolShape* s = p->isSymbolShape()) {
+      if (s->combine == SYMBOL_COMBINE_INTERSECTION) return true;
+      if (s->region == SYMBOL_REGION_BORDER && (s->combine == SYMBOL_COMBINE_SUBTRACT || s->combine == SYMBOL_COMBINE_DIFFERENCE)) return true;
+    } else if (const SymbolGroup* g = p->isSymbolGroup()) {
+      if (needs_buffering(*g)) return true;
+    }
+  }
+  return false;
 }
 
 void SymbolViewer::draw(DC& dc) {
@@ -140,59 +177,84 @@ void SymbolViewer::draw(DC& dc) {
   bool buffersFilled    = false;
   in_symmetry = 0;
   // Temporary dcs
-  MemoryDCP borderDC;
-  MemoryDCP interiorDC;
+  Buffers buffers;
   // Check if we can paint directly to the dc
-  // This will fail if there are parts with combine == intersection
-  FOR_EACH(p, symbol->parts) {
-    if (SymbolShape* s = p->isSymbolShape()) {
-      if (s->combine == SYMBOL_COMBINE_INTERSECTION) {
-        paintedSomething = true;
-        break;
-      }
-    }
+  // If not, everything is buffered
+  if (needs_buffering(*symbol)) {
+    paintedSomething = true;
   }
   // Draw all parts
-  combineSymbolPart(dc, *symbol, paintedSomething, buffersFilled, true, borderDC, interiorDC);
+  combineSymbolPart(dc, *symbol, paintedSomething, buffersFilled, true, buffers);
   // Output the final parts from the buffer
   if (buffersFilled) {
-    combineBuffers(dc, borderDC.get(), interiorDC.get());
+    combineBuffers(dc, buffers);
   }
   // Editing hints?
   if (editing_hints) {
     drawEditingHints(dc);
   }
 }
-void SymbolViewer::combineSymbolPart(DC& dc, const SymbolPart& part, bool& paintedSomething, bool& buffersFilled, bool allow_overlap, MemoryDCP& borderDC, MemoryDCP& interiorDC) {
+void SymbolViewer::combineSymbolPart(DC& dc, const SymbolPart& part, bool& paintedSomething, bool& buffersFilled, bool allow_overlap, Buffers& buffers) {
   if (const SymbolShape* s = part.isSymbolShape()) {
     if (s->combine == SYMBOL_COMBINE_OVERLAP && buffersFilled && allow_overlap) {
       // We will be overlapping some previous parts, write them to the screen
-      combineBuffers(dc, borderDC.get(), interiorDC.get());
+      combineBuffers(dc, buffers);
       // Clear the buffers
       buffersFilled = false;
       paintedSomething = true;
       wxSize s = dc.GetSize();
-      if (borderDC) {
-        borderDC->SetBrush(*wxBLACK_BRUSH);
-        borderDC->SetPen(  *wxTRANSPARENT_PEN);
-        borderDC->DrawRectangle(0, 0, s.GetWidth(), s.GetHeight());
+      if (buffers.border) {
+        buffers.border->SetBrush(*wxBLACK_BRUSH);
+        buffers.border->SetPen(  *wxTRANSPARENT_PEN);
+        buffers.border->DrawRectangle(0, 0, s.GetWidth(), s.GetHeight());
       }
-      interiorDC->SetBrush(*wxBLACK_BRUSH);
-      interiorDC->DrawRectangle(0, 0, s.GetWidth(), s.GetHeight());
+      if (buffers.interior) { // there is no interior if only accent shapes were drawn
+        buffers.interior->SetBrush(*wxBLACK_BRUSH);
+        buffers.interior->SetPen(  *wxTRANSPARENT_PEN);
+        buffers.interior->DrawRectangle(0, 0, s.GetWidth(), s.GetHeight());
+      }
+      // the other masks are made again when they are needed
+      buffers.accent_border.reset();
+      buffers.accent.reset();
+      buffers.accent_top.reset();
+      buffers.extra_border.reset();
     }
     
     // Paint the part itself
-    if (!paintedSomething) {
+    if (s->region == SYMBOL_REGION_ACCENT) {
+      // The part acts on the accent, which has its own masks.
+      // These are always buffered, and they are completely independent of the fill.
+      if (!buffers.accent_border) buffers.accent_border = getTempDC(dc);
+      if (!buffers.accent)        buffers.accent        = getTempDC(dc);
+      if (!buffers.accent_top)    buffers.accent_top    = getTempDC(dc);
+      combineSymbolShape(*s, *buffers.accent_border, *buffers.accent, false, false);
+      buffersFilled = true;
+    } else if (s->region == SYMBOL_REGION_BORDER) {
+      // The part acts on the border as a whole, it can also change the borders of the fill and the accent.
+      // Those are buffered if that is needed, see needs_buffering.
+      if (!buffers.extra_border) buffers.extra_border = getTempDC(dc);
+      combineBorderShape(*s, buffers.border.get(), buffers.accent_border.get(), *buffers.extra_border);
+      buffersFilled = true;
+    } else if (!paintedSomething) {
       // No need to buffer
-      if (!interiorDC) interiorDC = getTempDC(dc);
-      combineSymbolShape(*s, dc, *interiorDC, true, false);
+      if (!buffers.interior) buffers.interior = getTempDC(dc);
+      combineSymbolShape(*s, dc, *buffers.interior, true, false);
       buffersFilled = true;
     } else {
-      if (!borderDC)   borderDC   = getTempDC(dc);
-      if (!interiorDC) interiorDC = getTempDC(dc);
+      if (!buffers.border)   buffers.border   = getTempDC(dc);
+      if (!buffers.interior) buffers.interior = getTempDC(dc);
       // Draw this shape to the buffer
-      combineSymbolShape(*s, *borderDC, *interiorDC, false, false);
+      combineSymbolShape(*s, *buffers.border, *buffers.interior, false, false);
       buffersFilled = true;
+    }
+    
+    // Where the fill and the accent overlap, the one that was added last is on top.
+    // Shapes that add something (so not subtract or intersection) are on top of what was already there.
+    // (there is no accent yet if accent_top doesn't exist, so the fill is on top anyway)
+    // A shape that acts on the border has no influence on this.
+    if (buffers.accent_top && s->region != SYMBOL_REGION_BORDER
+        && (s->combine == SYMBOL_COMBINE_OVERLAP || s->combine == SYMBOL_COMBINE_MERGE || s->combine == SYMBOL_COMBINE_DIFFERENCE)) {
+      drawSymbolShape(*s, nullptr, buffers.accent_top.get(), 0, s->region == SYMBOL_REGION_ACCENT ? 255 : 0, false, false);
     }
   } else if (const SymbolSymmetry* s = part.isSymbolSymmetry()) {
     // Draw all parts, in reverse order (bottom to top), also draw rotated copies
@@ -240,7 +302,7 @@ void SymbolViewer::combineSymbolPart(DC& dc, const SymbolPart& part, bool& paint
           origin = old_o + (s->center - s->center * rot) * old_m;
         }
         // draw rotated copy
-        combineSymbolPart(dc, *p, paintedSomething, buffersFilled, allow_overlap && i == copies - 1, borderDC, interiorDC);
+        combineSymbolPart(dc, *p, paintedSomething, buffersFilled, allow_overlap && i == copies - 1, buffers);
       }
     }
     multiply = old_m;
@@ -251,7 +313,7 @@ void SymbolViewer::combineSymbolPart(DC& dc, const SymbolPart& part, bool& paint
   } else if (const SymbolGroup* g = part.isSymbolGroup()) {
     // Draw all parts, in reverse order (bottom to top)
     FOR_EACH_CONST_REVERSE(p, g->parts) {
-      combineSymbolPart(dc, *p, paintedSomething, buffersFilled, allow_overlap, borderDC, interiorDC);
+      combineSymbolPart(dc, *p, paintedSomething, buffersFilled, allow_overlap, buffers);
     }
   }
 }
@@ -290,9 +352,7 @@ void SymbolViewer::combineSymbolShape(const SymbolShape& shape, DC& border, DC& 
       interior.SetLogicalFunction(wxCOPY);
       break;
     } case SYMBOL_COMBINE_BORDER: {
-      // draw border as interior
-      drawSymbolShape(shape, nullptr, &border, 0, 255, false, false);
-      break;
+      break; // not used anymore, shapes that act on the border use their own region now
     }
   }
 }
@@ -300,6 +360,65 @@ void SymbolViewer::combineSymbolShape(const SymbolShape& shape, DC& border, DC& 
 
 // ----------------------------------------------------------------------------- : Drawing : Basic
 
+
+void SymbolViewer::combineBorderShape(const SymbolShape& shape, DC* border, DC* accent_border, DC& extra_border) {
+  switch (shape.combine) {
+    case SYMBOL_COMBINE_OVERLAP:
+    case SYMBOL_COMBINE_MERGE: {
+      // add the shape to the border
+      drawSymbolShape(shape, nullptr, &extra_border, 0, 255, false, false);
+      break;
+    } case SYMBOL_COMBINE_BORDER: {
+      break; // not used anymore, symbols with this are converted when they are read
+    } case SYMBOL_COMBINE_SUBTRACT: {
+      // remove the shape from the border
+      for (DC* mask : {border, accent_border, &extra_border}) {
+        if (mask) drawSymbolShape(shape, nullptr, mask, 0, 0, false, false);
+      }
+      break;
+    } case SYMBOL_COMBINE_INTERSECTION: {
+      // only keep the part of the border that is inside the shape
+      MemoryDCP keep = getTempDC(extra_border);
+      drawSymbolShape(shape, nullptr, keep.get(), 0, 255, false, false);
+      wxSize s = extra_border.GetSize();
+      for (DC* mask : {border, accent_border, &extra_border}) {
+        if (mask) mask->Blit(0, 0, s.GetWidth(), s.GetHeight(), &*keep, 0, 0, wxAND);
+      }
+      break;
+    } case SYMBOL_COMBINE_DIFFERENCE: {
+      // toggle, where there is border it is removed, where there is none it is added.
+      MemoryDCP shapeDC = getTempDC(extra_border);
+      drawSymbolShape(shape, nullptr, shapeDC.get(), 0, 255, false, false);
+      wxSize size = extra_border.GetSize();
+      Image shapeImg = dc_to_image(*shapeDC);
+      Image extraImg = dc_to_image(extra_border);
+      Image borderImg, accentImg;
+      if (border)        borderImg = dc_to_image(*border);
+      if (accent_border) accentImg = dc_to_image(*accent_border);
+      Byte* shapeData  = shapeImg.GetData();
+      Byte* extraData  = extraImg.GetData();
+      Byte* borderData = border        ? borderImg.GetData() : nullptr;
+      Byte* accentData = accent_border ? accentImg.GetData() : nullptr;
+      size_t count = (size_t)size.GetWidth() * (size_t)size.GetHeight();
+      for (size_t i = 0; i < count; ++i) {
+        size_t j = 3 * i;
+        if (shapeData[j] < 128) continue; // not inside the shape
+        bool on_border = extraData[j] >= 128
+                      || (borderData && borderData[j] >= 128)
+                      || (accentData && accentData[j] >= 128);
+        for (size_t k = j; k < j + 3; ++k) {
+          extraData[k] = on_border ? 0 : 255;
+          if (borderData) borderData[k] = 0;
+          if (accentData) accentData[k] = 0;
+        }
+      }
+      extra_border.DrawBitmap(Bitmap(extraImg), 0, 0, false);
+      if (border)        border       ->DrawBitmap(Bitmap(borderImg), 0, 0, false);
+      if (accent_border) accent_border->DrawBitmap(Bitmap(accentImg), 0, 0, false);
+      break;
+    }
+  }
+}
 
 void SymbolViewer::drawSymbolShape(const SymbolShape& shape, DC* border, DC* interior, Byte borderCol, Byte interiorCol, bool directB, bool clear) {
   // create point list
@@ -369,7 +488,7 @@ void SymbolViewer::highlightPart(DC& dc, const SymbolShape& shape, HighlightStyl
     dc.SetBrush(Color(0,0,64));
     dc.SetPen  (*wxTRANSPARENT_PEN);
     dc.DrawPolygon((int)points.size(), &points[0]);
-    if (shape.combine == SYMBOL_COMBINE_SUBTRACT || shape.combine == SYMBOL_COMBINE_BORDER) {
+    if (shape.combine == SYMBOL_COMBINE_SUBTRACT || shape.region == SYMBOL_REGION_BORDER) {
       dc.SetLogicalFunction(wxAND);
       dc.SetBrush(Color(191,191,255));
       dc.DrawPolygon((int)points.size(), &points[0]);

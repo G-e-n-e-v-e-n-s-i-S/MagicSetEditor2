@@ -165,6 +165,22 @@ private:
   vector<pair<SymbolShapeP,SymbolShapeCombine>> parts;  ///< Affected parts with new combining modes
 };
 
+// ----------------------------------------------------------------------------- : Change region
+
+/// Change on what region shapes act (fill, accent or border)
+class SymbolRegionAction : public SymbolPartsAction {
+public:
+  /// All parts must be SymbolParts, groups are applied to their contents
+  SymbolRegionAction(const set<SymbolPartP>& parts, SymbolShapeRegion region);
+  
+  String getName(bool to_undo) const override;
+  void perform(bool to_undo) override;
+  
+private:
+  void add(const SymbolPartP&, SymbolShapeRegion region);
+  vector<pair<SymbolShapeP,SymbolShapeRegion>> shapes;  ///< Affected shapes with their new region
+};
+
 // ----------------------------------------------------------------------------- : Change name
 
 /// Change the name of a symbol part

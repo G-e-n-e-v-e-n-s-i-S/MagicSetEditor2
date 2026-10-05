@@ -31,6 +31,7 @@ enum SymbolSet
 {  SYMBOL_INSIDE
 ,  SYMBOL_BORDER
 ,  SYMBOL_OUTSIDE
+,  SYMBOL_ACCENT
 };
 
 // ----------------------------------------------------------------------------- : SymbolFilter
@@ -38,6 +39,7 @@ enum SymbolSet
 /// Base class for symbol filters
 class SymbolFilter : public IntrusivePtrVirtualBase {
 public:
+  inline SymbolFilter() : accent_color(255,255,255) {}
   virtual ~SymbolFilter() {}
   /// What color should the symbol have at location (x, y)?
   /** x,y are in the range [0...1) */
@@ -46,6 +48,8 @@ public:
   virtual String fillType() const = 0;
   /// Comparision
   virtual bool operator == (const SymbolFilter& that) const = 0;
+  
+  Color accent_color;
   
   DECLARE_REFLECTION_VIRTUAL();
 };

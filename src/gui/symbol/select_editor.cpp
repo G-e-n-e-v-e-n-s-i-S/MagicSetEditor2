@@ -121,7 +121,10 @@ void SymbolSelectEditor::initUI(wxToolBar* tb, wxMenuBar* mb) {
   add_tool_tr(tb, ID_SYMBOL_COMBINE_INTERSECTION, "combine_and_dark", "intersect", true, wxITEM_CHECK);
   add_tool_tr(tb, ID_SYMBOL_COMBINE_DIFFERENCE, "combine_xor", "difference", true, wxITEM_CHECK);
   add_tool_tr(tb, ID_SYMBOL_COMBINE_OVERLAP, "combine_over", "overlap", true, wxITEM_CHECK);
-  add_tool_tr(tb, ID_SYMBOL_COMBINE_BORDER, "combine_border", "border", true, wxITEM_CHECK);
+  tb->AddSeparator();
+  add_tool_tr(tb, ID_SYMBOL_REGION_FILL,   "region_fill",   "fill",   true, wxITEM_CHECK);
+  add_tool_tr(tb, ID_SYMBOL_REGION_ACCENT, "region_accent", "accent", true, wxITEM_CHECK);
+  add_tool_tr(tb, ID_SYMBOL_REGION_BORDER, "combine_border", "border", true, wxITEM_CHECK);
   tb->Realize();
 }
 void SymbolSelectEditor::destroyUI(wxToolBar* tb, wxMenuBar* mb) {
@@ -130,8 +133,11 @@ void SymbolSelectEditor::destroyUI(wxToolBar* tb, wxMenuBar* mb) {
   tb->DeleteTool(ID_SYMBOL_COMBINE_INTERSECTION);
   tb->DeleteTool(ID_SYMBOL_COMBINE_DIFFERENCE);
   tb->DeleteTool(ID_SYMBOL_COMBINE_OVERLAP);
-  tb->DeleteTool(ID_SYMBOL_COMBINE_BORDER);
+  tb->DeleteTool(ID_SYMBOL_REGION_FILL);
+  tb->DeleteTool(ID_SYMBOL_REGION_ACCENT);
+  tb->DeleteTool(ID_SYMBOL_REGION_BORDER);
   // HACK: hardcoded size of rest of toolbar
+  tb->DeleteToolByPos(7); // delete separator
   tb->DeleteToolByPos(7); // delete separator
 }
 
@@ -147,6 +153,22 @@ void SymbolSelectEditor::onUpdateUI(wxUpdateUIEvent& ev) {
           break;
         }
       } // disable when symmetries are selected?
+    }
+    ev.Enable(enable);
+    ev.Check(enable && check);
+  } else if (ev.GetId() >= ID_SYMBOL_REGION && ev.GetId() < ID_SYMBOL_REGION_MAX) {
+    // on what region do the selected shapes act?
+    int region = ev.GetId() - ID_SYMBOL_REGION;
+    bool enable = false;
+    bool check = true;
+    FOR_EACH(p, control.selected_parts.get()) {
+      if (SymbolShape* s = p->isSymbolShape()) {
+        enable = true;
+        if (s->region != region) {
+          check = false;
+          break;
+        }
+      }
     }
     ev.Enable(enable);
     ev.Check(enable && check);
@@ -174,6 +196,13 @@ void SymbolSelectEditor::onCommand(int id) {
     addAction(make_unique<CombiningModeAction>(
         control.selected_parts.get(),
         static_cast<SymbolShapeCombine>(id - ID_SYMBOL_COMBINE)
+      ));
+    control.Refresh(false);
+  } else if (id >= ID_SYMBOL_REGION && id < ID_SYMBOL_REGION_MAX) {
+    // change region
+    addAction(make_unique<SymbolRegionAction>(
+        control.selected_parts.get(),
+        static_cast<SymbolShapeRegion>(id - ID_SYMBOL_REGION)
       ));
     control.Refresh(false);
   } else if (id == ID_EDIT_DUPLICATE && !isEditing()) {

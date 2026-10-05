@@ -159,14 +159,26 @@ IMPLEMENT_REFLECTION_ENUM(SymbolShapeCombine) {
   VALUE_N("border",    SYMBOL_COMBINE_BORDER);
 }
 
+IMPLEMENT_REFLECTION_ENUM(SymbolShapeRegion) {
+  VALUE_N("fill",    SYMBOL_REGION_FILL);
+  VALUE_N("accent",  SYMBOL_REGION_ACCENT);
+  VALUE_N("border",  SYMBOL_REGION_BORDER);
+}
+
 IMPLEMENT_REFLECTION(SymbolShape) {
   REFLECT_BASE(SymbolPart);
   REFLECT(combine);
+  REFLECT(region);
   REFLECT(points);
 }
 
 void SymbolShape::after_reading(Version version) {
   // Fixes after reading
+  // shapes that acted on the border used to have combine == border, now they have a region == border
+  if (combine == SYMBOL_COMBINE_BORDER) {
+    region  = SYMBOL_REGION_BORDER;
+    combine = SYMBOL_COMBINE_MERGE;
+  }
   // enforce constraints
   enforceConstraints();
   if (version == Version()) {
@@ -186,7 +198,7 @@ void SymbolShape::after_reading(Version version) {
 
 
 SymbolShape::SymbolShape()
-  : combine(SYMBOL_COMBINE_OVERLAP), rotation_center(.5, .5)
+  : combine(SYMBOL_COMBINE_OVERLAP), region(SYMBOL_REGION_FILL), rotation_center(.5, .5)
 {}
 
 String SymbolShape::typeName() const {
