@@ -200,6 +200,14 @@ bool TextValue::update(Context& ctx) {
   WITH_DYNAMIC_ARG(value_being_updated, this);
   bool change = field().default_script.invokeOnDefault(ctx, value)
               | field().        script.invokeOn(ctx, value);
+  // repair <soft-line> tags
+  String fixed;
+  if (fix_soft_lines(value(), fixed)) {
+    bool was_default = value.isDefault();
+    value.assign(fixed);
+    value.makeDefault(was_default);
+    change = true;
+  }
   if (change) last_update.update();
   updateSortValue(ctx);
   return change;
