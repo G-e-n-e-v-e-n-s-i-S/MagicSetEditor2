@@ -141,8 +141,8 @@ void SymbolViewer::combineBuffers(DC& dc, Buffers& b) {
     Byte* interiorData = b.interior   ? interiorImg.GetData() : nullptr;
     Byte* topData      = b.accent_top ? topImg.GetData()      : nullptr;
     for (size_t i = 0; i < count; ++i) {
-      // The extra copies of a symmetry are drawn with a lower value when editing, those are only a hint, don't color them
-      if (accentData[3 * i] < 248) continue;
+      // Not part of the accent mask (the extra copies of a symmetry are drawn with a lower value when editing, but still count)
+      if (accentData[3 * i] < 128) continue;
       bool has_fill = interiorData && interiorData[3 * i] >= 128;
       bool on_top   = topData      && topData[3 * i]      >= 128;
       if (!has_fill || on_top) {
