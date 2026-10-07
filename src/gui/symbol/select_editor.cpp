@@ -315,8 +315,8 @@ void SymbolSelectEditor::onMouseMove  (const Vector2D& from, const Vector2D& to,
   control.Refresh(false);
 }
 
-template <typename Event> int snap(Event& ev) {
-  return settings.symbol_grid_snap != ev.ShiftDown() ? settings.symbol_grid_size : 0; // shift toggles snap
+template <typename Event> int snap(Event& ev, int density) {
+  return settings.symbol_grid_snap != ev.ShiftDown() ? settings.symbol_grid_size * density : 0; // shift toggles snap
 }
 
 void SymbolSelectEditor::onMouseDrag  (const Vector2D& from, const Vector2D& to, wxMouseEvent& ev) {
@@ -368,7 +368,7 @@ void SymbolSelectEditor::onMouseDrag  (const Vector2D& from, const Vector2D& to,
   if (moveAction) {
     // move the selected parts
     moveAction->constrain =  ev.ControlDown();
-    moveAction->snap      = snap(ev);
+    moveAction->snap      = snap(ev, control.gridDensity());
     moveAction->move(to - from);
   } else if (scaleAction) {
     // scale the selected parts
@@ -380,7 +380,7 @@ void SymbolSelectEditor::onMouseDrag  (const Vector2D& from, const Vector2D& to,
     if (scaleY ==  1) dMax.y = delta.y;
 //    scaleAction->constrain = ev.ControlDown();
     scaleAction->constrain = true; // always constrain diagonal scaling
-    scaleAction->snap      = snap(ev);
+    scaleAction->snap      = snap(ev, control.gridDensity());
     scaleAction->move(dMin,  dMax);
   } else if (rotateAction) {
     // rotate the selected parts
@@ -393,7 +393,7 @@ void SymbolSelectEditor::onMouseDrag  (const Vector2D& from, const Vector2D& to,
     delta = delta.mul(Vector2D(scaleY, scaleX));
     delta = delta.div(bounds.max - bounds.min);
 //    shearAction->constrain = ev.ControlDown();
-    shearAction->snap      = snap(ev);
+    shearAction->snap      = snap(ev, control.gridDensity());
     shearAction->move(delta);
   }
   control.Refresh(false);
@@ -406,14 +406,14 @@ void SymbolSelectEditor::onKeyChange (wxKeyEvent& ev) {
     // changed constrains
     if (moveAction) {
       moveAction->constrain = ev.ControlDown();
-      moveAction->snap      = snap(ev);
+      moveAction->snap      = snap(ev, control.gridDensity());
       moveAction->move(Vector2D()); // apply constrains
       control.Refresh(false);
     } else if (scaleAction) {
       // only allow constrained scaling in diagonal direction
 //      scaleAction->constrain = ev.ControlDown();
       scaleAction->constrain = true; // always constrain diagonal scaling
-      scaleAction->snap      = snap(ev);
+      scaleAction->snap      = snap(ev, control.gridDensity());
       scaleAction->update(); // apply constrains
       control.Refresh(false);
     } else if (rotateAction) {
@@ -421,7 +421,7 @@ void SymbolSelectEditor::onKeyChange (wxKeyEvent& ev) {
       rotateAction->rotateBy(0); // apply constrains
       control.Refresh(false);
     } else if (shearAction) {
-      shearAction->snap      = snap(ev);
+      shearAction->snap      = snap(ev, control.gridDensity());
       shearAction->move(Vector2D()); // apply constrains
       control.Refresh(false);
     }
@@ -437,7 +437,7 @@ void SymbolSelectEditor::onChar(wxKeyEvent& ev) {
     control.Refresh(false);
   } else {
     // move selection using arrow keys
-    double step = 1.0 / settings.symbol_grid_size;
+    double step = 1.0 / (settings.symbol_grid_size * control.gridDensity());
     Vector2D delta;
     if      (ev.GetKeyCode() == WXK_LEFT)  delta = Vector2D(-step, 0);
     else if (ev.GetKeyCode() == WXK_RIGHT) delta = Vector2D( step, 0);
