@@ -17,16 +17,18 @@ using boost::tribool;
 
 // ----------------------------------------------------------------------------- : Writer
 
-Writer::Writer(OutputStream& output)
+Writer::Writer(OutputStream& output, bool indent_output)
   : indentation(0)
   , output(output)
   , stream(output, wxEOL_UNIX, wxMBConvUTF8())
+  , indent_output(indent_output)
 {}
 
 Writer::Writer(OutputStream& output, Version file_app_version)
   : indentation(0)
   , output(output)
   , stream(output, wxEOL_UNIX, wxMBConvUTF8())
+  , indent_output(true)
 {
   stream.WriteString(BYTE_ORDER_MARK);
   handle(_("mse_version"), file_app_version);
@@ -65,6 +67,7 @@ void Writer::writePending() {
 }
 
 void Writer::writeIndentation() {
+  if (!indent_output) return;
   for(int i = 1 ; i < indentation ; ++i) {
     stream.PutChar(_('\t'));
   }

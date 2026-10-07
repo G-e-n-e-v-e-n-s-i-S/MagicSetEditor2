@@ -452,8 +452,7 @@ inline boost::json::string to_json_string(const String& s) {
 template <typename T>
 void write(boost::json::object& out, const String& name, const T& value) {
   wxStringOutputStream stream;
-  Writer writer(stream);
-  writer.indentation = -1000;
+  Writer writer(stream, false);
   writer.handle(name, value);
   String string = stream.GetString();
   if (!string.empty()) {
