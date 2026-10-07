@@ -346,6 +346,10 @@ help:
 	difference:							這個圖形和下面不相交，僅僅保留不在其他圖形的區域
 	overlap:							替換並且將邊框覆蓋到上面的圖形
 	border:								把這個圖形繪制為邊框
+	#TODO: Localize
+	fill:								Draws this shape with the fill color gradient
+	#TODO: Localize
+	accent:								Draws this shape with the accent color
 
 	# shape manipulation
 	drag to shear:						拖拽，修改選定的 %s
@@ -428,6 +432,10 @@ tool:
 	difference:							不相交
 	overlap:							覆蓋
 	border:								邊框
+	#TODO: Localize
+	fill:								Fill
+	#TODO: Localize
+	accent:								Accent
 
 	ellipse:							橢圓形
 	rectangle:							矩形
@@ -529,6 +537,10 @@ tooltip:
 	difference:							和下面的圖形不相交
 	overlap:							覆蓋上面的其他圖形
 	border:								繪制邊框
+	#TODO: Localize
+	fill:								Draw as the fill color gradient
+	#TODO: Localize
+	accent:								Draw as the accent color
 
 	ellipse:							圓形 / 橢圓形
 	rectangle:							正方形 /矩形
@@ -1111,6 +1123,8 @@ action:
 	reorder parts:						再添加
 	change combine mode:				改變聯合模式
 	change shape name:					改變圖形名字
+	#TODO: Localize
+	change region:						Change region type
 	group parts:						分組
 	ungroup parts:						取消分組
 
@@ -1154,6 +1168,12 @@ error:
 	#TODO: Localize
 	error loading set:					Error while loading set:
 	#TODO: Localize
+	error updating card:
+		Error while running update cards script:
+		  Stylesheet: %s
+		  Before version: %s
+		  Card: %s
+	#TODO: Localize
 	write to read only:					Trying to write to file that has been declared read only: '%s'
 	#TODO: Localize
 	uninstall read only:
@@ -1174,6 +1194,8 @@ error:
 		  附加項目 到： %s %s
 	#TODO: Localize
 	icon too large:						Icon image file for package '%s' is too large. It should be 105x105 pixels max.
+	#TODO: Localize
+	malformed soft line:				Malformed <soft-line> tag found. Attempted to repair.
 
 	# image import
 	#TODO: Localize Section
@@ -1353,6 +1375,8 @@ error:
 	install packages successful:		%s 文件包被成功安裝
 	remove packages successful:			%s 文件包被成功移除.
 	change packages successful:			%s 文件包被成功修改
+	#TODO: Localize
+	updating cards:						Updating Cards.
 
 	cannot create file:					無法創建文件 '%s' ，繼續安裝？
 

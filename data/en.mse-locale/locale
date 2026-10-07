@@ -322,6 +322,8 @@ help:
 	difference:							Differs this shape from the shapes below it, leaves only the area not in any other shape
 	overlap:							Place this shape, and its border above shapes below it
 	border:								Draws this shape as a border
+	fill:								Draws this shape with the fill color gradient
+	accent:								Draws this shape with the accent color
 
 	# shape manipulation
 	drag to shear:						Drag to shear selected %s
@@ -403,6 +405,8 @@ tool:
 	difference:							Difference
 	overlap:							Overlap
 	border:								Border
+	fill:								Fill
+	accent:								Accent
 
 	ellipse:							Ellipse
 	rectangle:							Rectangle
@@ -497,6 +501,8 @@ tooltip:
 	difference:							Differ from shapes below
 	overlap:							Place above other shapes
 	border:								Draw as a border
+	fill:								Draw as the fill color gradient
+	accent:								Draw as the accent color
 
 	ellipse:							Circle / Ellipse
 	rectangle:							Square / Rectangle
@@ -1004,6 +1010,7 @@ action:
 	reorder parts:						Reorder
 	change combine mode:				Change combine mode
 	change shape name:					Change shape name
+	change region:						Change region type
 	group parts:						Group
 	ungroup parts:						Ungroup
 
@@ -1043,6 +1050,11 @@ error:
 	package out of date:				The package '%s' (version %s) is out of date, version %s is required.
 	package too new:					The package '%s' (version %s) is not compatible with version %s, required by '%s'
 	error loading set:					Error while loading set:
+	error updating card:
+		Error while running update cards script:
+		  Stylesheet: %s
+		  Before version: %s
+		  Card: %s
 	write to read only:					Trying to write to file that has been declared read only: '%s'
 	uninstall read only:
 		The package '%s' contains the following read only files:
@@ -1060,6 +1072,7 @@ error:
 		To resolve this, add:
 		  depends on: %s %s
 	icon too large:						Icon image file for package '%s' is too large. It should be 105x105 pixels max.
+	malformed soft line:				Malformed <soft-line> tag found. Attempted to repair.
 
 	# image import
 	import not found:					File not found: '%s'
@@ -1211,6 +1224,7 @@ error:
 	install packages successful:		%s package(s) were successfully installed.
 	remove packages successful:			%s package(s) were successfully removed.
 	change packages successful:			%s package(s) were successfully changed.
+	updating cards:						Updating Cards.
 
 	cannot create file:					Can not create file '%s', continue installation?
 

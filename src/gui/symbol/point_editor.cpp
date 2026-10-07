@@ -276,8 +276,8 @@ void SymbolPointEditor::onMouseMove(const Vector2D& from, const Vector2D& to, wx
   control.Refresh(false);
 }
 
-template <typename Event> int snap(Event& ev) {
-  return settings.symbol_grid_snap != ev.ShiftDown() ? settings.symbol_grid_size : 0; // shift toggles snap
+template <typename Event> int snap(Event& ev, int density) {
+  return settings.symbol_grid_snap != ev.ShiftDown() ? settings.symbol_grid_size * density : 0; // shift toggles snap
 }
 
 void SymbolPointEditor::onMouseDrag(const Vector2D& from, const Vector2D& to, wxMouseEvent& ev) {
@@ -302,7 +302,7 @@ void SymbolPointEditor::onMouseDrag(const Vector2D& from, const Vector2D& to, wx
       addAction(std::move(action));
     }
     controlPointMoveAction->constrain = ev.ControlDown(); // ctrl constrains
-    controlPointMoveAction->snap      = snap(ev);
+    controlPointMoveAction->snap      = snap(ev, control.gridDensity());
     controlPointMoveAction->move(delta);
     new_point += delta;
     control.Refresh(false);
@@ -314,7 +314,7 @@ void SymbolPointEditor::onMouseDrag(const Vector2D& from, const Vector2D& to, wx
       addAction(std::move(action));
     }
     handleMoveAction->constrain  = ev.ControlDown(); // ctrl constrains
-    handleMoveAction->snap = snap(ev);
+    handleMoveAction->snap = snap(ev, control.gridDensity());
     handleMoveAction->move(delta);
     control.Refresh(false);
   }
@@ -339,12 +339,12 @@ void SymbolPointEditor::onKeyChange(wxKeyEvent& ev) {
     // constrain/snap changed
     if (controlPointMoveAction) {
       controlPointMoveAction->constrain = ev.ControlDown();
-      controlPointMoveAction->snap = snap(ev);
+      controlPointMoveAction->snap = snap(ev, control.gridDensity());
       controlPointMoveAction->move(Vector2D()); //refresh action
       control.Refresh(false);
     } else if (handleMoveAction) {
       handleMoveAction->constrain = ev.ControlDown();
-      handleMoveAction->snap = snap(ev);
+      handleMoveAction->snap = snap(ev, control.gridDensity());
       handleMoveAction->move(Vector2D()); //refresh action
       control.Refresh(false);
     }
@@ -357,7 +357,7 @@ void SymbolPointEditor::onChar(wxKeyEvent& ev) {
   } else {
     resetActions();
     // move selection using arrow keys
-    double step = 1.0 / settings.symbol_grid_size;
+    double step = 1.0 / (settings.symbol_grid_size * control.gridDensity());
     Vector2D delta;
     if      (ev.GetKeyCode() == WXK_LEFT)  delta = Vector2D(-step, 0);
     else if (ev.GetKeyCode() == WXK_RIGHT) delta = Vector2D( step, 0);

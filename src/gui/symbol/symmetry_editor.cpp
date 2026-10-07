@@ -158,7 +158,7 @@ void SymbolSymmetryEditor::onMouseDrag  (const Vector2D& from, const Vector2D& t
     auto action = make_unique<SymmetryMoveAction>(*symmetry, selection == SELECTION_HANDLE);
     symmetryMoveAction = action.get();
     symmetryMoveAction->constrain = ev.ControlDown();
-    symmetryMoveAction->snap      = ev.ShiftDown() != settings.symbol_grid_snap ? settings.symbol_grid_size : 0;
+    symmetryMoveAction->snap      = ev.ShiftDown() != settings.symbol_grid_snap ? settings.symbol_grid_size * control.gridDensity() : 0;
     addAction(std::move(action));
   }
   symmetryMoveAction->move(to - from);
@@ -191,7 +191,7 @@ void SymbolSymmetryEditor::onKeyChange(wxKeyEvent& ev) {
     if (ev.GetKeyCode() == WXK_CONTROL || ev.GetKeyCode() == WXK_SHIFT) {
       // changed constrains
       symmetryMoveAction->constrain = ev.ControlDown();
-      symmetryMoveAction->snap      = ev.ShiftDown() != settings.symbol_grid_snap ? settings.symbol_grid_size : 0;
+      symmetryMoveAction->snap      = ev.ShiftDown() != settings.symbol_grid_snap ? settings.symbol_grid_size * control.gridDensity() : 0;
       control.Refresh(false);
     } else if (ev.GetKeyCode() == WXK_ESCAPE) {
       // cancel drawing

@@ -321,7 +321,9 @@ help:
 	intersect:							Interseca questa figura con quelle sottostanti, lasciando solo l'area in comune
 	difference:							Crea la differenza fra questa figura e quelle sottostanti, lasciando intatta l'area non condivisa da altre figure
 	overlap:							Posiziona questa figura e i suoi bordi sopra le altre
-	border:								Lascia solo il bordo della figura
+	border:								Disegna questa forma come bordo
+	fill:								Disegna questa forma con il gradiente del colore di riempimento
+	accent:								Disegna questa forma con il colore di accento
 
 	# shape manipulation
 	drag to shear:						Trascina per tagliare il/la %s selezionato/a
@@ -402,7 +404,9 @@ tool:
 	intersect:							Interseca
 	difference:							Differenza
 	overlap:							Sovrapponi
-	border:								Bordi
+	border:								Bordo
+	fill:								Riempimento
+	accent:								Accento
 
 	ellipse:							Ellisse
 	rectangle:							Rettangolo
@@ -497,6 +501,8 @@ tooltip:
 	difference:							Differenza dalle figure sottostanti
 	overlap:							Posiziona sopra altre figure
 	border:								Disegna come bordo
+	fill:								Disegna come gradiente di riempimento
+	accent:								Disegna come colore di accento
 
 	ellipse:							Cerchio / Ellisse
 	rectangle:							Quadrato / Rettangolo
@@ -1003,6 +1009,7 @@ action:
 	reorder parts:						Riordina
 	change combine mode:				Cambia combinazione
 	change shape name:					Cambia nome figura
+	change region:						Cambia tipo di regione
 	group parts:						Raggruppa
 	ungroup parts:						Sgruppa
 
@@ -1042,6 +1049,11 @@ error:
 	package out of date:				Il pacchetto '%s' (versione %s) è obsoleto, e' richiesta la versione %s.
 	package too new:					Il pacchetto '%s' (versione %s) non è compatibile con la versione %s, richieste di '%s'
 	error loading set:					Errore durante il caricamento del set:
+	error updating card:
+		Errore durante l'esecuzione dello script di aggiornamento delle carte:
+		  Stile: %s
+		  Before version: %s
+		  Carta: %s
 	write to read only:					Tentativo di scrittura su un file dichiarato di sola lettura: '%s'
 	uninstall read only:
 		Il pacchetto '%s' contiene i seguenti file di sola lettura:
@@ -1059,6 +1071,7 @@ error:
 		Per risolvere questo problema, aggiungere:
 		  depends on: %s %s
 	icon too large:						Il file immagine dell'icona per il pacchetto '%s' è troppo grande. Dovrebbe essere di massimo 105x105 pixel.
+	malformed soft line:				Rilevato tag <soft-line> malformato. Tentata riparazione.
 
 	# image import
 	import not found:					File non trovato: '%s'
@@ -1210,6 +1223,7 @@ error:
 	install packages successful:		sono stati installati %s pacchetti.
 	remove packages successful:			sono stati rimossi %s pacchetti.
 	change packages successful:			sono stati modificati %s pacchetti.
+	updating cards:						Aggiornamento delle carte.
 
 	cannot create file:					Impossibile creare file '%s', continuare con l'installazione?
 

@@ -893,6 +893,74 @@ bool check_tagged(const String& str, bool check_balance) {
   return true;
 }
 
+// Find the next <soft-line or </soft-line tag at or after position from
+static size_t find_soft_line_tag(const String& str, const String& tag, size_t from) {
+  size_t pos = str.find(tag, from);
+  while (pos != String::npos && !is_tag(str, pos, tag)) {
+    pos = str.find(tag, pos + 1); // something like <soft-linefoo
+  }
+  return pos;
+}
+
+bool fix_soft_lines(const String& str, String& fixed) {
+  // fast path, most strings don't contain any soft-lines
+  if (str.find(_("<soft-line")) == String::npos) return false;
+  const String soft_line = _("<soft-line>\n</soft-line>");
+  const size_t size = str.size();
+  String ret; ret.reserve(size + 2 * soft_line.size());
+  bool changed = false;
+  size_t i = 0; // everything before i has been handled and is in ret
+  while (i < size) {
+    size_t open = find_soft_line_tag(str, _("<soft-line"), i);
+    if (open == String::npos) break;
+    size_t open_end = skip_tag(str, open);
+    if (open_end == String::npos) break; // missing '>', not something we can repair here
+    // is there a close tag before the next soft-line starts?
+    size_t close     = find_soft_line_tag(str, _("</soft-line"), open_end);
+    size_t next_open = find_soft_line_tag(str, _("<soft-line"),  open_end);
+    if (close != String::npos && (next_open == String::npos || close < next_open)) {
+      size_t close_end = skip_tag(str, close);
+      if (close_end == String::npos) break;
+      ret += str.substr(i, open - i);
+      String content = str.substr(open_end, close - open_end);
+      if (content == _("\n")) {
+        // correct, keep as it is
+        ret += str.substr(open, close_end - open);
+      } else {
+        // old style soft-line that can contain anything, only keep the newlines inside soft-lines
+        changed = true;
+        for (size_t j = 0 ; j < content.size() ; ) {
+          Char c = content.GetChar(j);
+          if (c == _('\n')) {
+            ret += soft_line;
+            ++j;
+          } else if (c == _('<')) {
+            size_t end = skip_tag(content, j);
+            if (end == String::npos) end = content.size();
+            ret += content.substr(j, end - j);
+            j = end;
+          } else {
+            ret += c;
+            ++j;
+          }
+        }
+      }
+      i = close_end;
+    } else {
+      // no close tag, put it back after the newline that the tag is supposed to contain
+      changed = true;
+      ret += str.substr(i, open - i);
+      ret += soft_line;
+      i = (open_end < size && str.GetChar(open_end) == _('\n')) ? open_end + 1 : open_end;
+    }
+  }
+  if (!changed) return false;
+  ret += str.substr(i);
+  fixed = ret;
+  queue_message(MESSAGE_WARNING, _ERROR_("malformed soft line"));
+  return true;
+}
+
 // ----------------------------------------------------------------------------- : Other utilities
 
 bool is_space_like(Char c) {

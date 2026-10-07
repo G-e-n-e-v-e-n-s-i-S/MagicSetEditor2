@@ -164,8 +164,8 @@ inline double sgn(double d) {
 void SymbolBasicShapeEditor::makeShape(Vector2D a, Vector2D b, bool constrained, bool snap, bool centered) {
   // snap
   if (snap) {
-    a = snap_vector(a, settings.symbol_grid_size);
-    b = snap_vector(b, settings.symbol_grid_size);
+    a = snap_vector(a, settings.symbol_grid_size * control.gridDensity());
+    b = snap_vector(b, settings.symbol_grid_size * control.gridDensity());
   }
   // constrain
   Vector2D size = b - a;

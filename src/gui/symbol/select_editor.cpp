@@ -121,7 +121,10 @@ void SymbolSelectEditor::initUI(wxToolBar* tb, wxMenuBar* mb) {
   add_tool_tr(tb, ID_SYMBOL_COMBINE_INTERSECTION, "combine_and_dark", "intersect", true, wxITEM_CHECK);
   add_tool_tr(tb, ID_SYMBOL_COMBINE_DIFFERENCE, "combine_xor", "difference", true, wxITEM_CHECK);
   add_tool_tr(tb, ID_SYMBOL_COMBINE_OVERLAP, "combine_over", "overlap", true, wxITEM_CHECK);
-  add_tool_tr(tb, ID_SYMBOL_COMBINE_BORDER, "combine_border", "border", true, wxITEM_CHECK);
+  tb->AddSeparator();
+  add_tool_tr(tb, ID_SYMBOL_REGION_FILL,   "region_fill",   "fill",   true, wxITEM_CHECK);
+  add_tool_tr(tb, ID_SYMBOL_REGION_ACCENT, "region_accent", "accent", true, wxITEM_CHECK);
+  add_tool_tr(tb, ID_SYMBOL_REGION_BORDER, "combine_border", "border", true, wxITEM_CHECK);
   tb->Realize();
 }
 void SymbolSelectEditor::destroyUI(wxToolBar* tb, wxMenuBar* mb) {
@@ -130,8 +133,11 @@ void SymbolSelectEditor::destroyUI(wxToolBar* tb, wxMenuBar* mb) {
   tb->DeleteTool(ID_SYMBOL_COMBINE_INTERSECTION);
   tb->DeleteTool(ID_SYMBOL_COMBINE_DIFFERENCE);
   tb->DeleteTool(ID_SYMBOL_COMBINE_OVERLAP);
-  tb->DeleteTool(ID_SYMBOL_COMBINE_BORDER);
+  tb->DeleteTool(ID_SYMBOL_REGION_FILL);
+  tb->DeleteTool(ID_SYMBOL_REGION_ACCENT);
+  tb->DeleteTool(ID_SYMBOL_REGION_BORDER);
   // HACK: hardcoded size of rest of toolbar
+  tb->DeleteToolByPos(7); // delete separator
   tb->DeleteToolByPos(7); // delete separator
 }
 
@@ -147,6 +153,22 @@ void SymbolSelectEditor::onUpdateUI(wxUpdateUIEvent& ev) {
           break;
         }
       } // disable when symmetries are selected?
+    }
+    ev.Enable(enable);
+    ev.Check(enable && check);
+  } else if (ev.GetId() >= ID_SYMBOL_REGION && ev.GetId() < ID_SYMBOL_REGION_MAX) {
+    // on what region do the selected shapes act?
+    int region = ev.GetId() - ID_SYMBOL_REGION;
+    bool enable = false;
+    bool check = true;
+    FOR_EACH(p, control.selected_parts.get()) {
+      if (SymbolShape* s = p->isSymbolShape()) {
+        enable = true;
+        if (s->region != region) {
+          check = false;
+          break;
+        }
+      }
     }
     ev.Enable(enable);
     ev.Check(enable && check);
@@ -174,6 +196,13 @@ void SymbolSelectEditor::onCommand(int id) {
     addAction(make_unique<CombiningModeAction>(
         control.selected_parts.get(),
         static_cast<SymbolShapeCombine>(id - ID_SYMBOL_COMBINE)
+      ));
+    control.Refresh(false);
+  } else if (id >= ID_SYMBOL_REGION && id < ID_SYMBOL_REGION_MAX) {
+    // change region
+    addAction(make_unique<SymbolRegionAction>(
+        control.selected_parts.get(),
+        static_cast<SymbolShapeRegion>(id - ID_SYMBOL_REGION)
       ));
     control.Refresh(false);
   } else if (id == ID_EDIT_DUPLICATE && !isEditing()) {
@@ -286,8 +315,8 @@ void SymbolSelectEditor::onMouseMove  (const Vector2D& from, const Vector2D& to,
   control.Refresh(false);
 }
 
-template <typename Event> int snap(Event& ev) {
-  return settings.symbol_grid_snap != ev.ShiftDown() ? settings.symbol_grid_size : 0; // shift toggles snap
+template <typename Event> int snap(Event& ev, int density) {
+  return settings.symbol_grid_snap != ev.ShiftDown() ? settings.symbol_grid_size * density : 0; // shift toggles snap
 }
 
 void SymbolSelectEditor::onMouseDrag  (const Vector2D& from, const Vector2D& to, wxMouseEvent& ev) {
@@ -339,7 +368,7 @@ void SymbolSelectEditor::onMouseDrag  (const Vector2D& from, const Vector2D& to,
   if (moveAction) {
     // move the selected parts
     moveAction->constrain =  ev.ControlDown();
-    moveAction->snap      = snap(ev);
+    moveAction->snap      = snap(ev, control.gridDensity());
     moveAction->move(to - from);
   } else if (scaleAction) {
     // scale the selected parts
@@ -351,7 +380,7 @@ void SymbolSelectEditor::onMouseDrag  (const Vector2D& from, const Vector2D& to,
     if (scaleY ==  1) dMax.y = delta.y;
 //    scaleAction->constrain = ev.ControlDown();
     scaleAction->constrain = true; // always constrain diagonal scaling
-    scaleAction->snap      = snap(ev);
+    scaleAction->snap      = snap(ev, control.gridDensity());
     scaleAction->move(dMin,  dMax);
   } else if (rotateAction) {
     // rotate the selected parts
@@ -364,7 +393,7 @@ void SymbolSelectEditor::onMouseDrag  (const Vector2D& from, const Vector2D& to,
     delta = delta.mul(Vector2D(scaleY, scaleX));
     delta = delta.div(bounds.max - bounds.min);
 //    shearAction->constrain = ev.ControlDown();
-    shearAction->snap      = snap(ev);
+    shearAction->snap      = snap(ev, control.gridDensity());
     shearAction->move(delta);
   }
   control.Refresh(false);
@@ -377,14 +406,14 @@ void SymbolSelectEditor::onKeyChange (wxKeyEvent& ev) {
     // changed constrains
     if (moveAction) {
       moveAction->constrain = ev.ControlDown();
-      moveAction->snap      = snap(ev);
+      moveAction->snap      = snap(ev, control.gridDensity());
       moveAction->move(Vector2D()); // apply constrains
       control.Refresh(false);
     } else if (scaleAction) {
       // only allow constrained scaling in diagonal direction
 //      scaleAction->constrain = ev.ControlDown();
       scaleAction->constrain = true; // always constrain diagonal scaling
-      scaleAction->snap      = snap(ev);
+      scaleAction->snap      = snap(ev, control.gridDensity());
       scaleAction->update(); // apply constrains
       control.Refresh(false);
     } else if (rotateAction) {
@@ -392,7 +421,7 @@ void SymbolSelectEditor::onKeyChange (wxKeyEvent& ev) {
       rotateAction->rotateBy(0); // apply constrains
       control.Refresh(false);
     } else if (shearAction) {
-      shearAction->snap      = snap(ev);
+      shearAction->snap      = snap(ev, control.gridDensity());
       shearAction->move(Vector2D()); // apply constrains
       control.Refresh(false);
     }
@@ -408,7 +437,7 @@ void SymbolSelectEditor::onChar(wxKeyEvent& ev) {
     control.Refresh(false);
   } else {
     // move selection using arrow keys
-    double step = 1.0 / settings.symbol_grid_size;
+    double step = 1.0 / (settings.symbol_grid_size * control.gridDensity());
     Vector2D delta;
     if      (ev.GetKeyCode() == WXK_LEFT)  delta = Vector2D(-step, 0);
     else if (ev.GetKeyCode() == WXK_RIGHT) delta = Vector2D( step, 0);

@@ -185,7 +185,14 @@ enum SymbolShapeCombine
 ,  SYMBOL_COMBINE_INTERSECTION
 ,  SYMBOL_COMBINE_DIFFERENCE
 ,  SYMBOL_COMBINE_OVERLAP
-,  SYMBOL_COMBINE_BORDER
+,  SYMBOL_COMBINE_BORDER  ///< Not used anymore but necessary for backwards compatibility
+};
+
+/// On what region does a shape act?
+enum SymbolShapeRegion
+{  SYMBOL_REGION_FILL
+,  SYMBOL_REGION_ACCENT
+,  SYMBOL_REGION_BORDER
 };
 
 /// A sane mod function, always returns a result in the range [0..size)
@@ -199,8 +206,19 @@ class SymbolShape : public SymbolPart {
 public:
   /// The points of this polygon
   vector<ControlPointP> points;
-  /// How is this part combined with parts below it?
+  /// How is this part combined with parts from the same region that are below it?
   SymbolShapeCombine combine;
+  /// On what region/mask does this shape act?
+  /** The fill and the accent are two independent masks.
+   *  A shape only changes the mask it acts on, and the combine mode (merge, subtract, ...) only
+   *  works within that mask. The border is drawn around the union of both masks.
+   *  Where both masks are set, the one that was added last (the highest in the list) is shown.
+   *
+   *  The border is a third region. A shape that acts on the border adds to / removes from the border as a whole:
+   *  the border around the fill and the accent, and the border added by other shapes.
+   *  The border is never shown where there is fill or accent.
+   */
+  SymbolShapeRegion region;
   // Center of rotation, relative to the part, when the part is scaled to [0..1]
   Vector2D rotation_center;
   

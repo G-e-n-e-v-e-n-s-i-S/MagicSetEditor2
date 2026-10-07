@@ -92,7 +92,13 @@ void Set::updateCardsScripts() {
         if (script->before_version >= current_cutoff && !last_iteration) continue;
         if (script->before_version < previous_cutoff) continue;
         if (stylesheet_version >= script->before_version) continue;
-        vector<CardP> new_cards = script->perform(*this, card);
+        vector<CardP> new_cards;
+        try {
+          new_cards = script->perform(*this, card);
+        }
+        catch (Error& e) {
+          throw Error(_ERROR_3_("error updating card", stylesheet->relativeFilename(), script->before_version.toString(), card->identification()) + _("\n\n") + e.what());
+        }
         if (!new_cards.empty()) {
           FOR_EACH(new_card, new_cards) {
             // Initialize the stylesheet_version if it wasn't defined, to prevent this script from applying again

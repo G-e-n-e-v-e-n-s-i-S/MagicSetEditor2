@@ -255,6 +255,9 @@ bool check_tagged(const String& str, bool check_balance = true);
   #define assert_tagged(...) do{}while(0)
 #endif
 
+/// Repair <soft-line> tags so that each one contains exactly one newline and has a close tag.
+bool fix_soft_lines(const String& str, String& fixed);
+
 /// Simplify a tagged string
 /**   - merges adjecent open/close tags: "<tag></tag>" --> ""
  *    - removes overlapping tags: "<i>a<i>b</i>c</i>" --> "<i>abc</i>"

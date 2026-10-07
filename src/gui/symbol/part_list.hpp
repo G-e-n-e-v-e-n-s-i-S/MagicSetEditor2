@@ -63,6 +63,9 @@ private:
   Preview symbol_preview; ///< Preview of the whole symbol
   vector<Preview> part_previews;
   
+  /// The layer that each part is in, used to alternate the background of the rows
+  std::map<const SymbolPart*, int> part_layer;
+  
   static const int ITEM_HEIGHT = 25;
   // --------------------------------------------------- : Event handling
   DECLARE_EVENT_TABLE();
@@ -83,6 +86,10 @@ private:
   const Image& itemPreview(int i, const SymbolPartP& part);
   const Image& symbolPreview();
   void updatePart(const set<SymbolPartP>& parts, int& i, bool parent_updated, const SymbolPartP& part);
+  
+  /// Determine in which layer each part is, store the result in part_layer
+  /// (This must agree with SymbolViewer::combineSymbolPart)
+  bool updateLayers(const SymbolGroup& group, int& layer, bool& drawn);
   
   /// find item by position
   SymbolPartP findItem(int i, int x) const;

@@ -387,6 +387,26 @@ void SymbolPartList::onPaint(wxPaintEvent&) {
   DoPrepareDC(dc);
   OnDraw(dc);
 }
+
+bool SymbolPartList::updateLayers(const SymbolGroup& group, int& layer, bool& drawn) {
+  bool any_shape = false;
+  // same order as when drawing the symbol: bottom to top
+  FOR_EACH_CONST_REVERSE(p, group.parts) {
+    if (const SymbolShape* s = p->isSymbolShape()) {
+      if (s->combine == SYMBOL_COMBINE_OVERLAP && drawn) ++layer; // this shape starts a new layer
+      drawn = true;
+      part_layer[s] = layer;
+      any_shape = true;
+    } else if (const SymbolGroup* g = p->isSymbolGroup()) {
+      if (updateLayers(*g, layer, drawn)) {
+        part_layer[g] = layer; // layer of the last (topmost) shape inside the group
+        any_shape = true;
+      }
+    }
+  }
+  return any_shape;
+}
+
 void SymbolPartList::OnDraw(DC& dc) {
   // init
   dc.SetFont(*wxNORMAL_FONT);
@@ -395,6 +415,13 @@ void SymbolPartList::OnDraw(DC& dc) {
   dc.SetPen(*wxTRANSPARENT_PEN);
   dc.SetBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
   dc.DrawRectangle(0,0,size.x,size.y);
+  // layers, to alternate the background of the rows
+  part_layer.clear();
+  if (symbol) {
+    int layer = 0;
+    bool drawn = false;
+    updateLayers(*symbol, layer, drawn);
+  }
   // items
   int i = 0;
   drawItem(dc, 0, i, false, symbol);
@@ -414,6 +441,15 @@ void SymbolPartList::drawItem(DC& dc, int x, int& i, bool parent_active, const S
   Color background;
   dc.SetPen(*wxTRANSPARENT_PEN);
   bool active = selection.selected(part);
+  // every other layer gets a very slightly different background
+  auto layer = part_layer.find(part.get());
+  bool tinted = !active && layer != part_layer.end() && layer->second % 2 == 1; // (selected items have their own color)
+  Color tint = lerp(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW),
+                    wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT), 0.06);
+  if (tinted) {
+    dc.SetBrush(tint);
+    dc.DrawRectangle(x,y,w,ITEM_HEIGHT);
+  }
   if (active) {
     background = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
     dc.SetBrush(background);
@@ -423,7 +459,7 @@ void SymbolPartList::drawItem(DC& dc, int x, int& i, bool parent_active, const S
     background = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
     dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
   } else {
-    background = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+    background = tinted ? tint : wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
     dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
   }
   wxPen line_pen = lerp(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW),
@@ -495,15 +531,19 @@ const Image& SymbolPartList::itemPreview(int i, const SymbolPartP& part) {
   Preview& p = part_previews[i];
   if (!p.up_to_date) {
     SolidFillSymbolFilter filter(*wxBLACK, Color(255,128,128));
+    filter.accent_color = Color(128,128,255);
     // temporary symbol
     SymbolP sym(new Symbol); sym->parts.push_back(part);
     Image img;
     if (SymbolShape* s = part->isSymbolShape()) {
       if (s->combine == SYMBOL_COMBINE_SUBTRACT) {
-        // temporarily render using subtract instead, otherwise we don't see anything
-        s->combine = SYMBOL_COMBINE_BORDER;
+        // temporarily render adding to the border instead of subtracting, otherwise we don't see anything
+        SymbolShapeRegion old_region = s->region;
+        s->region  = SYMBOL_REGION_BORDER;
+        s->combine = SYMBOL_COMBINE_MERGE;
         img = render_symbol(sym, filter, 0.08, ITEM_HEIGHT * 4, ITEM_HEIGHT * 4, true);
         s->combine = SYMBOL_COMBINE_SUBTRACT;
+        s->region  = old_region;
       } else {
         img = render_symbol(sym, filter, 0.08, ITEM_HEIGHT * 4, ITEM_HEIGHT * 4, true);
       }
@@ -518,6 +558,7 @@ const Image& SymbolPartList::itemPreview(int i, const SymbolPartP& part) {
 const Image& SymbolPartList::symbolPreview() {
   if (!symbol_preview.up_to_date) {
     SolidFillSymbolFilter filter(Color(0,0,0,40), Color(255,255,255,40));
+    filter.accent_color = Color(128,128,255,40);
     Image img = render_symbol(symbol, filter, 0.06, ITEM_HEIGHT * 4);
     resample(img, symbol_preview.image);
     symbol_preview.up_to_date = true;

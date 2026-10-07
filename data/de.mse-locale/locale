@@ -321,7 +321,9 @@ help:
 	intersect:							Zeigt nur die gemeinsame Fläche an
 	difference:							Zeigt nur die Fläche an, in den sich die Objekte unterscheiden
 	overlap:							Zeigt das Objekt und seinen Rand über allem an
-	border:								Stellt das Objekt als Rand dar
+	border:								Zeichnet diese Form als Rahmen
+	fill:								Zeichnet diese Form mit dem Füllfarbverlauf
+	accent:								Zeichnet diese Form in der Akzentfarbe
 
 	# shape manipulation
 	drag to shear:						Ziehen, um %s zu schneiden
@@ -402,7 +404,9 @@ tool:
 	intersect:							Kombinieren
 	difference:							Unterscheiden
 	overlap:							Überlappen
-	border:								Rand
+	border:								Rahmen
+	fill:								Füllung
+	accent:								Akzent
 
 	ellipse:							Ellipse
 	rectangle:							Rechteck
@@ -496,7 +500,9 @@ tooltip:
 	intersect:							Zeigt nur die gemeinsame Fläche an
 	difference:							Zeigt nur die Fläche an, in den sich die Objekte unterscheiden
 	overlap:							Zeigt das Objekt und seinen Rand über allem an
-	border:								Stellt das Objekt als Rand dar
+	border:								Als Rahmen zeichnen
+	fill:								Als Füllfarbverlauf zeichnen
+	accent:								Als Akzent zeichnen
 
 	ellipse:							Ellipse / Kreis
 	rectangle:							Rechteck / Quadrat
@@ -1004,6 +1010,7 @@ action:
 	reorder parts:						Neu anordnen
 	change combine mode:				Kombinierung ändern
 	change shape name:					Namen ändern
+	change region:						Bereichstyp ändern
 	group parts:						Gruppieren
 	ungroup parts:						Gruppierung entfernen
 
@@ -1043,6 +1050,11 @@ error:
 	package out of date:				Package '%s' (Version %s) ist nicht kompatibel, Version %s wird benötigt.
 	package too new:					Package '%s' (Version %s) ist nicht kompatibel mit Version %s, Version %s wird benötigt.
 	error loading set:					Fehler beim Laden der Edition:
+	error updating card:
+		Fehler beim Ausführen des Skripts zur Kartenaktualisierung:
+		  Stylesheet: %s
+		  Before version: %s
+		  Karte: %s
 	write to read only:					Es wird versucht, in eine als schreibgeschützt deklarierte Datei zu schreiben: '%s'
 	uninstall read only:
 		Das Package '%s' enthält die folgenden schreibgeschützten Dateien:
@@ -1060,6 +1072,7 @@ error:
 		Bitte fügen Sie folgendes ein:
 		  depends on: %s %s
 	icon too large:						Die Symbolbilddatei für das Package '%s' ist zu groß. Sie sollte maximal 105 x 105 Pixel groß sein.
+	malformed soft line:				Fehlerhaftes <soft-line>-Tag gefunden. Reparaturversuch unternommen.
 
 	# image import
 	import not found:					Datei nicht gefunden: '%s'
@@ -1211,6 +1224,7 @@ error:
 	install packages successful:		%s Package(s) wurden erfolgreich installiert.
 	remove packages successful:			%s Package(s) wurden erfolgreich entfernt.
 	change packages successful:			%s Package(s) wurden erfolgreich geändert.
+	updating cards:						Karten aktualisieren.
 
 	cannot create file:					Datei '%s' kann nicht erstellt werden, trotzdem fortfahren?
 
