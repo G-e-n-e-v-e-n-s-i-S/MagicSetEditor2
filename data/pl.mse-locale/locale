@@ -1226,6 +1226,12 @@ error:
 	#TODO: Localize
 	error loading set:					Error while loading set:
 	#TODO: Localize
+	error updating card:
+		Error while running update cards script:
+		  Stylesheet: %s
+		  Before version: %s
+		  Card: %s
+	#TODO: Localize
 	write to read only:					Trying to write to file that has been declared read only: '%s'
 	#TODO: Localize
 	uninstall read only:
@@ -1246,6 +1252,8 @@ error:
 		  depends on: %s %s
 	#TODO: Localize
 	icon too large:						Icon image file for package '%s' is too large. It should be 105x105 pixels max.
+	#TODO: Localize
+	malformed soft line:				Malformed <soft-line> tag found. Attempted to repair.
 
 	# image import
 	#TODO: Localize Section

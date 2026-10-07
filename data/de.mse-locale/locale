@@ -1050,6 +1050,11 @@ error:
 	package out of date:				Package '%s' (Version %s) ist nicht kompatibel, Version %s wird benötigt.
 	package too new:					Package '%s' (Version %s) ist nicht kompatibel mit Version %s, Version %s wird benötigt.
 	error loading set:					Fehler beim Laden der Edition:
+	error updating card:
+		Fehler beim Ausführen des Skripts zur Kartenaktualisierung:
+		  Stylesheet: %s
+		  Before version: %s
+		  Karte: %s
 	write to read only:					Es wird versucht, in eine als schreibgeschützt deklarierte Datei zu schreiben: '%s'
 	uninstall read only:
 		Das Package '%s' enthält die folgenden schreibgeschützten Dateien:
@@ -1067,6 +1072,7 @@ error:
 		Bitte fügen Sie folgendes ein:
 		  depends on: %s %s
 	icon too large:						Die Symbolbilddatei für das Package '%s' ist zu groß. Sie sollte maximal 105 x 105 Pixel groß sein.
+	malformed soft line:				Fehlerhaftes <soft-line>-Tag gefunden. Reparaturversuch unternommen.
 
 	# image import
 	import not found:					Datei nicht gefunden: '%s'
