@@ -13,7 +13,6 @@ The value is one of the following options:
 | @subtract@		Subtract this shape from the one below it.
 | @intersection@	Take the intersection of this shape and the one below it, only areas that are in both shapes remain.
 | @difference@		Take the difference of this shape and the one below it, only areas that are in exactly one of the shapes remain.
-| @border@		Use this shape as additional border for the shape below it.
 
 --Examples--
 > combine: overlap

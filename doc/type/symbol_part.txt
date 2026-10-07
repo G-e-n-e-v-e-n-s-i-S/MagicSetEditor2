@@ -16,6 +16,7 @@ The rest of the properties depends on the @type@.
 
 ! Type		Property	Type					Default		Description
 | @"shape"@	@combine@	[[type:symbol combine]]			@"overlap"@	How to combine the shape with those below it?
+| ^^^		@region@	[[type:symbol region]]	@"fill"@	How to color the shape?
 | ^^^		@points@	[[type:list]] of [[type:control point]]s	 	The points that form this shape
 | @"symmetry"@	@kind@		@rotation@ or @reflection@		@"rotation"@	What kind of symmetry is this?
 | ^^^		@copies@	[[type:int]]				2		How many times is the original copied (including the original itself)?

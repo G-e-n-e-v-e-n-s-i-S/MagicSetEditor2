@@ -13,6 +13,7 @@ A single symbol in a [[type:symbol font]].
 | @enabled@		[[type:scriptable]] [[type:boolean]]	@true@			Is this symbol actually used?<br/>
 			 					 			This can be scripted to optionally disable certain symbols.<br/>
 			 					 			If multiple symbols with the same code are given disabling the first switches to the second one.
+| @preview enabled@		[[type:scriptable]] [[type:boolean]]	@true@			Should the program attempt to render this symbol to create a preview in the Insert Symbol menu?
 | @draw text@			[[type:int]]			@-1@			The index of the captured regex expression to draw as text, or -1 to not draw text.<br/> For example with the code @"x([a-z])"@ and @draw text: 1@ the text of the symbol @"xb"@ will be @"b"@.
 | @text font@			[[type:font]]			 			Font to use for drawing text on symbols. The font size is in font points per text box font point.
 | @text alignment@		[[type:alignment]]		@"middle center"@	How should text be aligned on the symbol?

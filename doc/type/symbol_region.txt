@@ -1,0 +1,16 @@
+Enumeration: symbol region
+
+Specifies how symbol shapes are colored
+
+--Script syntax--
+In scripts, symbol regions are passed around as a string.
+
+--Possible values--
+The value is one of the following options:
+! Value			Description
+| @fill@		Color this shape with the main gradient colors.
+| @accent@		Color this shape with the accent color.
+| @border@		Draw this shape as part of the border contour.
+
+--Examples--
+> region: fill
