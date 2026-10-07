@@ -459,7 +459,7 @@ void SymbolPartList::drawItem(DC& dc, int x, int& i, bool parent_active, const S
     background = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
     dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
   } else {
-    background = tinted ? tint : wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+    background = tinted ? tint : Color(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
     dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
   }
   wxPen line_pen = lerp(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW),
