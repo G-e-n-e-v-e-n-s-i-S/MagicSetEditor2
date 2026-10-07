@@ -70,7 +70,7 @@ public:
     ZOOM_MIN        = 50,   ///< lowest zoom level in percent
     ZOOM_MAX        = 200,  ///< highest zoom level in percent
     ZOOM_STEP       = 10,   ///< size of one zoom step in percent
-    ZOOM_DENSE_GRID = 140,  ///< from this zoom level on, the grid is twice as dense
+    ZOOM_DENSE_GRID = 120,  ///< from this zoom level on, the grid is twice as dense
   };
 
 private:
