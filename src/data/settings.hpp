@@ -90,7 +90,7 @@ public:
   bool                        pack_seed_random;
   int                         pack_seed;
   vector<Color>               custom_colors;
-  static const size_t         max_custom_colors = 16; // store this many custom colors for the color picker
+  static constexpr size_t     max_custom_colors = 16; // store this many custom colors for the color picker
 
   DECLARE_REFLECTION();
 private:

@@ -292,7 +292,7 @@ void SymbolWindow::onFileStore(wxCommandEvent& ev) {
       writer.handle(control->getSymbol());
     }
     if (!stream->IsOk()) {
-      queue_message(MESSAGE_ERROR, _ERROR_1_("can't write symbol", new_filename));
+      queue_message(MESSAGE_ERROR, _ERROR_1_("can't write symbol", new_filename.toStringForWriting()));
       return;
     }
     performer->addAction(value_action(value, new_filename));

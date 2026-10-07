@@ -7,7 +7,10 @@ add_definitions(-DUNOFFICIAL_BUILD)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-find_package(wxWidgets 3.3.1 CONFIG REQUIRED)
+find_package(wxWidgets 3.3.1 CONFIG QUIET COMPONENTS core base net)
+if(NOT wxWidgets_FOUND)
+  find_package(wxWidgets 3.3.1 MODULE REQUIRED COMPONENTS core base net)
+endif()
 find_package(Boost REQUIRED COMPONENTS regex)
 
 find_package(PkgConfig)
