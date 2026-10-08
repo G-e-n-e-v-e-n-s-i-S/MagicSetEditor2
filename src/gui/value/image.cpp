@@ -20,6 +20,68 @@
 
 IMPLEMENT_VALUE_EDITOR(Image) {}
 
+// ----------------------------------------------------------------------------- : Drawing
+
+void ImageValueEditor::draw(RotatedDC& dc) {
+  if (!nativeLook()) {
+    ImageValueViewer::draw(dc);
+    return;
+  }
+  // in the UI (styling or set field) show a preview of the image
+  drawFieldBorder(dc);
+  RealRect rect = dc.getInternalRect();
+  draw_checker(dc, rect); // shows transparency, and a background if there is no image
+  updatePreview(max(0, (int)rect.width), max(0, (int)rect.height));
+  if (preview_bitmap.Ok()) {
+    RealSize size(preview_bitmap.GetWidth(), preview_bitmap.GetHeight());
+    // left aligned, vertically centered
+    dc.DrawBitmap(preview_bitmap, align_in_rect((Alignment)(ALIGN_MIDDLE | ALIGN_LEFT), size, rect));
+  } else {
+    // no image (or it could not be loaded), show a hint
+    dc.SetFont(wxFont(10,wxFONTFAMILY_SWISS,wxFONTSTYLE_NORMAL,wxFONTWEIGHT_NORMAL));
+    dc.SetTextForeground(*wxBLACK);
+    String label = _LABEL_("load image");
+    RealSize text_size = dc.GetTextExtent(label);
+    dc.DrawText(label, align_in_rect(ALIGN_MIDDLE_CENTER, text_size, rect));
+  }
+}
+
+void ImageValueEditor::updatePreview(int w, int h) {
+  if (preview_valid && preview_w == w && preview_h == h) return;
+  // set the cache state first, so a file that fails to load is not retried on every redraw
+  preview_valid = true;
+  preview_w = w;
+  preview_h = h;
+  preview_bitmap = Bitmap();
+  if (value().filename.empty() || w < 1 || h < 1) return;
+  try {
+    auto image_file = getLocalPackage().openIn(value().filename);
+    Image image;
+    if (!image_load_file(image, *image_file) || !image.Ok()) return;
+    // scale to fit, keeping the aspect ratio
+    double scale = min(w / (double)image.GetWidth(), h / (double)image.GetHeight());
+    int new_w = max(1, (int)(image.GetWidth()  * scale));
+    int new_h = max(1, (int)(image.GetHeight() * scale));
+    image.Rescale(new_w, new_h, wxIMAGE_QUALITY_HIGH);
+    preview_bitmap = Bitmap(image);
+  } catch (const Error& e) {
+    handle_error(e);
+  }
+}
+
+void ImageValueEditor::onValueChange() {
+  ImageValueViewer::onValueChange();
+  preview_valid = false;
+  preview_bitmap = Bitmap();
+}
+
+void ImageValueEditor::determineSize(bool) {
+  if (style().height == 0) style().height = 50;
+  bounding_box.height = 50;
+}
+
+// ----------------------------------------------------------------------------- : Events
+
 bool ImageValueEditor::onLeftDClick(const RealPoint&, wxMouseEvent&) {
   String directory = settings.default_image_dir;
   String filename = _("");
@@ -50,9 +112,12 @@ void ImageValueEditor::sliceImage(const Image& image, const String& filename, co
   if (!image.Ok()) return;
   // determine import scale based on the user's settings.
   double import_scale = 1.0;
-  StyleSheetP stylesheet = editor().getCard()->stylesheet;
-  if (!stylesheet) stylesheet = editor().getSet()->stylesheet;
-  if (stylesheet) import_scale = settings.importScaleSettingsFor(*stylesheet);
+  const CardP& card = editor().getCard();
+  if (card) {
+    StyleSheetP stylesheet = card->stylesheet;
+    if (!stylesheet) stylesheet = editor().getSet()->stylesheet;
+    if (stylesheet) import_scale = settings.importScaleSettingsFor(*stylesheet);
+  }
   RealSize target_size = RealSize(style().getSize() * import_scale);
   target_size = RealSize((int)target_size.width, (int)target_size.height);
   // mask

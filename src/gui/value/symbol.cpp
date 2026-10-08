@@ -26,8 +26,9 @@ void SymbolValueEditor::draw(RotatedDC& dc) {
   if (symbols.empty()) {
     dc.SetFont(wxFont(10,wxFONTFAMILY_SWISS,wxFONTSTYLE_NORMAL,wxFONTWEIGHT_NORMAL));
     dc.SetTextForeground(*wxBLACK);
-    RealSize text_size = dc.GetTextExtent(_("double click to edit symbol"));
-    dc.DrawText(_("double click to edit symbol"), align_in_rect(ALIGN_MIDDLE_CENTER, text_size, dc.getInternalRect()));
+    String label = _LABEL_("edit symbol");
+    RealSize text_size = dc.GetTextExtent(label);
+    dc.DrawText(label, align_in_rect(ALIGN_MIDDLE_CENTER, text_size, dc.getInternalRect()));
   }
   if (nativeLook()) {
     // draw editor buttons

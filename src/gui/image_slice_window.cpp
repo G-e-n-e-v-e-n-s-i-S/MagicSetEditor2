@@ -22,10 +22,15 @@ map<pair<String, String>, PreviouslyUsedSliceSettings> ImageSliceWindow::previou
 
 ImageSlice::ImageSlice(const Image& source, const String& source_path, const String& card_name, const wxSize& target_size)
   : source(source), source_path(source_path), card_name(card_name), target_size(target_size)
+  , adaptive_target_size(target_size.GetWidth() < 1 || target_size.GetHeight() < 1)
   , selection(0, 0, source.GetWidth(), source.GetHeight())
   , allow_outside(false), aspect_fixed(true)
   , sharpen(false), sharpen_amount(0)
-{}
+{
+  if (adaptive_target_size) {
+    this->target_size = wxSize(source.GetWidth(), source.GetHeight());
+  }
+}
 
 void ImageSlice::constrain(PreferedProperty prefer) {
   sharpen_amount = min(100, max(0, sharpen_amount));
@@ -51,6 +56,9 @@ void ImageSlice::constrain(PreferedProperty prefer) {
       // too high
       selection.height -= int(-diff / target_size.GetWidth());
     }
+  }
+  if (adaptive_target_size) {
+    target_size = wxSize(selection.width, selection.height);
   }
 }
 
@@ -156,6 +164,15 @@ ImageSliceWindow::ImageSliceWindow(Window* parent, const Image& source, const St
                    , _LABEL_("grid fifths") };
   grid = new wxRadioBox(this, ID_GRID, _LABEL_("grid"), defPos, wxDefaultSize, 5, grids, 1);
 
+  if (slice.adaptive_target_size) {
+    // the target always equals the selection, so zoom is always 100%, and only "force to fit" (whole source) and "custom size" make sense
+    size->Enable(0, false); // original size
+    size->Enable(1, false); // size to fit
+    zoom->Enable(false);
+    zoom_x->Enable(false);
+    zoom_y->Enable(false);
+  }
+
   // init sizers
   wxSizer* s = new wxBoxSizer(wxVERTICAL);
     // top row: image editors
@@ -165,7 +182,8 @@ ImageSliceWindow::ImageSliceWindow(Window* parent, const Image& source, const St
         s3->Add(selector, 1, wxEXPAND | wxTOP, 4);
       s2->Add(s3, 1, wxEXPAND | wxALL, 4);
       wxSizer* s4 = new wxBoxSizer(wxVERTICAL);
-        s4->Add(new wxStaticText(this, wxID_ANY, _LABEL_2_("result with dimensions", to_string(slice.target_size.GetWidth()), to_string(slice.target_size.GetHeight()))));
+        result_label = new wxStaticText(this, wxID_ANY, _LABEL_2_("result with dimensions", to_string(slice.target_size.GetWidth()), to_string(slice.target_size.GetHeight())));
+        s4->Add(result_label);
         s4->Add(preview, 0, wxTOP, 4);
       s2->Add(s4, 0, wxALL, 4);
     s->Add(s2, 1, wxEXPAND);
@@ -372,7 +390,14 @@ void ImageSliceWindow::onSelectionCenter(wxCommandEvent& ev) {
 }
 
 void ImageSliceWindow::updateControls() {
-  if (slice.selection.width == slice.target_size.GetWidth() && slice.selection.height == slice.target_size.GetHeight()) {
+  if (slice.adaptive_target_size) {
+    // the target always equals the selection, so only "force to fit" (whole source) and "custom size" make sense
+    bool whole_source = slice.selection.x == 0 && slice.selection.y == 0 &&
+                        slice.selection.width  == slice.source.GetWidth() &&
+                        slice.selection.height == slice.source.GetHeight();
+    size->SetSelection(whole_source ? 2 : 3);
+    result_label->SetLabel(_LABEL_2_("result with dimensions", to_string(slice.target_size.GetWidth()), to_string(slice.target_size.GetHeight())));
+  } else if (slice.selection.width == slice.target_size.GetWidth() && slice.selection.height == slice.target_size.GetHeight()) {
     size->SetSelection(0); // original size
   } else if (slice.selection.x == 0 && slice.selection.width  == slice.source.GetWidth() &&
              slice.selection.y == 0 && slice.selection.height == slice.source.GetHeight() && !slice.aspect_fixed) {
@@ -459,9 +484,9 @@ void ImageSlicePreview::update() {
 wxSize ImageSlicePreview::getBestSliceSize() const {
   double target_ratio = ((double)slice.target_size.GetWidth()) / ((double)slice.target_size.GetHeight());
   if (target_ratio > 1.0) {
-    return wxSize(500, 500 / target_ratio);
+    return wxSize(500, max(1, int(500 / target_ratio)));
   } else {
-    return wxSize(500 * target_ratio, 500);
+    return wxSize(max(1, int(500 * target_ratio)), 500);
   }
 }
 
@@ -470,18 +495,27 @@ wxSize ImageSlicePreview::DoGetBestSize() const {
   // This helps with applying margins and other spacing necessities.
   wxSize ws = GetSize(), cs = GetClientSize();
 
-  return getBestSliceSize() + ws - cs;
+  // In adaptive mode the shape of the slice changes while editing, so reserve a fixed box
+  // for it (the image is centered inside), instead of having to re-layout the dialog constantly.
+  wxSize best = slice.adaptive_target_size ? wxSize(500, 500) : getBestSliceSize();
+  return best + ws - cs;
 }
 
 void ImageSlicePreview::onPaint(wxPaintEvent&) {
-  wxPaintDC dc(this);
+  wxBufferedPaintDC dc(this);
   draw(dc);
 }
 void ImageSlicePreview::draw(DC& dc) {
+  if (slice.adaptive_target_size) {
+    // the image may not cover all of the dc, so clear it before redraw
+    dc.SetBackground(wxBrush(GetBackgroundColour()));
+    dc.Clear();
+  }
   if (!bitmap.Ok()) {
     Image image = slice.getSlice();
     assert(image.GetWidth() == slice.target_size.GetWidth() && image.GetHeight() == slice.target_size.GetHeight());
-    mask.setAlpha(image);
+    // the mask is made for a specific target size, which doesn't exist in adaptive mode
+    if (!slice.adaptive_target_size) mask.setAlpha(image);
     if (image.HasAlpha()) {
       // create bitmap
       int width = image.GetWidth(), height = image.GetHeight();
@@ -502,39 +536,24 @@ void ImageSlicePreview::draw(DC& dc) {
     bitmap = wxBitmap(bitmap.ConvertToImage().Scale(available_size.GetWidth(), available_size.GetHeight()));
   }
   if (bitmap.Ok()) {
-    dc.DrawBitmap(bitmap, 0, 0);
-    if (grid == 1) {
-      wxSize size = dc.GetSize();
+    // area covered by the image
+    wxRect r(wxPoint(0, 0), dc.GetSize());
+    if (slice.adaptive_target_size) {
+      // center the image in the fixed size preview box
+      wxSize cs = GetClientSize();
+      r = wxRect(max(0, (cs.x - bitmap.GetWidth()) / 2), max(0, (cs.y - bitmap.GetHeight()) / 2), bitmap.GetWidth(), bitmap.GetHeight());
+    }
+    dc.DrawBitmap(bitmap, r.x, r.y);
+    // grid, 1 = halves, 2 = thirds, 3 = fourths, 4 = fifths
+    if (grid >= 1 && grid <= 4) {
+      int n = grid + 1;
       dc.SetPen(*wxRED_PEN);
-      dc.DrawLine(size.x * 1 / 2, 0,              size.x * 1 / 2, size.y);
-      dc.DrawLine(0,              size.y * 1 / 2, size.x,         size.y * 1 / 2);
-    } else if (grid == 2) {
-      wxSize size = dc.GetSize();
-      dc.SetPen(*wxRED_PEN);
-      dc.DrawLine(size.x * 1 / 3, 0,              size.x * 1 / 3, size.y);
-      dc.DrawLine(size.x * 2 / 3, 0,              size.x * 2 / 3, size.y);
-      dc.DrawLine(0,              size.y * 1 / 3, size.x,         size.y * 1 / 3);
-      dc.DrawLine(0,              size.y * 2 / 3, size.x,         size.y * 2 / 3);
-    } else if (grid == 3) {
-      wxSize size = dc.GetSize();
-      dc.SetPen(*wxRED_PEN);
-      dc.DrawLine(size.x * 1 / 4, 0,              size.x * 1 / 4, size.y);
-      dc.DrawLine(size.x * 2 / 4, 0,              size.x * 2 / 4, size.y);
-      dc.DrawLine(size.x * 3 / 4, 0,              size.x * 3 / 4, size.y);
-      dc.DrawLine(0,              size.y * 1 / 4, size.x,         size.y * 1 / 4);
-      dc.DrawLine(0,              size.y * 2 / 4, size.x,         size.y * 2 / 4);
-      dc.DrawLine(0,              size.y * 3 / 4, size.x,         size.y * 3 / 4);
-    } else if (grid == 4) {
-      wxSize size = dc.GetSize();
-      dc.SetPen(*wxRED_PEN);
-      dc.DrawLine(size.x * 1 / 5, 0,              size.x * 1 / 5, size.y);
-      dc.DrawLine(size.x * 2 / 5, 0,              size.x * 2 / 5, size.y);
-      dc.DrawLine(size.x * 3 / 5, 0,              size.x * 3 / 5, size.y);
-      dc.DrawLine(size.x * 4 / 5, 0,              size.x * 4 / 5, size.y);
-      dc.DrawLine(0,              size.y * 1 / 5, size.x,         size.y * 1 / 5);
-      dc.DrawLine(0,              size.y * 2 / 5, size.x,         size.y * 2 / 5);
-      dc.DrawLine(0,              size.y * 3 / 5, size.x,         size.y * 3 / 5);
-      dc.DrawLine(0,              size.y * 4 / 5, size.x,         size.y * 4 / 5);
+      for (int i = 1 ; i < n ; ++i) {
+        int x = r.x + r.width  * i / n;
+        int y = r.y + r.height * i / n;
+        dc.DrawLine(x,   r.y, x,             r.y + r.height);
+        dc.DrawLine(r.x, y,   r.x + r.width, y);
+      }
     }
   }
 }

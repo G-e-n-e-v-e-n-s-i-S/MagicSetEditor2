@@ -30,14 +30,15 @@ class ImageSlice {
 public:
   ImageSlice(const Image& source, const String& source_path, const String& card_name, const wxSize& target_size);
   
-  Image  source;        ///< The source image
-  String source_path;   ///< The filename of the source image (only used to find previously used settings)
-  String card_name;     ///< The identification of the card we're on (only used to find previously used settings)
-  wxSize target_size;   ///< Size of the target image
-  wxRect selection;     ///< Area to slice from source
-  Color  background;    ///< Color for areas outside the source image
-  bool   allow_outside; ///< Allow the slice to extend outside the source image? TODO: This currently crashes
-  bool   aspect_fixed;  ///< Aspect ratio lock?
+  Image  source;               ///< The source image
+  String source_path;          ///< The filename of the source image (only used to find previously used settings)
+  String card_name;            ///< The identification of the card we're on (only used to find previously used settings)
+  wxSize target_size;          ///< Size of the resulting image (set by the card field the image is for)
+  bool   adaptive_target_size; ///< If this is not for a card field, target_size will just be selection size
+  wxRect selection;            ///< Area to slice from source
+  Color  background;           ///< Color for areas outside the source image
+  bool   allow_outside;        ///< Allow the slice to extend outside the source image? TODO: This currently crashes
+  bool   aspect_fixed;         ///< Aspect ratio lock?
   
   // Filters
   bool   sharpen;
@@ -89,6 +90,7 @@ private:
   // Gui items
   ImageSlicePreview*   preview;
   ImageSliceSelector*  selector;
+  wxStaticText*        result_label;
   wxRadioBox*          size, *grid;
   wxSpinCtrl*          top, *left, *width, *height;
   wxCheckBox*          fix_aspect;
