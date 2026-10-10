@@ -488,7 +488,7 @@ void instrBinary (BinaryInstructionType  i, ScriptValueP& a, const ScriptValueP&
       } else if (at == SCRIPT_FUNCTION && bt == SCRIPT_FUNCTION) {
         a = make_intrusive<ScriptCompose>(a, b);
       } else if (at == SCRIPT_COLLECTION && bt == SCRIPT_COLLECTION) {
-        a = make_intrusive<ScriptConcatCollection>(a, b);
+        a = make_intrusive<ScriptCustomCollection>(a, b);
       } else if (at == SCRIPT_INT    && bt == SCRIPT_INT) {
         a = to_script(a->toInt() + b->toInt());
       } else if ((at == SCRIPT_INT || at == SCRIPT_DOUBLE) &&
