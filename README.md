@@ -10,7 +10,7 @@ Documentation on https://mseverse.miraheze.org/wiki/Category:MSE_Documentation
 ## Dependencies
 
 The code depends on
- * wxWidgets >= 3.3.1
+ * wxWidgets >= 3.3.3
  * boost
  * hunspell
 

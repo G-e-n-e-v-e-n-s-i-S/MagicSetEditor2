@@ -13,6 +13,7 @@
 #include <util/file_utils.hpp>
 #include <wx/renderer.h>
 #include <wx/stdpaths.h>
+#include <wx/mstream.h>
 #include <gfx/gfx.hpp>
 
 #if wxUSE_UXTHEME && defined(__WXMSW__)
@@ -430,7 +431,7 @@ void draw_control_box(Window* win, DC& dc, const wxRect& rect, bool focused, boo
   dc.SetBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
   dc.DrawRectangle(rect);
   // draw the border
-  #if defined(__WXMSW__)
+  #if wxUSE_UXTHEME && defined(__WXMSW__)
     r.left   = rect.x - 2;
     r.top    = rect.y - 2;
     r.right  = rect.x + rect.width  + 2;
