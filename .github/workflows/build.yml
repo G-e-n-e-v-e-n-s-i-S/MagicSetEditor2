@@ -114,9 +114,33 @@ jobs:
           cd project
           mkdir build
           cd build
-          wxcmake="$WXWIDGETS_DIR/lib/cmake/wxWidgets"
+
+          # Debug: show what's inside the wxwidgets install prefix provided by cache or build
+          echo "---- WXWIDGETS_DIR = $WXWIDGETS_DIR"
+          echo "Listing few top-level entries (if any):"
+          ls -la "$WXWIDGETS_DIR" || true
+          echo "Listing lib directory (if present):"
+          ls -la "$WXWIDGETS_DIR/lib" || ls -la "$WXWIDGETS_DIR/lib64" || true
+
+          # Make wx-config available on PATH so find_package(... MODULE) can locate it
+          if [ -x "$WXWIDGETS_DIR/bin/wx-config" ]; then
+            echo "$WXWIDGETS_DIR/bin" >> $GITHUB_PATH
+            echo "Added $WXWIDGETS_DIR/bin to PATH"
+            echo "wx-config --version output:" 
+            "$WXWIDGETS_DIR/bin/wx-config" --version || true
+          else
+            echo "No wx-config found at $WXWIDGETS_DIR/bin/wx-config"
+          fi
+
+          # Prefer passing the install prefix to CMake so CONFIG-mode find_package can locate wxWidgets
           echo "::group::cmake"
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$wxcmake" -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$WXWIDGETS_DIR" \
+            -DwxWidgets_ROOT_DIR="$WXWIDGETS_DIR" \
+            -DwxWidgets_CONFIG_EXECUTABLE="$WXWIDGETS_DIR/bin/wx-config" \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_MESSAGE_LOG_LEVEL=DEBUG
           echo "::endgroup::"
           echo "::group::ccache stats"
           ccache --max-size "$CCACHE_SIZE"
